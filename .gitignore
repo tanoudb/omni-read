@@ -1,0 +1,48 @@
+# Python cache/bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# Test/build cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+.venv/
+.venv*/
+venv/
+env/
+
+# Runtime outputs and logs
+output/
+output_*/
+logs/
+*.log
+
+# Local environment files
+.env
+.env.*
+
+# Model/cache artifacts (heavy, reproducible)
+assets/cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+
+# Tauri/Node local build artifacts
+webtoon-translator-native/node_modules/
+webtoon-translator-native/src-tauri/target/
+
+# Temporary workspace files
+.tmp_pip/

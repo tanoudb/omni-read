@@ -1,0 +1,45 @@
+services:
+  webtoon-translator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: webtoon-translator:cuda
+    container_name: webtoon-translator
+    gpus: all
+    environment:
+      WEBTOON_TRANSLATION_BACKEND: "local_llm"
+      WEBTOON_LLM_MODEL: "Qwen/Qwen2.5-7B-Instruct"
+      WEBTOON_LLM_REQUIRE_CUDA: "true"
+      WEBTOON_LLM_MAX_NEW_TOKENS: "512"
+      WEBTOON_LLM_TEMPERATURE: "0.0"
+      WEBTOON_USE_BLACK_PADDING: "false"
+      WEBTOON_BLACK_PADDING_RATIO: "0.03"
+      WEBTOON_ENABLE_PRECISE_MASKS: "true"
+      WEBTOON_SEGMENTATION_BACKEND: "hybrid"
+      WEBTOON_SAM2_CHECKPOINT: "/app/assets/cache/ocr_weights/sam2_b.pt"
+      WEBTOON_SEGMENTATION_MULTIMASK: "true"
+      WEBTOON_SEGMENTATION_MIN_COMPONENT: "24"
+      WEBTOON_SEGMENTATION_DILATE: "9"
+      WEBTOON_SEGMENTATION_PROMPT_MARGIN: "4"
+      WEBTOON_OCR_PRIMARY: "paddleocr-vl-v1.5"
+      WEBTOON_OCR_FALLBACKS: "rapidocr-ppocrv5"
+      WEBTOON_USE_VL15: "true"
+      WEBTOON_OCR_FALLBACK_MIN_CONF: "0.72"
+      WEBTOON_ENABLE_CONTEXT_GROUPING: "true"
+      WEBTOON_CONTEXT_DISTANCE_THRESHOLD: "420"
+      WEBTOON_MAX_GROUP_SIZE: "7"
+      WEBTOON_PRESERVE_TEXT_COLOR: "true"
+      WEBTOON_AUTO_STYLE_TYPESETTING: "true"
+      WEBTOON_LOCK_TEXT_TO_OCR_REGIONS: "true"
+      WEBTOON_LOCK_TEXT_SYSTEM_ONLY: "true"
+      WEBTOON_USE_BITSANDBYTES: "true"
+      WEBTOON_BNB_4BIT: "true"
+      WEBTOON_BNB_8BIT: "false"
+    volumes:
+      - ./input:/app/input
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./assets/cache:/app/assets/cache
+      - ./assets/models:/app/assets/models
+      - ./assets/fonts:/app/assets/fonts
+    command: ["python", "main.py", "--debug"]

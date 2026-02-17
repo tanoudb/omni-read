@@ -1,0 +1,28 @@
+numpy==1.26.4
+opencv-python==4.10.0.84
+pillow==9.5.0
+psutil==7.1.3
+
+# OCR
+rapidocr==3.6.0
+onnxruntime-gpu==1.24.1
+
+# Vision + translation
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+ultralytics==8.3.229
+transformers==4.46.3
+tokenizers==0.20.3
+sentencepiece==0.2.1
+accelerate==1.12.0
+huggingface-hub==0.36.2
+
+# Inpainting
+simple-lama-inpainting==0.1.2
+lama-cleaner==1.2.5
+
+# API bridge
+fastapi==0.129.0
+uvicorn[standard]==0.41.0
+pydantic==2.12.5
