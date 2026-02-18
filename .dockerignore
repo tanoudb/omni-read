@@ -1,0 +1,22 @@
+.git
+.gitignore
+.vscode
+.venv
+.venv311
+__pycache__
+**/__pycache__
+*.pyc
+output
+debug
+logs
+
+# Données lourdes non nécessaires au build image
+assets/cache
+assets/models
+back images
+input
+image.png
+
+# Artefacts locaux
+*.log
+*.tmp

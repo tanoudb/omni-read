@@ -1,0 +1,6 @@
+class: out_text
+bbox: [340.9902099609375, 11974.259765625, 793.00439453125, 12138.686328125]
+ocr: We wish your erry christmas
+translation: Nous vous souhaitons un bon Noël.
+style: dialogue
+mask_regions: 2

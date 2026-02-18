@@ -1,0 +1,6 @@
+class: out_text
+bbox: [341.0945638020833, 74.82032267252605, 1254.0087890625, 342.7075602213542]
+ocr: MIRE CHAPTERS AT RYASCANSCOM
+translation: Les chapitres de Mire à ryascanscom
+style: dialogue
+mask_regions: 2

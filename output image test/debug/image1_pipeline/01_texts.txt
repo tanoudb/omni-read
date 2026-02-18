@@ -1,0 +1,6 @@
+class: out_text
+bbox: [143.95660400390625, 425.7550048828125, 698.2083129882812, 686.05029296875]
+ocr: THE GREAT ATACLYSM
+translation: THE GREAT ATACLYSM
+style: dialogue
+mask_regions: 2

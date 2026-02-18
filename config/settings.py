@@ -135,10 +135,10 @@ class DetectionConfig:
     # ── CONFIDENCE - YOLO v3 (4 classes) ──
     # names: ['System', 'bulle', 'out_text', 'sfx']
     confidence_thresholds: Dict[str, float] = field(default_factory=lambda: {
-        'System': 0.55,
-        'bulle': 0.70,
-        'out_text': 0.30,    # Texte hors bulle (baissé pour capturer plus)
-        'sfx': 0.50          # Effets sonores
+        'System': 0.30,
+        'bulle': 0.30,
+        'out_text': 0.30,
+        'sfx': 0.30
     })
     
     # NMS - YOLO v3
@@ -173,7 +173,7 @@ class DetectionConfig:
     # out_text = texte hors bulle (à traduire)
     # sfx = effets sonores (ne pas traduire)
     # System = UI/titre (à traduire)
-    translatable_classes: List[str] = field(default_factory=lambda: ['bulle', 'out_text'])
+    translatable_classes: List[str] = field(default_factory=lambda: ['bulle', 'out_text', 'System'])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -239,12 +239,19 @@ class SegmentationConfig:
 @dataclass
 class TranslationConfig:
     backend: str = os.environ.get("WEBTOON_TRANSLATION_BACKEND", "local_llm").strip().lower()
+    translation_mode: str = os.environ.get("WEBTOON_TRANSLATION_MODE", "hybrid").strip().lower()
 
     # NLLB (legacy)
-    model_name: str = os.environ.get("WEBTOON_NLLB_MODEL", "facebook/nllb-200-distilled-600M")
+    model_name: str = os.environ.get("WEBTOON_NLLB_MODEL", "facebook/nllb-200-3.3B")
+    nllb_source_model: str = os.environ.get("WEBTOON_NLLB_SOURCE_MODEL", "facebook/nllb-200-3.3B")
+    nllb_ct2_model_dir: Path = MODEL_DIR / "nllb-200-3.3b-ct2"
+    nllb_ct2_compute_type: str = os.environ.get("WEBTOON_NLLB_CT2_COMPUTE_TYPE", "int8")
+    nllb_beam_size: int = int(os.environ.get("WEBTOON_NLLB_BEAM_SIZE", "4"))
+    nllb_max_decoding_length: int = int(os.environ.get("WEBTOON_NLLB_MAX_DECODING_LENGTH", "320"))
+    nllb_cache_file: str = os.environ.get("WEBTOON_NLLB_CACHE_FILE", "translation_cache_nllb_ct2_v1.json")
 
     # Local LLM (aucune API externe)
-    llm_model_name: str = os.environ.get("WEBTOON_LLM_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+    llm_model_name: str = os.environ.get("WEBTOON_LLM_MODEL", "Qwen/Qwen2.5-3B-Instruct")
     llm_require_cuda: bool = _env_bool("WEBTOON_LLM_REQUIRE_CUDA", True)
     llm_max_new_tokens: int = int(os.environ.get("WEBTOON_LLM_MAX_NEW_TOKENS", "512"))
     llm_temperature: float = float(os.environ.get("WEBTOON_LLM_TEMPERATURE", "0.0"))
@@ -260,6 +267,22 @@ class TranslationConfig:
         "Respecte la ponctuation et effets stylistiques (!!!, ...). "
         "Réponds uniquement avec la traduction.\n"
         "TEXT:\n{text}\nTRADUCTION:"
+    )
+    llm_polish_system_prompt: str = os.environ.get(
+        "WEBTOON_LLM_POLISH_SYSTEM_PROMPT",
+        "Tu es un éditeur manga français expert.\n"
+        "Ta tâche: améliorer des traductions pour qu'elles sonnent naturelles en français.\n\n"
+        "RÈGLES STRICTES:\n"
+        "- Traduction de base fournie (déjà correcte grammaticalement)\n"
+        "- Adapte le TON pour manga (émotions, ponctuation !!! ...)\n"
+        "- Garde le SENS exact\n"
+        "- Rends naturel en français parlé\n"
+        "- Longueur similaire (pour tenir dans bulle)\n"
+        "- Les onomatopées restent EN MAJUSCULES\n"
+        "- Réponds UNIQUEMENT avec les valeurs finales, pas d'explication\n"
+        "- N'écris JAMAIS littéralement 'version polie'\n"
+        "- Ne mélange jamais les entrées entre elles\n\n"
+        "Réponds en JSON STRICT: {\"0\":\"texte final\",\"1\":\"texte final\"}"
     )
     
 
@@ -329,7 +352,7 @@ class RenderingConfig:
     font_paths: List[str] = field(default_factory=_discover_font_paths)
     
     enable_dynamic_sizing: bool = True
-    target_fill_ratio: float = 0.85
+    target_fill_ratio: float = 0.70
     min_font_size: int = 12
     max_font_size: int = 80
     font_size_step: int = 2
@@ -338,7 +361,7 @@ class RenderingConfig:
     horizontal_align: str = "center"
     vertical_align: str = "center"
     line_spacing_ratio: float = 0.20
-    word_wrap_ratio: float = 0.90
+    word_wrap_ratio: float = 0.72
     padding_horizontal: int = 8
     padding_vertical: int = 6
     

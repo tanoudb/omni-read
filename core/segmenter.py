@@ -204,11 +204,11 @@ class SmartSegmenter:
         text_like = cv2.bitwise_or(dark, bright)
 
         if np.sum(seed_mask) > 0:
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
             grown_seed = cv2.dilate(seed_mask, kernel, iterations=1)
             text_like = cv2.bitwise_and(text_like, grown_seed)
 
-        k = max(3, int(self.cfg.mask_dilate_kernel) | 1)
+        k = min(5, max(3, int(self.cfg.mask_dilate_kernel) | 1))
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
         refined = cv2.morphologyEx(text_like, cv2.MORPH_CLOSE, kernel, iterations=1)
         refined = cv2.dilate(refined, kernel, iterations=1)

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [299.89703369140625, 6582.315490722656, 787.8746948242188, 6935.834655761719]
+ocr: SAVE ME!!!
+translation: Sauvez-moi !
+style: dialogue
+mask_regions: 1

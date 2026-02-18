@@ -1,0 +1,38 @@
+OCR Results for image4
+============================================================
+
+[1] out_text (score=0.44)
+    bbox: [264, 1299, 669, 1402]
+    size: 405x103px
+    OCR text: "GOOS BY THE BELOVED AND EVEN THOSE" 
+    OCR conf: 0.87
+    Traduit: "Les oiseaux par les bien-aimés et même ceux" 
+
+[2] out_text (score=0.40)
+    bbox: [96, 2186, 306, 2253]
+    size: 210x67px
+    OCR text: "NONE SHA" 
+    OCR conf: 0.85
+    Traduit: "NONE SHA" 
+
+[3] out_text (score=0.57)
+    bbox: [329, 2186, 570, 2253]
+    size: 241x67px
+    OCR text: "ESCAPE" 
+    OCR conf: 0.99
+    Traduit: "ESCAPE" 
+
+[4] out_text (score=0.45)
+    bbox: [150, 2891, 612, 3071]
+    size: 462x180px
+    OCR text: "BLOOD," 
+    OCR conf: 0.95
+    Traduit: "Le sang," 
+
+[5] bulle (score=0.91)
+    bbox: [218, 4679, 533, 4938]
+    size: 315x259px
+    OCR text: "NOT STOP. I... SHALL" 
+    OCR conf: 0.94
+    Traduit: "Je ne vais pas m'arrêter." 
+

@@ -34,7 +34,7 @@ logs/
 
 # Model/cache artifacts (heavy, reproducible)
 assets/cache/
-
+assets/models
 # OS / editor
 .DS_Store
 Thumbs.db

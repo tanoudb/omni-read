@@ -1,0 +1,215 @@
+{
+  "source": "a:\\omni read\\image test\\image3.png",
+  "output": "a:\\omni read\\output image test\\image3_translated.png",
+  "dimensions": {
+    "width": 1380,
+    "height": 15000
+  },
+  "stats": {
+    "image": "image3.png",
+    "width": 1380,
+    "height": 15000,
+    "detections": 22,
+    "translatable": 14,
+    "translated": 8,
+    "skipped": 6,
+    "skip_reasons": {
+      "low_confidence": 6
+    },
+    "time_seconds": 0
+  },
+  "detections": [
+    {
+      "class": "out_text",
+      "bbox": [
+        113.98385620117188,
+        75.508544921875,
+        936.501708984375,
+        334.26373291015625
+      ],
+      "original": "READ MORE CHAP SURYASCANS",
+      "translated": "Pour en savoir plus sur les suryascans",
+      "mask_regions_count": 2,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        113,
+        7,
+        25
+      ],
+      "font_hint": "thin",
+      "confidence": 0.9972376078367233,
+      "detection_confidence": 0.403574675321579,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.69
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        341.0945638020833,
+        74.82032267252605,
+        1254.0087890625,
+        342.7075602213542
+      ],
+      "original": "MIRE CHAPTERS AT RYASCANSCOM",
+      "translated": "Les chapitres de Mire à ryascanscom",
+      "mask_regions_count": 2,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        109,
+        8,
+        25
+      ],
+      "font_hint": "thin",
+      "confidence": 0.8226963669497469,
+      "detection_confidence": 0.5402918457984924,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.659
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        632.847412109375,
+        6595.2542724609375,
+        1123.0919189453125,
+        6776.5933837890625
+      ],
+      "original": "Ne wish your erry christmas",
+      "translated": "Je ne vous souhaite pas de mauvais Noël.",
+      "mask_regions_count": 2,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        11,
+        12,
+        13
+      ],
+      "font_hint": "thin",
+      "confidence": 0.9734613299369812,
+      "detection_confidence": 0.6678677797317505,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.772
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        454.77392578125,
+        9174.194921875,
+        993.18525390625,
+        9363.833203125
+      ],
+      "original": "We wish your",
+      "translated": "Nous vous souhaitons",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        12,
+        15,
+        16
+      ],
+      "font_hint": "thin",
+      "confidence": 0.95,
+      "detection_confidence": 0.6984170079231262,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.772
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        851.9070434570312,
+        10414.163314819336,
+        1313.129638671875,
+        10573.78125
+      ],
+      "original": "Whoa~ It's snowing",
+      "translated": "Il neige.",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        227,
+        226,
+        218
+      ],
+      "font_hint": "thin",
+      "confidence": 0.9954930146535238,
+      "detection_confidence": 0.38587331771850586,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.683
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        340.9902099609375,
+        11974.259765625,
+        793.00439453125,
+        12138.686328125
+      ],
+      "original": "We wish your erry christmas",
+      "translated": "Nous vous souhaitons un bon Noël.",
+      "mask_regions_count": 2,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        222,
+        218,
+        217
+      ],
+      "font_hint": "thin",
+      "confidence": 0.975739061832428,
+      "detection_confidence": 0.6260406374931335,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.758
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        689.686767578125,
+        13088.264404296875,
+        1054.702880859375,
+        13278.396728515625
+      ],
+      "original": "nd a happs new year",
+      "translated": "nd a happs new year",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        9,
+        10,
+        11
+      ],
+      "font_hint": "thin",
+      "confidence": 0.9530899226665497,
+      "detection_confidence": 0.6682456731796265,
+      "source_lang_detected": "pt",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.829
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        766.5917154947916,
+        13993.0,
+        983.885498046875,
+        14037.839284261068
+      ],
+      "original": "N PA",
+      "translated": "N PA",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        109,
+        108,
+        131
+      ],
+      "font_hint": "thin",
+      "confidence": 0.3297465741634369,
+      "detection_confidence": 0.600967526435852,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.459
+    }
+  ]
+}

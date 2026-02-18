@@ -1,0 +1,31 @@
+{
+  "name": "webtoon-translator-native",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config src-frontend/vite.config.ts",
+    "build": "vite build --config src-frontend/vite.config.ts",
+    "preview": "vite preview --config src-frontend/vite.config.ts",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.8.0",
+    "axios": "^1.8.1",
+    "immer": "^10.1.1",
+    "konva": "^9.3.20",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-konva": "^18.2.14",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
+  }
+}

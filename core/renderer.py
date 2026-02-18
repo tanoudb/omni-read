@@ -54,9 +54,9 @@ except ImportError:
 class TextRenderer:
     """Rendu texte avec LaMa inpainting local"""
     
-    SHRINK_RATIO = 0.10
+    SHRINK_RATIO = 0.18
     CROP_MARGIN = 30  # Marge autour de la bbox pour le crop LaMa
-    INPAINT_MIN_HEIGHT = 100  # ✅ RÉDUIT de 150px → 100px pour plus d'inpainting
+    INPAINT_MIN_HEIGHT = 20  # ✅ RÉDUIT pour inpainter aussi les petites bulles
     
     def __init__(self):
         self.cfg = config.rendering
@@ -237,7 +237,7 @@ class TextRenderer:
                 cv2.fillPoly(mask, [hull], 255)
         
         # Dilater pour couvrir anti-alias
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         mask = cv2.dilate(mask, kernel, iterations=1)
         
         if np.sum(mask) == 0:

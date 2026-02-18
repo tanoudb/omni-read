@@ -98,7 +98,24 @@ class YOLODetector:
         window_height = int(base_height * ratio)
         return max(self.cfg.min_window_height, min(window_height, self.cfg.max_window_height))
     
-    def sliding_window_detect(self, image: np.ndarray, scale: float = 1.0) -> List[Detection]:
+    @staticmethod
+    def _det_key(det: Detection) -> Tuple[str, int, int, int, int, int]:
+        return (
+            str(det.class_name),
+            int(round(det.score * 10000)),
+            int(det.x1),
+            int(det.y1),
+            int(det.x2),
+            int(det.y2),
+        )
+
+    def sliding_window_detect(
+        self,
+        image: np.ndarray,
+        scale: float = 1.0,
+        logger=None,
+        debug_stats: Optional[Dict] = None,
+    ) -> List[Detection]:
         h, w = image.shape[:2]
         
         if self.cfg.enable_adaptive_slicing:
@@ -117,6 +134,16 @@ class YOLODetector:
         overlap = int(window_height * self.cfg.overlap_ratio)
         step = window_height - overlap
         detections = []
+        scale_key = f"{float(scale):.2f}"
+
+        if debug_stats is not None and scale_key not in debug_stats:
+            debug_stats[scale_key] = {
+                'raw': 0,
+                'kept': 0,
+                'threshold_reject': 0,
+                'threshold_reject_by_class': defaultdict(int),
+                'border_reject': 0,
+            }
         
         for y in range(0, new_h, step):
             y_end = min(y + window_height, new_h)
@@ -130,8 +157,15 @@ class YOLODetector:
                     conf = float(box.conf[0])
                     cls_id = int(box.cls[0])
                     cls_name = result.names[cls_id]
+                    if debug_stats is not None:
+                        debug_stats[scale_key]['raw'] += 1
+
+                    conf_threshold = float(self.cfg.confidence_thresholds.get(cls_name, 0.25))
                     
-                    if conf < self.cfg.confidence_thresholds.get(cls_name, 0.25):
+                    if conf < conf_threshold:
+                        if debug_stats is not None:
+                            debug_stats[scale_key]['threshold_reject'] += 1
+                            debug_stats[scale_key]['threshold_reject_by_class'][cls_name] += 1
                         continue
                     
                     if scale != 1.0:
@@ -150,12 +184,26 @@ class YOLODetector:
                         too_close_top = (y > 0) and ((y1_local) < margin)
                         too_close_bottom = (y_end < new_h) and ((window_height - y2_local) < margin)
                         if too_close_top or too_close_bottom:
+                            if debug_stats is not None:
+                                debug_stats[scale_key]['border_reject'] += 1
                             continue
                     
                     detections.append(Detection(
                         class_name=cls_name, bbox=bbox, score=conf,
                         scale=scale, metadata={'window_y': y}
                     ))
+                    if debug_stats is not None:
+                        debug_stats[scale_key]['kept'] += 1
+
+        if logger and debug_stats is not None:
+            stats = debug_stats.get(scale_key, {})
+            by_class = dict(stats.get('threshold_reject_by_class', {}))
+            logger.info(
+                f"      [scale {scale_key}] raw={stats.get('raw', 0)} | kept={stats.get('kept', 0)} "
+                f"| rejet_conf={stats.get('threshold_reject', 0)} | rejet_border={stats.get('border_reject', 0)}"
+            )
+            if by_class:
+                logger.info(f"      [scale {scale_key}] rejet_conf_par_classe={by_class}")
         
         return detections
     
@@ -163,17 +211,17 @@ class YOLODetector:
     # MULTI-SCALE
     # ─────────────────────────────────────────────────────────────────────────
     
-    def multi_scale_detect(self, image: np.ndarray) -> List[Detection]:
+    def multi_scale_detect(self, image: np.ndarray, logger=None, debug_stats: Optional[Dict] = None) -> List[Detection]:
         all_detections = []
         for scale in self.cfg.detection_scales:
-            all_detections.extend(self.sliding_window_detect(image, scale=scale))
+            all_detections.extend(self.sliding_window_detect(image, scale=scale, logger=logger, debug_stats=debug_stats))
         return all_detections
     
     # ─────────────────────────────────────────────────────────────────────────
     # NMS
     # ─────────────────────────────────────────────────────────────────────────
     
-    def nms_per_class(self, detections: List[Detection]) -> List[Detection]:
+    def nms_per_class(self, detections: List[Detection], debug_events: Optional[List[Dict]] = None) -> List[Detection]:
         by_class = defaultdict(list)
         for det in detections:
             by_class[det.class_name].append(det)
@@ -187,12 +235,27 @@ class YOLODetector:
             while dets:
                 best = dets.pop(0)
                 keep.append(best)
-                dets = [d for d in dets if ImageUtils.calculate_iou(best.bbox, d.bbox) < iou_thresh]
+                remaining = []
+                for d in dets:
+                    iou = ImageUtils.calculate_iou(best.bbox, d.bbox)
+                    if iou < iou_thresh:
+                        remaining.append(d)
+                    elif debug_events is not None:
+                        debug_events.append({
+                            'stage': 'nms_per_class',
+                            'class_name': cls_name,
+                            'iou': round(float(iou), 3),
+                            'threshold': float(iou_thresh),
+                            'kept_score': round(float(best.score), 3),
+                            'removed_score': round(float(d.score), 3),
+                            'removed_bbox': [int(d.x1), int(d.y1), int(d.x2), int(d.y2)],
+                        })
+                dets = remaining
             kept.extend(keep)
         
         return kept
     
-    def multi_scale_nms(self, detections: List[Detection]) -> List[Detection]:
+    def multi_scale_nms(self, detections: List[Detection], debug_events: Optional[List[Dict]] = None) -> List[Detection]:
         if not detections:
             return []
         detections = sorted(detections, key=lambda x: x.score, reverse=True)
@@ -201,7 +264,23 @@ class YOLODetector:
         while detections:
             best = detections.pop(0)
             kept.append(best)
-            detections = [d for d in detections if ImageUtils.calculate_iou(best.bbox, d.bbox) < iou_thresh]
+            remaining = []
+            for d in detections:
+                iou = ImageUtils.calculate_iou(best.bbox, d.bbox)
+                if iou < iou_thresh:
+                    remaining.append(d)
+                elif debug_events is not None:
+                    debug_events.append({
+                        'stage': 'nms_multi_scale',
+                        'iou': round(float(iou), 3),
+                        'threshold': float(iou_thresh),
+                        'kept_scale': float(getattr(best, 'scale', 1.0)),
+                        'removed_scale': float(getattr(d, 'scale', 1.0)),
+                        'kept_score': round(float(best.score), 3),
+                        'removed_score': round(float(d.score), 3),
+                        'removed_bbox': [int(d.x1), int(d.y1), int(d.x2), int(d.y2)],
+                    })
+            detections = remaining
         return kept
     
     # ─────────────────────────────────────────────────────────────────────────
@@ -223,7 +302,7 @@ class YOLODetector:
         inner_area = (inner_bbox[2] - inner_bbox[0]) * (inner_bbox[3] - inner_bbox[1])
         return intersection / inner_area if inner_area > 0 else 0.0
     
-    def remove_contained_boxes(self, detections: List[Detection]) -> List[Detection]:
+    def remove_contained_boxes(self, detections: List[Detection], debug_events: Optional[List[Dict]] = None) -> List[Detection]:
         """
         Supprime les bbox contenues dans d'autres (TOUTES classes confondues).
         
@@ -251,6 +330,16 @@ class YOLODetector:
                 if ratio > 0.75:
                     # j est contenu dans i → supprimer j (le plus petit)
                     to_remove.add(j)
+                    if debug_events is not None:
+                        debug_events.append({
+                            'stage': 'containment',
+                            'ratio': round(float(ratio), 3),
+                            'keeper_class': detections[i].class_name,
+                            'keeper_score': round(float(detections[i].score), 3),
+                            'removed_class': detections[j].class_name,
+                            'removed_score': round(float(detections[j].score), 3),
+                            'removed_bbox': [int(detections[j].x1), int(detections[j].y1), int(detections[j].x2), int(detections[j].y2)],
+                        })
         
         kept = [d for i, d in enumerate(detections) if i not in to_remove]
         
@@ -283,7 +372,12 @@ class YOLODetector:
     # FILTRAGE
     # ─────────────────────────────────────────────────────────────────────────
     
-    def filter_detections(self, detections: List[Detection], image_shape: Tuple[int, int]) -> List[Detection]:
+    def filter_detections(
+        self,
+        detections: List[Detection],
+        image_shape: Tuple[int, int],
+        debug_events: Optional[List[Dict]] = None,
+    ) -> List[Detection]:
         filtered = []
         for det in detections:
             if not ImageUtils.is_valid_bbox(
@@ -291,10 +385,34 @@ class YOLODetector:
                 min_area=self.cfg.min_box_area, max_area=self.cfg.max_box_area,
                 min_ratio=self.cfg.min_box_ratio, max_ratio=self.cfg.max_box_ratio
             ):
+                if debug_events is not None:
+                    debug_events.append({
+                        'stage': 'geometry',
+                        'reason': 'invalid_bbox',
+                        'class_name': det.class_name,
+                        'score': round(float(det.score), 3),
+                        'bbox': [int(det.x1), int(det.y1), int(det.x2), int(det.y2)],
+                    })
                 continue
             if config.filters.filter_top_edge and self.geo_filter.is_on_top_edge(det.y1, image_shape[0]):
+                if debug_events is not None:
+                    debug_events.append({
+                        'stage': 'geometry',
+                        'reason': 'top_edge',
+                        'class_name': det.class_name,
+                        'score': round(float(det.score), 3),
+                        'bbox': [int(det.x1), int(det.y1), int(det.x2), int(det.y2)],
+                    })
                 continue
             if config.filters.filter_bottom_edge and self.geo_filter.is_on_bottom_edge(det.y2, image_shape[0]):
+                if debug_events is not None:
+                    debug_events.append({
+                        'stage': 'geometry',
+                        'reason': 'bottom_edge',
+                        'class_name': det.class_name,
+                        'score': round(float(det.score), 3),
+                        'bbox': [int(det.x1), int(det.y1), int(det.x2), int(det.y2)],
+                    })
                 continue
             filtered.append(det)
         return filtered
@@ -305,6 +423,11 @@ class YOLODetector:
     
     def detect(self, image: np.ndarray, logger=None) -> List[Detection]:
         h, w = image.shape[:2]
+        scale_debug_stats: Dict[str, Dict] = {}
+        nms_debug: List[Dict] = []
+        containment_debug: List[Dict] = []
+        geometry_debug: List[Dict] = []
+        multi_nms_debug: List[Dict] = []
         
         if logger:
             logger.info(f"   🔍 Détection sur {w}x{h}px")
@@ -313,29 +436,58 @@ class YOLODetector:
         if self.cfg.enable_multi_scale:
             if logger:
                 logger.info(f"      Multi-scale: {self.cfg.detection_scales}")
-            detections = self.multi_scale_detect(image)
+            detections = self.multi_scale_detect(image, logger=logger, debug_stats=scale_debug_stats)
         else:
-            detections = self.sliding_window_detect(image, scale=1.0)
+            detections = self.sliding_window_detect(image, scale=1.0, logger=logger, debug_stats=scale_debug_stats)
         
         if logger:
             logger.info(f"      → {len(detections)} détections brutes")
+            if detections:
+                by_scale = defaultdict(int)
+                for det in detections:
+                    by_scale[f"{float(getattr(det, 'scale', 1.0)):.2f}"] += 1
+                logger.info(f"      📐 Brutes par scale: {dict(sorted(by_scale.items()))}")
         
         # 2. NMS par classe
-        detections = self.nms_per_class(detections)
+        detections = self.nms_per_class(detections, debug_events=nms_debug)
         if logger:
             logger.info(f"      → {len(detections)} après NMS par classe")
+            if nms_debug:
+                logger.info(f"      🔎 Rejets NMS classe: {len(nms_debug)}")
+                for event in nms_debug[:5]:
+                    logger.info(
+                        f"         - {event['class_name']} conf {event['removed_score']:.2f} rejeté "
+                        f"(iou={event['iou']:.2f} ≥ {event['threshold']:.2f}) bbox={event['removed_bbox']}"
+                    )
         
         # 3. NMS multi-échelle
         if self.cfg.enable_multi_scale:
-            detections = self.multi_scale_nms(detections)
+            detections = self.multi_scale_nms(detections, debug_events=multi_nms_debug)
             if logger:
                 logger.info(f"      → {len(detections)} après NMS multi-échelle")
+                if multi_nms_debug:
+                    logger.info(f"      🔎 Rejets NMS multi-scale: {len(multi_nms_debug)}")
+                    for event in multi_nms_debug[:5]:
+                        logger.info(
+                            f"         - scale {event['removed_scale']:.2f} conf {event['removed_score']:.2f} rejeté "
+                            f"(iou={event['iou']:.2f} ≥ {event['threshold']:.2f}) bbox={event['removed_bbox']}"
+                        )
+                if detections:
+                    by_scale_after = defaultdict(int)
+                    for det in detections:
+                        by_scale_after[f"{float(getattr(det, 'scale', 1.0)):.2f}"] += 1
+                    logger.info(f"      📐 Après NMS multi-scale: {dict(sorted(by_scale_after.items()))}")
         
         # 4. Suppression containment (NOUVEAU - toutes classes)
         before = len(detections)
-        detections = self.remove_contained_boxes(detections)
+        detections = self.remove_contained_boxes(detections, debug_events=containment_debug)
         if logger and before != len(detections):
             logger.info(f"      → {len(detections)} après suppression containment ({before - len(detections)} doublons)")
+            for event in containment_debug[:5]:
+                logger.info(
+                    f"         - containment: {event['removed_class']} conf {event['removed_score']:.2f} rejeté "
+                    f"(ratio={event['ratio']:.2f}) bbox={event['removed_bbox']}"
+                )
         
         # 5. Conflits inter-classes
         before = len(detections)
@@ -345,9 +497,14 @@ class YOLODetector:
         
         # 6. Filtrage géométrique
         before = len(detections)
-        detections = self.filter_detections(detections, (h, w))
+        detections = self.filter_detections(detections, (h, w), debug_events=geometry_debug)
         if logger and before != len(detections):
             logger.info(f"      → {len(detections)} après filtrage géométrique ({before - len(detections)} supprimés)")
+            for event in geometry_debug[:5]:
+                logger.info(
+                    f"         - géométrie: {event['class_name']} conf {event['score']:.2f} rejeté "
+                    f"({event['reason']}) bbox={event['bbox']}"
+                )
         
         # Stats
         if logger:

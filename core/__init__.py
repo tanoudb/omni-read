@@ -2,7 +2,7 @@ from .detector import YOLODetector, Detection
 from .segmenter import SmartSegmenter
 from .ocr import OCREngine
 from .renderer import TextRenderer
-from .translator import NLLBTranslator 
+from .translation import NLLBTranslator
 
 # Alias pour la compatibilité si nécessaire
 Translator = NLLBTranslator 

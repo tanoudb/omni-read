@@ -1,0 +1,141 @@
+{
+  "source": "a:\\omni read\\image test\\image4.png",
+  "output": "a:\\omni read\\output image test\\image4_translated.png",
+  "dimensions": {
+    "width": 720,
+    "height": 9050
+  },
+  "stats": {
+    "image": "image4.png",
+    "width": 720,
+    "height": 9050,
+    "detections": 5,
+    "translatable": 5,
+    "translated": 5,
+    "skipped": 0,
+    "skip_reasons": {},
+    "time_seconds": 0
+  },
+  "detections": [
+    {
+      "class": "out_text",
+      "bbox": [
+        264.58642578125,
+        1299.5418701171875,
+        669.4251708984375,
+        1402.6978759765625
+      ],
+      "original": "GOOS BY THE BELOVED AND EVEN THOSE",
+      "translated": "Les oiseaux par les bien-aimés et même ceux",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        47,
+        33,
+        31
+      ],
+      "font_hint": "thin",
+      "confidence": 0.871242068707943,
+      "detection_confidence": 0.43849897384643555,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.95,
+      "global_confidence": 0.736
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        96.7645772298177,
+        2186.6884562174478,
+        306.9956868489583,
+        2253.0979817708335
+      ],
+      "original": "NONE SHA",
+      "translated": "NONE SHA",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        69,
+        32,
+        31
+      ],
+      "font_hint": "regular",
+      "confidence": 0.850916858608897,
+      "detection_confidence": 0.4033116400241852,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.624
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        329.2484130859375,
+        2186.2127482096353,
+        570.36181640625,
+        2253.245402018229
+      ],
+      "original": "ESCAPE",
+      "translated": "ESCAPE",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        60,
+        31,
+        29
+      ],
+      "font_hint": "regular",
+      "confidence": 0.9924728274345398,
+      "detection_confidence": 0.5659953355789185,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.745
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        150.80537109375,
+        2891.882421875,
+        612.7119140625,
+        3071.5990234375
+      ],
+      "original": "BLOOD,",
+      "translated": "Le sang,",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        42,
+        20,
+        21
+      ],
+      "font_hint": "thin",
+      "confidence": 0.95,
+      "detection_confidence": 0.45313042402267456,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.686
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        218.2619425455729,
+        4679.8179931640625,
+        533.9020589192709,
+        4938.008056640625
+      ],
+      "original": "NOT STOP. I... SHALL",
+      "translated": "Je ne vais pas m'arrêter.",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        44,
+        20,
+        25
+      ],
+      "font_hint": "thin",
+      "confidence": 0.9372156858444214,
+      "detection_confidence": 0.9075176119804382,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.839
+    }
+  ]
+}

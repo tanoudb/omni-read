@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import gc
+import json
 import threading
 import traceback
 import uuid
@@ -212,6 +213,64 @@ def _append_benchmark_result(result: dict, fallback_image: Path):
             writer.writerow(row)
 
 
+def _extract_bubbles_and_output_from_metadata(input_path: Path, output_dir: Path) -> tuple[list[dict], str | None]:
+    metadata_path = output_dir / f"{input_path.stem}_metadata.json"
+    if not metadata_path.exists():
+        return [], None
+
+    try:
+        with metadata_path.open("r", encoding="utf-8") as handle:
+            metadata = json.load(handle)
+    except Exception:
+        return [], None
+
+    raw_detections = metadata.get("detections") if isinstance(metadata, dict) else None
+    output_path = metadata.get("output") if isinstance(metadata, dict) else None
+
+    if not isinstance(raw_detections, list):
+        return [], str(output_path) if output_path else None
+
+    bubbles: list[dict] = []
+    for detection in raw_detections:
+        if not isinstance(detection, dict):
+            continue
+
+        raw_bbox = detection.get("bbox")
+        if not (isinstance(raw_bbox, list) and len(raw_bbox) >= 4):
+            continue
+
+        try:
+            bbox = [
+                float(raw_bbox[0]),
+                float(raw_bbox[1]),
+                float(raw_bbox[2]),
+                float(raw_bbox[3]),
+            ]
+        except Exception:
+            continue
+
+        bubble = {
+            "id": str(uuid.uuid4()),
+            "bbox": bbox,
+            "class": str(detection.get("class") or "bulle"),
+            "source_text": str(detection.get("original") or ""),
+            "translated_text": str(detection.get("translated") or ""),
+            "detection_confidence": (
+                float(detection.get("detection_confidence"))
+                if detection.get("detection_confidence") is not None
+                else None
+            ),
+            "ocr_confidence": (
+                float(detection.get("confidence"))
+                if detection.get("confidence") is not None
+                else None
+            ),
+        }
+        bubbles.append(bubble)
+
+    return bubbles, str(output_path) if output_path else None
+
+
 def _push_log(job_id: str, level: str, message: str):
     entry = {
         "ts": datetime.utcnow().isoformat() + "Z",
@@ -274,6 +333,11 @@ def _run_job(job_id: str, req: ProcessRequest):
             _push_log(job_id, "WARNING", f"Détection GPU échouée: {exc}")
 
         result = pipeline.process_image(input_path, output_dir)
+        bubbles, output_path = _extract_bubbles_and_output_from_metadata(input_path, output_dir)
+        if isinstance(result, dict):
+            result["bubbles"] = bubbles
+            if output_path:
+                result["output"] = output_path
         _append_benchmark_result(result, input_path)
 
         _strict_cuda_cleanup()

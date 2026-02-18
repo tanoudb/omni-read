@@ -1,0 +1,15 @@
+[package]
+name = "webtoon-translator-native"
+version = "0.1.0"
+description = "Phase 1 desktop shell for Webtoon Translator"
+authors = ["you"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2.1", features = [] }
+
+[features]
+default = []

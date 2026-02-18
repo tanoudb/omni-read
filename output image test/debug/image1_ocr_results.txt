@@ -1,0 +1,80 @@
+OCR Results for image1
+============================================================
+
+[1] out_text (score=0.72)
+    bbox: [143, 425, 698, 686]
+    size: 555x261px
+    OCR text: "THE GREAT ATACLYSM" 
+    OCR conf: 0.96
+    Traduit: "THE GREAT ATACLYSM" 
+
+[2] out_text (score=0.47)
+    bbox: [0, 1537, 436, 1636]
+    size: 436x99px
+    OCR text: "A PORTAL TO ANOTHER WC SUDDENLY APPEARED" 
+    OCR conf: 0.97
+    Traduit: "Un portail à un autre WC a soudainement apparu" 
+
+[3] out_text (score=0.49)
+    bbox: [151, 1537, 527, 1650]
+    size: 376x113px
+    OCR text: "TO ANOTHER WORLD ENLY APPEARED," 
+    OCR conf: 1.00
+    Traduit: "Un autre monde est apparu," 
+
+[4] bulle (score=0.78)
+    bbox: [281, 3277, 796, 3547]
+    size: 515x270px
+    OCR text: "(none)" 
+    OCR conf: 0.95
+    Traduit: "(none)" 
+
+[5] out_text (score=0.70)
+    bbox: [179, 3982, 560, 4064]
+    size: 381x82px
+    OCR text: "THIS WAS" 
+    OCR conf: 0.79
+    Traduit: "THIS WAS" 
+
+[6] bulle (score=0.86)
+    bbox: [13, 4527, 447, 4859]
+    size: 434x332px
+    OCR text: "(none)" 
+    OCR conf: 0.95
+    Traduit: "(none)" 
+
+[7] bulle (score=0.82)
+    bbox: [299, 6582, 787, 6935]
+    size: 488x353px
+    OCR text: "SAVE ME!!!" 
+    OCR conf: 0.95
+    Traduit: "Sauvez-moi !" 
+
+[8] bulle (score=0.78)
+    bbox: [51, 7398, 773, 7747]
+    size: 722x349px
+    OCR text: "THE END OF HUMANITY" 
+    OCR conf: 0.95
+    Traduit: "La fin de l'humanité" 
+
+[9] bulle (score=0.90)
+    bbox: [66, 8316, 343, 8589]
+    size: 277x273px
+    OCR text: "HUFF..." 
+    OCR conf: 0.99
+    Traduit: "C'est très bien." 
+
+[10] bulle (score=0.91)
+    bbox: [474, 9547, 747, 9715]
+    size: 273x168px
+    OCR text: "HUFF..." 
+    OCR conf: 0.99
+    Traduit: "C'est très bien." 
+
+[11] out_text (score=0.63)
+    bbox: [426, 12923, 708, 13011]
+    size: 282x88px
+    OCR text: "AHH!!!" 
+    OCR conf: 0.94
+    Traduit: "Je vous en prie !" 
+

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [218.2619425455729, 4679.8179931640625, 533.9020589192709, 4938.008056640625]
+ocr: NOT STOP. I... SHALL
+translation: Je ne vais pas m'arrêter.
+style: dialogue
+mask_regions: 1

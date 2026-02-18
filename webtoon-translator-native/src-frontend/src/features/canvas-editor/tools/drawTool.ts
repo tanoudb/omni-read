@@ -1,0 +1,3 @@
+export const drawTool = () => {
+  return;
+};

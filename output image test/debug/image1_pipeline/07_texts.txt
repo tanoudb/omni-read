@@ -1,0 +1,6 @@
+class: bulle
+bbox: [66.08831787109375, 8316.6669921875, 343.02484130859375, 8589.034912109375]
+ocr: HUFF...
+translation: C'est très bien.
+style: dialogue
+mask_regions: 1

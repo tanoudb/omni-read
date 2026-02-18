@@ -1,0 +1,6 @@
+class: out_text
+bbox: [632.847412109375, 6595.2542724609375, 1123.0919189453125, 6776.5933837890625]
+ocr: Ne wish your erry christmas
+translation: Je ne vous souhaite pas de mauvais Noël.
+style: dialogue
+mask_regions: 2

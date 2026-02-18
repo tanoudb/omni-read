@@ -1,0 +1,6 @@
+class: out_text
+bbox: [150.80537109375, 2891.882421875, 612.7119140625, 3071.5990234375]
+ocr: BLOOD,
+translation: Le sang,
+style: dialogue
+mask_regions: 1

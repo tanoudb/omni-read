@@ -14,9 +14,10 @@ torchaudio==2.5.1
 ultralytics==8.3.229
 transformers==4.46.3
 tokenizers==0.20.3
-sentencepiece==0.2.1
+sentencepiece>=0.1.99
 accelerate==1.12.0
 huggingface-hub==0.36.2
+ctranslate2>=3.20.0
 
 # Inpainting
 simple-lama-inpainting==0.1.2

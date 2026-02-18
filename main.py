@@ -87,6 +87,12 @@ def main():
         action='store_true',
         help='Afficher la configuration et quitter'
     )
+
+    parser.add_argument(
+        '--translation-mode',
+        choices=['hybrid', 'nllb', 'qwen'],
+        help='Mode traduction: hybrid (NLLB→Qwen), nllb, qwen'
+    )
     
     args = parser.parse_args()
     
@@ -113,6 +119,7 @@ def main():
         print(f"  Backend: {config.segmentation.backend}")
         print(f"  Multi-mask: {config.segmentation.use_multimask}")
         print(f"\nTranslation:")
+        print(f"  Mode: {getattr(config.translation, 'translation_mode', 'hybrid')}")
         print(f"  {config.translation.source_lang.upper()} → {config.translation.target_lang.upper()}")
         print(f"  Cache: {config.translation.enable_cache}")
         print(f"  BitsAndBytes: {config.translation.use_bitsandbytes} (4bit={config.translation.bnb_4bit}, 8bit={config.translation.bnb_8bit})")
@@ -131,6 +138,8 @@ def main():
     # Appliquer arguments
     if args.no_cache:
         config.translation.enable_cache = False
+    if args.translation_mode:
+        config.translation.translation_mode = args.translation_mode
     
     # Initialiser logger
     log_file = LOGS_DIR / "webtoon_v5.log"
@@ -180,6 +189,7 @@ def main():
     logger.stat("OCR", str(config.ocr.backend))
     logger.stat("Segmentation", f"{config.segmentation.backend} (precise={config.segmentation.enable_precise_masks})")
     logger.stat("Translation", f"{config.translation.source_lang.upper()} → {config.translation.target_lang.upper()}")
+    logger.stat("Translation mode", str(getattr(config.translation, 'translation_mode', 'hybrid')))
     logger.stat("Cache", "Activé" if config.translation.enable_cache else "Désactivé")
     
     # Créer pipeline avec mode debug

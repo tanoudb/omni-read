@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webtoon Translator Native</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main>
+    <h1>Webtoon Translator Native</h1>
+
+    <div class="card">
+      <label>Image input (path)</label>
+      <div class="row row-gap">
+        <button id="selectImageBtn" type="button">Sélectionner Image</button>
+      </div>
+      <input id="filePicker" type="file" accept="image/*" hidden />
+      <input id="inputPath" type="text" placeholder="A:/omni read/image.png" />
+
+      <label>Dossier output (path)</label>
+      <input id="outputDir" type="text" placeholder="A:/omni read/output" />
+
+      <div class="row">
+        <label><input id="debug" type="checkbox" /> Mode debug</label>
+        <button id="runBtn">Lancer</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <p id="status">Statut: idle</p>
+      <label>Console</label>
+      <pre id="logs"></pre>
+    </div>
+  </main>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
