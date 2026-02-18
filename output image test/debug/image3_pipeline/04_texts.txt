@@ -1,6 +1,0 @@
-class: out_text
-bbox: [454.77392578125, 9174.194921875, 993.18525390625, 9363.833203125]
-ocr: We wish your
-translation: Nous vous souhaitons
-style: dialogue
-mask_regions: 1

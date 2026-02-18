@@ -1,6 +1,0 @@
-class: out_text
-bbox: [426.2498779296875, 12923.490829467773, 708.0, 13011.006225585938]
-ocr: AHH!!!
-translation: Je vous en prie !
-style: dialogue
-mask_regions: 1

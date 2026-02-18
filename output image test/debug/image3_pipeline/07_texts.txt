@@ -1,6 +1,0 @@
-class: out_text
-bbox: [689.686767578125, 13088.264404296875, 1054.702880859375, 13278.396728515625]
-ocr: nd a happs new year
-translation: nd a happs new year
-style: dialogue
-mask_regions: 1

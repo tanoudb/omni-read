@@ -1,6 +1,0 @@
-class: out_text
-bbox: [113.98385620117188, 75.508544921875, 936.501708984375, 334.26373291015625]
-ocr: READ MORE CHAP SURYASCANS
-translation: Pour en savoir plus sur les suryascans
-style: dialogue
-mask_regions: 2

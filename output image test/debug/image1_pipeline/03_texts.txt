@@ -1,6 +1,0 @@
-class: out_text
-bbox: [151.0442657470703, 1537.3193054199219, 527.8945922851562, 1650.4799194335938]
-ocr: TO ANOTHER WORLD ENLY APPEARED,
-translation: Un autre monde est apparu,
-style: dialogue
-mask_regions: 1

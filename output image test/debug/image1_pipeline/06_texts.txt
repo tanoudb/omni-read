@@ -1,6 +1,0 @@
-class: bulle
-bbox: [51.639973958333336, 7398.885498046875, 773.362060546875, 7747.929361979167]
-ocr: THE END OF HUMANITY
-translation: La fin de l'humanité
-style: dialogue
-mask_regions: 1

@@ -1,6 +1,0 @@
-class: out_text
-bbox: [329.2484130859375, 2186.2127482096353, 570.36181640625, 2253.245402018229]
-ocr: ESCAPE
-translation: ESCAPE
-style: dialogue
-mask_regions: 1

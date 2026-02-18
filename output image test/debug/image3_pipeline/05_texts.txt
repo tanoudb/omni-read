@@ -1,6 +1,0 @@
-class: out_text
-bbox: [851.9070434570312, 10414.163314819336, 1313.129638671875, 10573.78125]
-ocr: Whoa~ It's snowing
-translation: Il neige.
-style: dialogue
-mask_regions: 1
