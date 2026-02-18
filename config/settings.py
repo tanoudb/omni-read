@@ -153,7 +153,8 @@ class DetectionConfig:
     inter_class_iou_threshold: float = 0.7
 
     # Padding noir optionnel (hack legacy) autour de l'image avant détection
-    use_black_padding: bool = _env_bool("WEBTOON_USE_BLACK_PADDING", False)
+    black_bars_enabled: bool = _env_bool("WEBTOON_BLACK_BARS_ENABLED", True)
+    use_black_padding: bool = _env_bool("WEBTOON_USE_BLACK_PADDING", True)
     black_padding_ratio: float = float(os.environ.get("WEBTOON_BLACK_PADDING_RATIO", "0.03"))
     
     # ── FILTRAGE BORDURES - DÉSACTIVÉ ──
@@ -271,19 +272,29 @@ class TranslationConfig:
     llm_polish_system_prompt: str = os.environ.get(
         "WEBTOON_LLM_POLISH_SYSTEM_PROMPT",
         "Tu es un éditeur manga français expert.\n"
-        "Ta tâche: améliorer des traductions pour qu'elles sonnent naturelles en français.\n\n"
-        "RÈGLES STRICTES:\n"
-        "- Traduction de base fournie (déjà correcte grammaticalement)\n"
-        "- Adapte le TON pour manga (émotions, ponctuation !!! ...)\n"
-        "- Garde le SENS exact\n"
-        "- Rends naturel en français parlé\n"
-        "- Longueur similaire (pour tenir dans bulle)\n"
+        "Ta tâche: améliorer le STYLE d'une traduction déjà correcte, SANS changer le sens.\n\n"
+        "RÈGLES ABSOLUES:\n"
+        "- NE CHANGE JAMAIS le sens des mots (Au fond ≠ À l'entrée, renverser ≠ révéler)\n"
+        "- NE CHANGE JAMAIS les lieux, directions, actions principales\n"
+        "- Change SEULEMENT: temps des verbes (passé→imparfait), ton émotionnel, fluidité\n"
+        "- Si la traduction est déjà bonne → garde-la EXACTEMENT telle quelle\n"
         "- Les onomatopées restent EN MAJUSCULES\n"
+        "- Longueur similaire (pour tenir dans bulle)\n"
         "- Réponds UNIQUEMENT avec les valeurs finales, pas d'explication\n"
-        "- N'écris JAMAIS littéralement 'version polie'\n"
-        "- Ne mélange jamais les entrées entre elles\n\n"
+        "- N'écris JAMAIS 'version polie'\n\n"
+        "Exemples de polish AUTORISÉS:\n"
+        "Base: 'Il a cherché les sommets'\n"
+        "Poli: 'Il cherchait à atteindre les sommets'  (temps + fluidité)\n\n"
+        "Base: 'Mais il s'est rendu compte même une vie ne suffirait pas'\n"
+        "Poli: 'Mais il réalisa qu'une vie entière ne suffirait pas'  (style)\n\n"
+        "Exemples de polish INTERDITS:\n"
+        "Base: 'Au fond du sanctuaire'\n"
+        "Poli: 'À l'entrée du sanctuaire'  (changement de lieu)\n\n"
+        "Base: 'Pour renverser cette vérité'\n"
+        "Poli: 'Pour révéler cette vérité'  (renverser ≠ révéler)\n\n"
         "Réponds en JSON STRICT: {\"0\":\"texte final\",\"1\":\"texte final\"}"
     )
+
     
 
     use_fp16: bool = True  # CRITIQUE pour tes 8 Go de RAM

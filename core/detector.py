@@ -69,6 +69,7 @@ class YOLODetector:
             top_threshold=config.filters.top_edge_threshold,
             bottom_threshold=config.filters.bottom_edge_threshold
         )
+        self.last_debug_report: Dict = {}
         
         self._load_model()
     
@@ -115,6 +116,7 @@ class YOLODetector:
         scale: float = 1.0,
         logger=None,
         debug_stats: Optional[Dict] = None,
+        conf_reject_events: Optional[List[Dict]] = None,
     ) -> List[Detection]:
         h, w = image.shape[:2]
         
@@ -163,6 +165,26 @@ class YOLODetector:
                     conf_threshold = float(self.cfg.confidence_thresholds.get(cls_name, 0.25))
                     
                     if conf < conf_threshold:
+                        if scale != 1.0:
+                            rej_x1 = x1 / scale
+                            rej_x2 = x2 / scale
+                            rej_y1 = (y1_local + y) / scale
+                            rej_y2 = (y2_local + y) / scale
+                        else:
+                            rej_x1 = x1
+                            rej_x2 = x2
+                            rej_y1 = y1_local + y
+                            rej_y2 = y2_local + y
+
+                        if conf_reject_events is not None:
+                            conf_reject_events.append({
+                                'stage': 'confidence',
+                                'class_name': cls_name,
+                                'scale': float(scale),
+                                'score': round(float(conf), 4),
+                                'threshold': round(float(conf_threshold), 4),
+                                'bbox': [int(rej_x1), int(rej_y1), int(rej_x2), int(rej_y2)],
+                            })
                         if debug_stats is not None:
                             debug_stats[scale_key]['threshold_reject'] += 1
                             debug_stats[scale_key]['threshold_reject_by_class'][cls_name] += 1
@@ -214,7 +236,15 @@ class YOLODetector:
     def multi_scale_detect(self, image: np.ndarray, logger=None, debug_stats: Optional[Dict] = None) -> List[Detection]:
         all_detections = []
         for scale in self.cfg.detection_scales:
-            all_detections.extend(self.sliding_window_detect(image, scale=scale, logger=logger, debug_stats=debug_stats))
+            all_detections.extend(
+                self.sliding_window_detect(
+                    image,
+                    scale=scale,
+                    logger=logger,
+                    debug_stats=debug_stats,
+                    conf_reject_events=self.last_debug_report.setdefault('confidence_rejects', []),
+                )
+            )
         return all_detections
     
     # ─────────────────────────────────────────────────────────────────────────
@@ -428,6 +458,18 @@ class YOLODetector:
         containment_debug: List[Dict] = []
         geometry_debug: List[Dict] = []
         multi_nms_debug: List[Dict] = []
+        confidence_debug: List[Dict] = []
+        self.last_debug_report = {
+            'image_shape': {'width': int(w), 'height': int(h)},
+            'scale_debug_stats': {},
+            'raw_detections': [],
+            'final_detections': [],
+            'confidence_rejects': confidence_debug,
+            'nms_per_class_rejects': nms_debug,
+            'nms_multi_scale_rejects': multi_nms_debug,
+            'containment_rejects': containment_debug,
+            'geometry_rejects': geometry_debug,
+        }
         
         if logger:
             logger.info(f"   🔍 Détection sur {w}x{h}px")
@@ -438,7 +480,34 @@ class YOLODetector:
                 logger.info(f"      Multi-scale: {self.cfg.detection_scales}")
             detections = self.multi_scale_detect(image, logger=logger, debug_stats=scale_debug_stats)
         else:
-            detections = self.sliding_window_detect(image, scale=1.0, logger=logger, debug_stats=scale_debug_stats)
+            detections = self.sliding_window_detect(
+                image,
+                scale=1.0,
+                logger=logger,
+                debug_stats=scale_debug_stats,
+                conf_reject_events=confidence_debug,
+            )
+
+        raw_detections = list(detections)
+        self.last_debug_report['raw_detections'] = [
+            {
+                'class_name': d.class_name,
+                'score': round(float(d.score), 4),
+                'scale': float(getattr(d, 'scale', 1.0)),
+                'bbox': [int(d.x1), int(d.y1), int(d.x2), int(d.y2)],
+            }
+            for d in raw_detections
+        ]
+        self.last_debug_report['scale_debug_stats'] = {
+            str(k): {
+                'raw': int(v.get('raw', 0)),
+                'kept': int(v.get('kept', 0)),
+                'threshold_reject': int(v.get('threshold_reject', 0)),
+                'threshold_reject_by_class': dict(v.get('threshold_reject_by_class', {})),
+                'border_reject': int(v.get('border_reject', 0)),
+            }
+            for k, v in scale_debug_stats.items()
+        }
         
         if logger:
             logger.info(f"      → {len(detections)} détections brutes")
@@ -515,8 +584,21 @@ class YOLODetector:
             for cls_name in sorted(by_class.keys()):
                 translatable = "✓" if cls_name in self.cfg.translatable_classes else "✗"
                 logger.info(f"         {cls_name:15s}: {by_class[cls_name]:2d} [{translatable}]")
+
+        self.last_debug_report['final_detections'] = [
+            {
+                'class_name': d.class_name,
+                'score': round(float(d.score), 4),
+                'scale': float(getattr(d, 'scale', 1.0)),
+                'bbox': [int(d.x1), int(d.y1), int(d.x2), int(d.y2)],
+            }
+            for d in detections
+        ]
         
         return detections
+
+    def get_last_debug_report(self) -> Dict:
+        return self.last_debug_report or {}
     
     def get_translatable_detections(self, detections: List[Detection]) -> List[Detection]:
         return [d for d in detections if d.class_name in self.cfg.translatable_classes]

@@ -369,6 +369,49 @@ class TranslationPipeline:
         
         self.logger.info(f"   🐛 Résultats OCR: {ocr_path}")
 
+    def save_debug_yolo_rejected(self, output_dir: Path, image_name: str, report: Dict) -> None:
+        debug_dir = output_dir / "debug"
+        debug_dir.mkdir(parents=True, exist_ok=True)
+
+        out_path = debug_dir / "yolo_rejected.txt"
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(f"YOLO Reject Report for {image_name}\n")
+            f.write("=" * 80 + "\n\n")
+
+            shape = report.get("image_shape", {}) if isinstance(report, dict) else {}
+            if shape:
+                f.write(f"Image shape: {shape.get('width', '?')}x{shape.get('height', '?')}\n\n")
+
+            scale_stats = report.get("scale_debug_stats", {}) if isinstance(report, dict) else {}
+            if scale_stats:
+                f.write("[Scale stats]\n")
+                for scale_key in sorted(scale_stats.keys()):
+                    st = scale_stats.get(scale_key, {})
+                    f.write(
+                        f"- scale {scale_key}: raw={st.get('raw', 0)} kept={st.get('kept', 0)} "
+                        f"reject_conf={st.get('threshold_reject', 0)} reject_border={st.get('border_reject', 0)}\n"
+                    )
+                    by_cls = st.get("threshold_reject_by_class", {}) or {}
+                    if by_cls:
+                        f.write(f"  reject_conf_by_class={by_cls}\n")
+                f.write("\n")
+
+            def _dump_events(title: str, events: List[Dict], max_items: int = 2000):
+                f.write(f"[{title}] count={len(events)}\n")
+                for idx, item in enumerate(events[:max_items], start=1):
+                    f.write(f"{idx:04d}. {item}\n")
+                f.write("\n")
+
+            _dump_events("Raw detections", report.get("raw_detections", []) or [])
+            _dump_events("Confidence rejects", report.get("confidence_rejects", []) or [])
+            _dump_events("NMS per class rejects", report.get("nms_per_class_rejects", []) or [])
+            _dump_events("NMS multi-scale rejects", report.get("nms_multi_scale_rejects", []) or [])
+            _dump_events("Containment rejects", report.get("containment_rejects", []) or [])
+            _dump_events("Geometry rejects", report.get("geometry_rejects", []) or [])
+            _dump_events("Final detections", report.get("final_detections", []) or [])
+
+        self.logger.info(f"   🐛 Rejets YOLO: {out_path}")
+
     @staticmethod
     def _wrap_debug_text(text: str, max_chars: int = 52) -> List[str]:
         words = (text or "").split()
@@ -647,7 +690,9 @@ class TranslationPipeline:
         
         # ── Padding noir optionnel haut/bas pour les bords ──
         # Désactivé par défaut (WEBTOON_USE_BLACK_PADDING=false)
-        use_black_padding = getattr(config.detection, 'use_black_padding', False)
+        use_black_padding = bool(
+            getattr(config.detection, 'black_bars_enabled', getattr(config.detection, 'use_black_padding', False))
+        )
         pad_h = int(h * max(0.0, float(getattr(config.detection, 'black_padding_ratio', 0.03)))) if use_black_padding else 0
 
         if pad_h > 0:
@@ -660,6 +705,7 @@ class TranslationPipeline:
             self.logger.info("   🔲 Barres noires: désactivées")
         
         yolo_t0 = time.perf_counter()
+        yolo_report: Dict = {}
         with model_context(lambda: YOLODetector(config.YOLO_MODEL_PATH, self.device)) as detector:
             max_h = int(getattr(config.detection, 'max_height', 0) or 0)
             detection_img = img_padded
@@ -672,6 +718,7 @@ class TranslationPipeline:
                 self.logger.info(f"   ↕️ Limite hauteur active: {img_padded.shape[0]} -> {max_h}px")
 
             detections = detector.detect(detection_img, logger=self.logger)
+            yolo_report = detector.get_last_debug_report()
             if detection_scale != 1.0:
                 for det in detections:
                     det.bbox = [
@@ -711,6 +758,7 @@ class TranslationPipeline:
         if self.debug:
             self.save_debug_detections(img, detections, translatable_detections,
                                        output_dir, image_stem)
+            self.save_debug_yolo_rejected(output_dir, image_stem, yolo_report if isinstance(yolo_report, dict) else {})
         
         self.logger.info(f"\n✅ {len(translatable_detections)} zones à traduire")
         
