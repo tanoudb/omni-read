@@ -57,6 +57,15 @@ class TextRenderer:
     SHRINK_RATIO = 0.18
     CROP_MARGIN = 30  # Marge autour de la bbox pour le crop LaMa
     INPAINT_MIN_HEIGHT = 20  # ✅ RÉDUIT pour inpainter aussi les petites bulles
+
+    @staticmethod
+    def _is_white_background(crop_bgr: np.ndarray) -> bool:
+        if crop_bgr is None or crop_bgr.size == 0:
+            return False
+        gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+        mean_val = float(np.mean(gray))
+        std_val = float(np.std(gray))
+        return mean_val >= 242.0 and std_val <= 14.0
     
     def __init__(self):
         self.cfg = config.rendering
@@ -178,7 +187,10 @@ class TextRenderer:
     # ─────────────────────────────────────────────────────────────────────────
     
     def inpaint_region(self, img: np.ndarray, x1: int, y1: int, x2: int, y2: int,
-                        text_regions: Optional[List[Dict]] = None) -> np.ndarray:
+                        text_regions: Optional[List[Dict]] = None,
+                        class_name: str = "",
+                        chirurgical_mask: Optional[np.ndarray] = None,
+                        bubble_mask: Optional[np.ndarray] = None) -> np.ndarray:
         """
         Inpainting sur un crop local autour de la bulle.
         
@@ -191,6 +203,11 @@ class TextRenderer:
         h_img, w_img = img.shape[:2]
         x1, y1 = max(0, int(x1)), max(0, int(y1))
         x2, y2 = min(w_img, int(x2)), min(h_img, int(y2))
+
+        cls = (class_name or "").strip().lower()
+        if cls == "out_text" and not bool(getattr(self.cfg, 'inpaint_out_text', True)):
+            print(f"[OUT_TEXT] skip inpaint bbox=({x1},{y1},{x2},{y2})")
+            return img
         
         if x2 - x1 < 10 or y2 - y1 < 10:
             return img
@@ -198,11 +215,12 @@ class TextRenderer:
         # ✅ NOUVEAU: Skip inpainting pour bulles trop petites
         bubble_height = y2 - y1
         if bubble_height < self.INPAINT_MIN_HEIGHT:
-            print(f"   [SKIP INPAINT] Bulle trop petite ({bubble_height}px < {self.INPAINT_MIN_HEIGHT}px)")
+            print(f"[SKIP LAMA] petite zone ({bubble_height}px < {self.INPAINT_MIN_HEIGHT}px) bbox=({x1},{y1},{x2},{y2})")
             return img  # Pas d'inpainting, juste du rendu texte
         
         # Pas de régions OCR → pas d'inpainting (on sait pas quoi effacer)
         if not text_regions or len(text_regions) == 0:
+            print(f"[SKIP LAMA] pas de mask_regions bbox=({x1},{y1},{x2},{y2})")
             return img
         
         # ── Crop local avec marge ──
@@ -214,55 +232,192 @@ class TextRenderer:
         
         crop = img[crop_y1:crop_y2, crop_x1:crop_x2].copy()
         crop_h, crop_w = crop.shape[:2]
+
+        if self._is_white_background(crop):
+            print(f"[SKIP LAMA] fond blanc bbox=({x1},{y1},{x2},{y2})")
+            return img
         
-        # ── Masque OCR en coords locales (relatif au crop) ──
+        # Build OCR mask in crop coords. Prefer provided chirurgical_mask when present.
         mask = np.zeros((crop_h, crop_w), dtype=np.uint8)
-        
-        # Offset: les text_regions sont en coords du crop YOLO (relatif à x1,y1)
-        # On doit les mettre en coords du crop local (relatif à crop_x1, crop_y1)
-        for region in text_regions:
-            bbox_points = region['bbox']
-            local_points = []
-            for pt in bbox_points:
-                # pt est en coords du crop OCR (relatif au coin de la détection x1,y1)
-                lx = int(pt[0]) + (x1 - crop_x1)
-                ly = int(pt[1]) + (y1 - crop_y1)
-                lx = max(0, min(lx, crop_w - 1))
-                ly = max(0, min(ly, crop_h - 1))
-                local_points.append([lx, ly])
-            
-            pts = np.array(local_points, dtype=np.int32)
-            if pts.shape[0] >= 3:
-                hull = cv2.convexHull(pts)
-                cv2.fillPoly(mask, [hull], 255)
+
+        def _place_local_mask(src_mask: np.ndarray, dst_shape, dx, dy):
+            if src_mask is None or not isinstance(src_mask, np.ndarray):
+                return np.zeros(dst_shape, dtype=np.uint8)
+            h_src, w_src = src_mask.shape[:2]
+            h_dst, w_dst = dst_shape
+            out = np.zeros(dst_shape, dtype=np.uint8)
+            sx = max(0, dx)
+            sy = max(0, dy)
+            ex = min(w_dst, dx + w_src)
+            ey = min(h_dst, dy + h_src)
+            src_x0 = max(0, -dx)
+            src_y0 = max(0, -dy)
+            src_x1 = src_x0 + (ex - sx)
+            src_y1 = src_y0 + (ey - sy)
+            if ex > sx and ey > sy:
+                out[sy:ey, sx:ex] = src_mask[src_y0:src_y1, src_x0:src_x1]
+            return out
+
+        # Text regions are relative to detection (x1,y1). We need to map them into crop coords (crop_x1, crop_y1)
+        if text_regions:
+            for region in text_regions:
+                bbox_points = region.get('bbox')
+                if not bbox_points:
+                    continue
+                local_points = []
+                for pt in bbox_points:
+                    lx = int(pt[0]) + (x1 - crop_x1)
+                    ly = int(pt[1]) + (y1 - crop_y1)
+                    lx = max(0, min(lx, crop_w - 1))
+                    ly = max(0, min(ly, crop_h - 1))
+                    local_points.append([lx, ly])
+                pts = np.array(local_points, dtype=np.int32)
+                if pts.shape[0] >= 3:
+                    cv2.fillPoly(mask, [pts], 255)
+
+        # If a chirurgical_mask (from pipeline) is provided use it preferentially.
+        if isinstance(chirurgical_mask, np.ndarray) and chirurgical_mask.size > 0:
+            # chirurgical_mask expected in detection-local coords (h_det, w_det)
+            dx = x1 - crop_x1
+            dy = y1 - crop_y1
+            placed = _place_local_mask(chirurgical_mask, (crop_h, crop_w), dx, dy)
+            if np.sum(placed) > 0:
+                mask = placed
         
         # Dilater pour couvrir anti-alias
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
         mask = cv2.dilate(mask, kernel, iterations=1)
         
         if np.sum(mask) == 0:
             return img
         
-        # ── Inpaint le crop ──
-        if self.anime_inpainter_ready and self.anime_inpainter is not None:
-            try:
-                crop_inpainted = self._inpaint_anime(crop, mask)
-            except Exception:
-                crop_inpainted = self._inpaint_lama(crop, mask) if self.lama is not None else cv2.inpaint(crop, mask, inpaintRadius=7, flags=cv2.INPAINT_TELEA)
-        elif self.lama is not None:
-            crop_inpainted = self._inpaint_lama(crop, mask)
-        else:
-            crop_inpainted = cv2.inpaint(crop, mask, inpaintRadius=7, flags=cv2.INPAINT_TELEA)
+        # Decide mode based on class_name and background complexity
+        # OUT_TEXT: single pass on OCR strict (dilated 12px), blend sigma=1.0
+        # SYSTEM: mask = full bbox; skip LaMa if white background (variance <15 and median>220)
+        # BUBBLE (default): pass1 = chirurgical_mask (OCR∩SAM), pass2 optional background outside bubble
 
-        # ── Blend doux (évite les bords visibles / arrachement visuel) ──
-        alpha = cv2.GaussianBlur(mask, (0, 0), sigmaX=3.0, sigmaY=3.0).astype(np.float32) / 255.0
-        alpha = np.clip(alpha, 0.0, 1.0)
-        alpha = np.expand_dims(alpha, axis=2)
-        crop_blended = (crop.astype(np.float32) * (1.0 - alpha) + crop_inpainted.astype(np.float32) * alpha).astype(np.uint8)
-        
-        # ── Remettre le crop dans l'image ──
-        img[crop_y1:crop_y2, crop_x1:crop_x2] = crop_blended
-        
+        def _run_lama_once(mask_use: np.ndarray, sigma_blur: float = 1.5) -> Optional[np.ndarray]:
+            try:
+                if self.anime_inpainter_ready and self.anime_inpainter is not None:
+                    out = self._inpaint_anime(crop, mask_use)
+                elif self.lama is not None:
+                    out = self._inpaint_lama(crop, mask_use)
+                else:
+                    out = cv2.inpaint(crop, mask_use, inpaintRadius=7, flags=cv2.INPAINT_TELEA)
+                alpha = cv2.GaussianBlur(mask_use, (0, 0), sigmaX=sigma_blur, sigmaY=sigma_blur).astype(np.float32) / 255.0
+                alpha = np.clip(alpha, 0.0, 1.0)
+                alpha = np.expand_dims(alpha, axis=2)
+                blended = (crop.astype(np.float32) * (1.0 - alpha) + out.astype(np.float32) * alpha).astype(np.uint8)
+                return blended
+            except Exception:
+                return None
+
+        # Prepare masks for decisions
+        # Build ocr_mask_dilated (in crop coords) if needed
+        ocr_mask = mask.copy()
+        if np.sum(ocr_mask) == 0 and text_regions:
+            # fallback: rebuild from regions
+            ocr_mask = np.zeros((crop_h, crop_w), dtype=np.uint8)
+            for region in text_regions:
+                bbox_points = region.get('bbox')
+                if not bbox_points:
+                    continue
+                local_points = []
+                for pt in bbox_points:
+                    lx = int(pt[0]) + (x1 - crop_x1)
+                    ly = int(pt[1]) + (y1 - crop_y1)
+                    lx = max(0, min(lx, crop_w - 1))
+                    ly = max(0, min(ly, crop_h - 1))
+                    local_points.append([lx, ly])
+                pts = np.array(local_points, dtype=np.int32)
+                if pts.shape[0] >= 3:
+                    cv2.fillPoly(ocr_mask, [pts], 255)
+
+        kernel_big = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+        ocr_mask_dilated = cv2.dilate(ocr_mask, kernel_big, iterations=1)
+
+        # Map bubble_mask (detection-local) into crop coords if provided
+        bubble_in_crop = None
+        if isinstance(bubble_mask, np.ndarray) and bubble_mask.size > 0:
+            dx = x1 - crop_x1
+            dy = y1 - crop_y1
+            bubble_in_crop = _place_local_mask(bubble_mask, (crop_h, crop_w), dx, dy)
+
+        # CASES
+        if cls == 'out_text':
+            # For out_text: use strict OCR mask (no intersection), dilate 12px, single LaMa pass, sigma=1.0
+            kernel_ot = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (23, 23))
+            ot_mask = cv2.dilate(ocr_mask, kernel_ot, iterations=1)
+            if np.sum(ot_mask) == 0:
+                return img
+            out_crop = _run_lama_once(ot_mask, sigma_blur=1.0)
+            if out_crop is None:
+                return img
+            img[crop_y1:crop_y2, crop_x1:crop_x2] = out_crop
+            return img
+
+        if cls == 'system':
+            # system: mask = full bbox
+            sys_mask = np.zeros((crop_h, crop_w), dtype=np.uint8)
+            cv2.rectangle(sys_mask, (x1 - crop_x1, y1 - crop_y1), (x2 - crop_x1 - 1, y2 - crop_y1 - 1), 255, -1)
+            # Check white background heuristics
+            mask_pixels = crop[sys_mask > 0]
+            if mask_pixels.size > 0:
+                var = float(np.var(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)[sys_mask > 0]))
+                med = float(np.median(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)[sys_mask > 0]))
+                if var < 15.0 and med > 220.0:
+                    # fill white rectangle in original image coordinates
+                    img[crop_y1:crop_y2, crop_x1:crop_x2][sys_mask > 0] = 255
+                    return img
+            out_crop = _run_lama_once(sys_mask, sigma_blur=1.5)
+            if out_crop is None:
+                return img
+            img[crop_y1:crop_y2, crop_x1:crop_x2] = out_crop
+            return img
+
+        # Default / bubble: Pass 1 - chirurgical mask preferred
+        pass1_mask = mask.copy()
+        if np.sum(pass1_mask) == 0 and isinstance(chirurgical_mask, np.ndarray) and chirurgical_mask.size > 0:
+            dx = x1 - crop_x1
+            dy = y1 - crop_y1
+            pass1_mask = _place_local_mask(chirurgical_mask, (crop_h, crop_w), dx, dy)
+
+        if np.sum(pass1_mask) == 0:
+            # fallback to ocr_mask_dilated
+            pass1_mask = ocr_mask_dilated.copy()
+
+        # Run pass1
+        out_crop = _run_lama_once(pass1_mask, sigma_blur=1.5)
+        if out_crop is None:
+            # fallback single-pass as before
+            out_crop = _run_lama_once(pass1_mask, sigma_blur=3.0)
+            if out_crop is None:
+                return img
+
+        # Decide on pass2: only if background complex (variance > 30) OR out_text handled earlier
+        gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        var_full = float(np.var(gray_crop))
+
+        do_pass2 = False
+        if var_full > 30.0:
+            do_pass2 = True
+
+        if do_pass2 and bubble_in_crop is not None:
+            # mask = ocr_mask_dilated - bubble_mask (only text outside bubble)
+            bg_mask = cv2.bitwise_and(ocr_mask_dilated, cv2.bitwise_not(bubble_in_crop))
+            if np.sum(bg_mask) > 0:
+                out_crop2 = _run_lama_once(bg_mask, sigma_blur=1.5)
+                if out_crop2 is not None:
+                    # Merge out_crop and out_crop2: prefer pass2 pixels where mask>0
+                    alpha2 = (cv2.GaussianBlur(bg_mask, (0, 0), sigmaX=1.5).astype(np.float32) / 255.0)
+                    alpha2 = np.clip(alpha2, 0.0, 1.0)
+                    alpha2 = np.expand_dims(alpha2, axis=2)
+                    merged = (out_crop.astype(np.float32) * (1.0 - alpha2) + out_crop2.astype(np.float32) * alpha2).astype(np.uint8)
+                    img[crop_y1:crop_y2, crop_x1:crop_x2] = merged
+                    return img
+
+        # If no pass2 or it failed, place pass1 result
+        img[crop_y1:crop_y2, crop_x1:crop_x2] = out_crop
         return img
     
     def _inpaint_lama(self, crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
@@ -302,8 +457,7 @@ class TextRenderer:
                 continue
             pts[:, 0] = np.clip(pts[:, 0], 0, max(0, width - 1))
             pts[:, 1] = np.clip(pts[:, 1], 0, max(0, height - 1))
-            hull = cv2.convexHull(pts)
-            cv2.fillPoly(mask, [hull], 255)
+            cv2.fillPoly(mask, [pts], 255)
 
         return mask
 
@@ -620,13 +774,16 @@ class TextRenderer:
                      text_color_rgb: Optional[Tuple[int, int, int]] = None,
                      text_style: str = "dialogue",
                      font_hint: str = "regular",
-                     class_name: str = "") -> np.ndarray:
+                     class_name: str = "",
+                     chirurgical_mask: Optional[np.ndarray] = None,
+                     bubble_mask: Optional[np.ndarray] = None) -> np.ndarray:
         effective_regions = mask_regions if mask_regions else text_regions
 
         if text_color_rgb is None and self.cfg.preserve_original_text_color:
             text_color_rgb = self.extract_original_text_color(img, x1, y1, x2, y2, effective_regions)
 
-        img = self.inpaint_region(img, x1, y1, x2, y2, text_regions=effective_regions)
+        img = self.inpaint_region(img, x1, y1, x2, y2, text_regions=effective_regions, class_name=class_name,
+                      chirurgical_mask=chirurgical_mask, bubble_mask=bubble_mask)
         img = self.insert_text(
             img,
             text,
@@ -649,7 +806,9 @@ class TextRenderer:
                                 text_color_rgb: Optional[Tuple[int, int, int]] = None,
                                 text_style: str = "dialogue",
                                 font_hint: str = "regular",
-                                class_name: str = "") -> Tuple[np.ndarray, float, float]:
+                                class_name: str = "",
+                                chirurgical_mask: Optional[np.ndarray] = None,
+                                bubble_mask: Optional[np.ndarray] = None) -> Tuple[np.ndarray, float, float]:
         import time
 
         effective_regions = mask_regions if mask_regions else text_regions
@@ -658,7 +817,8 @@ class TextRenderer:
             text_color_rgb = self.extract_original_text_color(img, x1, y1, x2, y2, effective_regions)
 
         t0 = time.perf_counter()
-        img = self.inpaint_region(img, x1, y1, x2, y2, text_regions=effective_regions)
+        img = self.inpaint_region(img, x1, y1, x2, y2, text_regions=effective_regions, class_name=class_name,
+                      chirurgical_mask=chirurgical_mask, bubble_mask=bubble_mask)
         inpaint_seconds = max(0.0, time.perf_counter() - t0)
 
         t1 = time.perf_counter()

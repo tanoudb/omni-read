@@ -138,8 +138,16 @@ def main():
     # Appliquer arguments
     if args.no_cache:
         config.translation.enable_cache = False
+
+    # Mode par défaut imposé: hybrid + backend local_llm
+    # (permet `python main.py` sans flags avec comportement stable)
     if args.translation_mode:
         config.translation.translation_mode = args.translation_mode
+    else:
+        config.translation.translation_mode = "hybrid"
+
+    if config.translation.translation_mode == "hybrid":
+        config.translation.backend = "local_llm"
     
     # Initialiser logger
     log_file = LOGS_DIR / "webtoon_v5.log"

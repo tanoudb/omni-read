@@ -20,6 +20,7 @@ class NLLBCT2Translator:
         self.tokenizer = None
         self.available = False
         self.backend_type = "none"  # ct2 | hf
+        self.runtime_device: str = "unknown"
 
         self.cache: Optional[CacheManager] = None
         if self.cfg.enable_cache:
@@ -64,9 +65,24 @@ class NLLBCT2Translator:
             )
 
             self.backend_type = "ct2"
+            self.runtime_device = device
             self.available = True
+            print(f"[NLLB] Runtime backend: ct2 | device={self.runtime_device}")
         except Exception as exc:
             self._load_hf_fallback(reason=f"Échec chargement CT2: {exc}")
+
+    def _hf_model_device(self) -> str:
+        if self.model is None:
+            return "unknown"
+        try:
+            if hasattr(self.model, "device") and self.model.device is not None:
+                return str(self.model.device)
+            first_param = next(self.model.parameters(), None)
+            if first_param is not None:
+                return str(first_param.device)
+        except Exception:
+            pass
+        return "unknown"
 
     def _load_hf_fallback(self, reason: str) -> None:
         from transformers import AutoModelForSeq2SeqLM, NllbTokenizer
@@ -81,51 +97,43 @@ class NLLBCT2Translator:
             trust_remote_code=True,
         )
 
-        loaded = False
-        gpu_attempt_failed = False
-        if self.device == "cuda" and torch.cuda.is_available():
-            try:
-                from transformers import BitsAndBytesConfig
+        cuda_requested = self.device == "cuda"
+        cuda_available = torch.cuda.is_available()
 
-                qcfg = BitsAndBytesConfig(
-                    load_in_4bit=True,
-                    bnb_4bit_compute_dtype=torch.float16,
-                    bnb_4bit_quant_type='nf4',
-                    bnb_4bit_use_double_quant=True,
-                )
+        if cuda_requested and cuda_available:
+            try:
                 self.model = AutoModelForSeq2SeqLM.from_pretrained(
                     model_name,
                     cache_dir=str(config.TRANSLATION_CACHE_DIR),
                     trust_remote_code=True,
-                    quantization_config=qcfg,
-                    device_map="auto",
+                    torch_dtype=torch.float16,
+                    device_map="cuda",
+                    low_cpu_mem_usage=True,
                 )
-                loaded = True
-                print("[NLLB] HF fallback loaded in 4-bit (bitsandbytes)")
-            except Exception as exc:
-                gpu_attempt_failed = True
-                print(f"[NLLB] 4-bit load failed: {exc}")
+                print("[NLLB] HF fallback loaded on CUDA fp16 (device_map=cuda)")
+            except Exception as fp16_exc:
+                print(f"[NLLB] HF CUDA fp16 load failed: {fp16_exc}")
+                try:
+                    from transformers import BitsAndBytesConfig
 
-        if not loaded and not gpu_attempt_failed:
-            try:
-                dtype = torch.float16 if (self.device == "cuda" and torch.cuda.is_available()) else torch.float32
-                self.model = AutoModelForSeq2SeqLM.from_pretrained(
-                    model_name,
-                    cache_dir=str(config.TRANSLATION_CACHE_DIR),
-                    trust_remote_code=True,
-                    torch_dtype=dtype,
-                )
-                if self.device == "cuda" and torch.cuda.is_available():
-                    self.model = self.model.to("cuda")
-                else:
-                    self.model = self.model.to("cpu")
-                loaded = True
-                print(f"[NLLB] HF fallback loaded in dtype={dtype}")
-            except Exception as exc:
-                print(f"[NLLB] HF GPU/auto load failed: {exc}")
-
-        if not loaded:
-            print("[NLLB] Falling back to CPU load for stability")
+                    qcfg = BitsAndBytesConfig(load_in_8bit=True)
+                    self.model = AutoModelForSeq2SeqLM.from_pretrained(
+                        model_name,
+                        cache_dir=str(config.TRANSLATION_CACHE_DIR),
+                        trust_remote_code=True,
+                        quantization_config=qcfg,
+                        device_map="cuda",
+                        low_cpu_mem_usage=True,
+                    )
+                    print("[NLLB] HF fallback loaded on CUDA 8-bit (device_map=cuda)")
+                except Exception as int8_exc:
+                    raise RuntimeError(
+                        "NLLB HF fallback CUDA load failed (fp16 and 8-bit). "
+                        f"fp16={fp16_exc} | int8={int8_exc}"
+                    )
+        else:
+            if cuda_requested and not cuda_available:
+                print("[NLLB] CUDA indisponible: fallback HF sur CPU")
             self.model = AutoModelForSeq2SeqLM.from_pretrained(
                 model_name,
                 cache_dir=str(config.TRANSLATION_CACHE_DIR),
@@ -137,7 +145,9 @@ class NLLBCT2Translator:
             print("[NLLB] HF fallback loaded on CPU fp32")
 
         self.backend_type = "hf"
+        self.runtime_device = self._hf_model_device()
         self.available = True
+        print(f"[NLLB] Runtime backend: hf | device={self.runtime_device}")
 
     @staticmethod
     def _clean_translation(text: str) -> str:
@@ -157,8 +167,9 @@ class NLLBCT2Translator:
                 truncation=True,
                 max_length=int(getattr(self.cfg, "max_length", 640)),
             )
-            if self.device == "cuda" and torch.cuda.is_available():
-                inputs = {k: v.to("cuda") for k, v in inputs.items()}
+            target_device = self._hf_model_device()
+            if target_device.startswith("cuda") and torch.cuda.is_available():
+                inputs = {k: v.to(target_device) for k, v in inputs.items()}
 
             forced_bos_token_id = self.tokenizer.convert_tokens_to_ids(tgt_lang)
             with torch.no_grad():

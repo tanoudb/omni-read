@@ -39,10 +39,16 @@ assets/models
 .DS_Store
 Thumbs.db
 .idea/
-
+assets/
 # Tauri/Node local build artifacts
 webtoon-translator-native/node_modules/
 webtoon-translator-native/src-tauri/target/
 
 # Temporary workspace files
 .tmp_pip/
+
+
+manhwa/
+oeuvres/
+
+temp/

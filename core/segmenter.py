@@ -12,7 +12,7 @@ OCR regions + raffinage morphologique/threshold.
 
 from __future__ import annotations
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 import gc
 
@@ -176,8 +176,7 @@ class SmartSegmenter:
             if pts.ndim != 2 or pts.shape[0] < 3 or pts.shape[1] < 2:
                 continue
             pts = self._clamp_polygon(pts, crop_w, crop_h)
-            hull = cv2.convexHull(pts)
-            cv2.fillPoly(mask, [hull], 255)
+            cv2.fillPoly(mask, [pts], 255)
 
         return mask
 
@@ -256,27 +255,32 @@ class SmartSegmenter:
         image_bgr: np.ndarray,
         detection,
         text_regions: Optional[List[Dict]],
-    ) -> List[Dict]:
+    ) -> Tuple[List[Dict], Optional[np.ndarray], str]:
         """
-        Retourne des régions masque relatives à la bbox de détection.
+        Retourne:
+        - régions masque relatives à la bbox
+        - masque binaire (crop local) ou None
+        - backend effectivement utilisé
         """
         try:
             if not self.cfg.enable_precise_masks:
-                return text_regions or []
+                return text_regions or [], None, "disabled"
 
             x1, y1, x2, y2 = detection.x1, detection.y1, detection.x2, detection.y2
             crop = image_bgr[y1:y2, x1:x2]
             if crop.size == 0:
-                return text_regions or []
+                return text_regions or [], None, "empty_crop"
 
             seed_mask = self._build_mask_from_ocr_regions(crop.shape[0], crop.shape[1], text_regions)
 
             backend = (self.cfg.backend or "hybrid").lower()
+            backend_used = backend
             if backend == "ocr_regions":
                 refined = seed_mask
             elif backend == "sam2":
                 sam_mask = self._predict_sam2_mask(crop, seed_mask)
                 if sam_mask is None or np.sum(sam_mask) == 0:
+                    backend_used = "sam2_fallback_hybrid"
                     refined = self._refine_with_threshold(crop, seed_mask)
                 else:
                     if np.sum(seed_mask) > 0:
@@ -289,9 +293,9 @@ class SmartSegmenter:
             regions = self._mask_to_regions(refined)
 
             if not regions and text_regions:
-                return text_regions
+                return text_regions, refined, backend_used
 
-            return regions
+            return regions, refined, backend_used
         finally:
             try:
                 import torch

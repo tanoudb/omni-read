@@ -8,6 +8,7 @@ FIX v2: containment filter intra-classe + inter-classe
 
 import numpy as np
 import cv2
+import torch
 from typing import List, Dict, Tuple, Optional
 from pathlib import Path
 from collections import defaultdict
@@ -85,6 +86,30 @@ class YOLODetector:
             self.model.model.eval()
         except Exception as e:
             raise RuntimeError(f"Erreur chargement YOLO: {e}")
+
+    def _recover_model_after_dtype_error(self):
+        """Recharge proprement le modèle en FP32 après une erreur dtype Ultralytics."""
+        try:
+            if self.device == 'cuda' and torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+        self._load_model()
+        try:
+            if hasattr(self.model, 'predictor'):
+                self.model.predictor = None
+        except Exception:
+            pass
+
+    @staticmethod
+    def _is_dtype_mismatch_error(error: Exception) -> bool:
+        message = str(error)
+        patterns = [
+            'float != struct c10::Half',
+            'expected mat1 and mat2 to have the same dtype',
+            'Expected all tensors to be on the same device',
+        ]
+        return any(pattern in message for pattern in patterns)
     
     # ─────────────────────────────────────────────────────────────────────────
     # SLICING ADAPTATIF
@@ -150,8 +175,28 @@ class YOLODetector:
         for y in range(0, new_h, step):
             y_end = min(y + window_height, new_h)
             window = image_scaled[y:y_end, :]
-            
-            results = self.model.predict(window, conf=0.15, verbose=False, half=False, device='cuda')
+
+            try:
+                results = self.model.predict(
+                    window,
+                    conf=0.15,
+                    verbose=False,
+                    half=False,
+                    device=self.device,
+                )
+            except RuntimeError as pred_error:
+                if not self._is_dtype_mismatch_error(pred_error):
+                    raise
+                if logger:
+                    logger.warning("      ⚠️  Dtype/device mismatch YOLO détecté, reload modèle et retry...")
+                self._recover_model_after_dtype_error()
+                results = self.model.predict(
+                    window,
+                    conf=0.15,
+                    verbose=False,
+                    half=False,
+                    device=self.device,
+                )
             
             for result in results:
                 for box in result.boxes:

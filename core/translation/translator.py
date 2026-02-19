@@ -34,6 +34,7 @@ class NLLBTranslator:
         self.last_nllb_inputs: List[str] = []
         self.last_nllb_outputs: List[str] = []
         self._generation_seconds_total: float = 0.0
+        self._glossaire: list[str] = []
 
         self.qwen: Optional[LegacyTranslator] = None
         self.nllb: Optional[NLLBCT2Translator] = None
@@ -106,6 +107,29 @@ class NLLBTranslator:
         self.last_nllb_outputs = list(translated)
         return {str(i): translated[i] if i < len(translated) else texts[i] for i in range(len(texts))}
 
+    def set_glossaire(self, termes: list[str]):
+        self._glossaire = [t.strip() for t in termes if t.strip()]
+
+    def _masquer_termes(self, texte: str) -> tuple[str, dict]:
+        """Remplace les termes du glossaire par des tokens neutres.
+        Retourne le texte modifié et le dictionnaire de restauration.
+        Trie les termes par longueur décroissante pour éviter les remplacements partiels."""
+        tokens = {}
+        termes_tries = sorted(self._glossaire, key=len, reverse=True)
+        for i, terme in enumerate(termes_tries):
+            token = f"__GTERM{i}__"
+            pattern = re.compile(re.escape(terme), re.IGNORECASE)
+            if pattern.search(texte):
+                tokens[token] = terme
+                texte = pattern.sub(token, texte)
+        return texte, tokens
+
+    def _restaurer_termes(self, texte: str, tokens: dict) -> str:
+        """Restaure les tokens en termes originaux."""
+        for token, terme in tokens.items():
+            texte = texte.replace(token, terme)
+        return texte
+
     def _polish_with_qwen(self, nllb_texts: List[str]) -> Dict[str, str]:
         if not nllb_texts:
             return {}
@@ -118,6 +142,12 @@ class NLLBTranslator:
             return {str(i): txt for i, txt in enumerate(nllb_texts)}
 
         system_prompt = getattr(self.cfg, "llm_polish_system_prompt", "")
+        if self._glossaire:
+            termes_str = ", ".join(self._glossaire)
+            system_prompt = (
+                f"Termes à NE PAS modifier (noms propres, titres, attaques) : {termes_str}\n\n"
+                + system_prompt
+            )
         payload_obj = {str(idx): txt for idx, txt in enumerate(nllb_texts)}
         user_prompt = (
             "POLISH_JSON_INPUT:\n"
@@ -234,11 +264,27 @@ class NLLBTranslator:
                 return {str(i): t for i, t in enumerate(clean_inputs)}
             return self.qwen.translate_page_json(clean_inputs)
 
+        # Masquer les termes du glossaire
+        tous_tokens = {}
+        textes_masques = []
+        for texte in clean_inputs:
+            texte_masque, tokens = self._masquer_termes(texte)
+            textes_masques.append(texte_masque)
+            tous_tokens.update(tokens)
+        clean_inputs = textes_masques
+
         if self.mode == "nllb":
-            return self._translate_with_nllb_map(clean_inputs)
+            nllb_map = self._translate_with_nllb_map(clean_inputs)
+            return {
+                str(i): self._restaurer_termes(nllb_map.get(str(i), clean_inputs[i]), tous_tokens)
+                for i in range(len(clean_inputs))
+            }
 
         nllb_map = self._translate_with_nllb_map(clean_inputs)
         nllb_texts = [nllb_map.get(str(i), clean_inputs[i]) for i in range(len(clean_inputs))]
+
+        # Restaurer les termes dans les sorties NLLB
+        nllb_texts = [self._restaurer_termes(t, tous_tokens) for t in nllb_texts]
 
         try:
             polished_map = self._polish_with_qwen(nllb_texts)
@@ -248,7 +294,7 @@ class NLLBTranslator:
 
         merged = {}
         for i, original in enumerate(clean_inputs):
-            base = nllb_map.get(str(i), original)
+            base = nllb_texts[i] if i < len(nllb_texts) else self._restaurer_termes(nllb_map.get(str(i), original), tous_tokens)
             polish = str(polished_map.get(str(i), "") or "").strip()
             merged[str(i)] = polish if polish else base
         return merged

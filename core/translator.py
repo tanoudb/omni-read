@@ -156,6 +156,8 @@ class NLLBTranslator:
         self.backend = getattr(self.cfg, 'backend', 'nllb')
         self.tokenizer = None
         self.model = None
+        self.llm_backend = "transformers"
+        self.gguf_model_path: Optional[Path] = None
         self.generation_seconds_total: float = 0.0
         self.last_page_system_prompt: str = ""
         self.last_page_user_prompt: str = ""
@@ -431,10 +433,16 @@ class NLLBTranslator:
             raise RuntimeError(f"Erreur chargement NLLB: {e}")
 
     def _load_local_llm_model(self):
+        model_name = self._select_llm_model_name()
+        gguf_path = self._resolve_gguf_model_path(model_name)
+        if gguf_path is not None:
+            self._load_local_gguf_model(gguf_path)
+            return
+
         try:
             from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
-            model_name = self._select_llm_model_name()
+            self.llm_backend = "transformers"
             force_low_vram_mode = model_name.endswith("2.5-3B-Instruct")
             print(f"⏳ Chargement LLM local: {model_name}...")
 
@@ -497,10 +505,63 @@ class NLLBTranslator:
         except Exception as e:
             raise RuntimeError(f"Erreur chargement LLM local: {e}")
 
+    def _resolve_gguf_model_path(self, model_name: str) -> Optional[Path]:
+        candidate = Path(str(model_name).strip())
+        if candidate.suffix.lower() == ".gguf":
+            if candidate.exists() and candidate.is_file():
+                return candidate
+            relative = Path(__file__).resolve().parents[1] / candidate
+            if relative.exists() and relative.is_file():
+                return relative
+        return None
+
+    def _load_local_gguf_model(self, model_path: Path):
+        try:
+            from llama_cpp import Llama
+        except Exception as exc:
+            raise RuntimeError(f"llama-cpp-python indisponible pour GGUF: {exc}")
+
+        self.llm_backend = "gguf"
+        self.gguf_model_path = model_path
+
+        n_ctx = int(max(2048, int(getattr(self.cfg, 'max_length', 640)) * 2))
+        n_threads = max(1, (os.cpu_count() or 8) // 2)
+        n_gpu_layers = int(os.environ.get("WEBTOON_GGUF_N_GPU_LAYERS", "-1")) if (self.device == 'cuda' and torch.cuda.is_available()) else 0
+
+        print(f"⏳ Chargement LLM GGUF: {model_path}...")
+        self.model = Llama(
+            model_path=str(model_path),
+            n_ctx=n_ctx,
+            n_threads=n_threads,
+            n_gpu_layers=n_gpu_layers,
+            verbose=False,
+        )
+        self.tokenizer = None
+        print(f"✅ LLM GGUF chargé ! ({model_path.name})")
+        print(f"✅ GGUF runtime: n_ctx={n_ctx}, n_gpu_layers={n_gpu_layers}\n")
+
+    @staticmethod
+    def _gguf_extract_content(response: dict) -> str:
+        if not isinstance(response, dict):
+            return ""
+        choices = response.get("choices")
+        if not isinstance(choices, list) or not choices:
+            return ""
+        first = choices[0] if isinstance(choices[0], dict) else {}
+        message = first.get("message") if isinstance(first.get("message"), dict) else {}
+        content = message.get("content")
+        if isinstance(content, str):
+            return content.strip()
+        text = first.get("text")
+        return str(text).strip() if text is not None else ""
+
     def _select_llm_model_name(self) -> str:
         forced_model = os.environ.get("WEBTOON_LLM_MODEL", "").strip()
         if forced_model:
             return forced_model
+        cfg_model = str(getattr(self.cfg, 'llm_model_name', '') or '').strip()
+        if cfg_model:
+            return cfg_model
         if self.device != 'cuda' or not torch.cuda.is_available():
             return "Qwen/Qwen2.5-3B-Instruct"
         try:
@@ -556,6 +617,40 @@ class NLLBTranslator:
 
     def _translate_with_local_llm(self, source_text: str, source_lang_code: str) -> str:
         prompt = self._build_llm_prompt(source_text, source_lang_code)
+
+        if self.llm_backend == "gguf":
+            import time
+
+            temperature = float(getattr(self.cfg, 'llm_temperature', 0.0))
+            top_p = float(getattr(self.cfg, 'llm_top_p', 1.0))
+            max_tokens = int(getattr(self.cfg, 'llm_max_new_tokens', 220))
+            repeat_penalty = float(getattr(self.cfg, 'llm_repetition_penalty', 1.05))
+
+            messages = [
+                {
+                    'role': 'system',
+                    'content': (
+                        'You are a translation engine. Return only the translated text on a single line. '
+                        'Never start with Hello/I am/Here is. '
+                        'If the input is onomatopoeia/SFX or watermark/credits/URL/@handle, return it unchanged.'
+                    ),
+                },
+                {'role': 'user', 'content': prompt},
+            ]
+
+            t0 = time.perf_counter()
+            response = self.model.create_chat_completion(
+                messages=messages,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_tokens,
+                repeat_penalty=repeat_penalty,
+            )
+            self.generation_seconds_total += max(0.0, time.perf_counter() - t0)
+
+            raw = self._gguf_extract_content(response)
+            translation = self._extract_llm_translation(raw, prompt)
+            return translation or source_text
 
         if hasattr(self.tokenizer, 'apply_chat_template'):
             messages = [
@@ -644,6 +739,24 @@ class NLLBTranslator:
         self.last_page_payload_lines = list(numbered_lines)
         self.last_page_system_prompt = system_prompt
         self.last_page_user_prompt = user_prompt
+
+        if self.llm_backend == "gguf":
+            import time
+
+            t0 = time.perf_counter()
+            response = self.model.create_chat_completion(
+                messages=[
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': user_prompt},
+                ],
+                temperature=float(getattr(self.cfg, 'llm_temperature', 0.0)),
+                top_p=float(getattr(self.cfg, 'llm_top_p', 1.0)),
+                max_tokens=int(getattr(self.cfg, 'llm_max_new_tokens', 512)),
+                repeat_penalty=float(getattr(self.cfg, 'llm_repetition_penalty', 1.05)),
+            )
+            self.generation_seconds_total += max(0.0, time.perf_counter() - t0)
+            raw = self._gguf_extract_content(response).strip()
+            return self._parse_page_translation_output(raw, texts)
 
         if hasattr(self.tokenizer, 'apply_chat_template'):
             messages = [

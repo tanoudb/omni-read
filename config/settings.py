@@ -252,7 +252,10 @@ class TranslationConfig:
     nllb_cache_file: str = os.environ.get("WEBTOON_NLLB_CACHE_FILE", "translation_cache_nllb_ct2_v1.json")
 
     # Local LLM (aucune API externe)
-    llm_model_name: str = os.environ.get("WEBTOON_LLM_MODEL", "Qwen/Qwen2.5-3B-Instruct")
+    llm_model_name: str = os.environ.get(
+        "WEBTOON_LLM_MODEL",
+        str(MODEL_DIR / "Qwen2.5-7B-Instruct-Q4_K_M.gguf")
+    )
     llm_require_cuda: bool = _env_bool("WEBTOON_LLM_REQUIRE_CUDA", True)
     llm_max_new_tokens: int = int(os.environ.get("WEBTOON_LLM_MAX_NEW_TOKENS", "512"))
     llm_temperature: float = float(os.environ.get("WEBTOON_LLM_TEMPERATURE", "0.0"))
@@ -276,6 +279,8 @@ class TranslationConfig:
         "RÈGLES ABSOLUES:\n"
         "- NE CHANGE JAMAIS le sens des mots (Au fond ≠ À l'entrée, renverser ≠ révéler)\n"
         "- NE CHANGE JAMAIS les lieux, directions, actions principales\n"
+        "- Si la ligne ressemble à un label UI/out_text bref, conserve une forme courte et directe\n"
+        "- N'ajoute ni interprétation ni contexte implicite absent du texte source\n"
         "- Change SEULEMENT: temps des verbes (passé→imparfait), ton émotionnel, fluidité\n"
         "- Si la traduction est déjà bonne → garde-la EXACTEMENT telle quelle\n"
         "- Les onomatopées restent EN MAJUSCULES\n"
@@ -392,6 +397,7 @@ class RenderingConfig:
     lock_text_to_ocr_regions: bool = _env_bool("WEBTOON_LOCK_TEXT_TO_OCR_REGIONS", True)
     lock_text_system_only: bool = _env_bool("WEBTOON_LOCK_TEXT_SYSTEM_ONLY", True)
     precise_masks: bool = _env_bool("WEBTOON_PRECISE_MASKS", True)
+    inpaint_out_text: bool = _env_bool("WEBTOON_INPAINT_OUT_TEXT", True)
     inpainting_model_id: str = os.environ.get("WEBTOON_INPAINTING_MODEL_ID", "dreMaz/AnimeMangaInpainting")
     inpainting_model_path: Path = INPAINTING_CACHE_DIR / "dreMaz--AnimeMangaInpainting"
 
