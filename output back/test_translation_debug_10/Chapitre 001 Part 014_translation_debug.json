@@ -1,0 +1,22 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 014.jpg",
+  "image": "Chapitre 001 Part 014",
+  "entries": [
+    {
+      "index": 0,
+      "class": "bulle",
+      "bbox": [
+        156.42039489746094,
+        135,
+        543.5894165039062,
+        419
+      ],
+      "ocr_source": "HONEY!!",
+      "nllb_raw": "Le miel !",
+      "final_translation": "Le miel !",
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.781
+    }
+  ]
+}

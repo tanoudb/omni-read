@@ -1,0 +1,58 @@
+{
+  "source": "image test\\image2.png",
+  "output": "output\\benchmark_final_standardized_isolated\\image2_translated.png",
+  "dimensions": {
+    "width": 720,
+    "height": 10800
+  },
+  "detections": [
+    {
+      "class": "out_text",
+      "bbox": [
+        410.99932861328125,
+        9,
+        718.3845825195312,
+        85
+      ],
+      "original": "You can join our Discord server by clicking the button d above",
+      "translated": "Vous pouvez rejoindre notre serveur Discord en cliquant sur le bouton d ci-dessus",
+      "confidence": 0.9585133333333332,
+      "detection_confidence": 0.39006897807121277,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.95,
+      "global_confidence": 0.758
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        354.2762145996094,
+        5156,
+        720.0,
+        5621
+      ],
+      "original": "YE WU! IN YOUR NEXT LIFE, MAKE SURE YOU KEEP YOUR EYES OPEN!",
+      "translated": "Dans ta prochaine vie, assure-toi de garder les yeux ouverts !",
+      "confidence": 0.964768,
+      "detection_confidence": 0.7893840074539185,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.876
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        45.2833251953125,
+        5589,
+        347.09027099609375,
+        5974
+      ],
+      "original": "KID! DON'T MESS WITH PEOPLE YOU SHOULDN'T BE MESSING WITH!",
+      "translated": "Ne te mêle pas des gens avec qui tu ne devrais pas te mêler.",
+      "confidence": 0.949845,
+      "detection_confidence": 0.7951599955558777,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.872
+    }
+  ]
+}

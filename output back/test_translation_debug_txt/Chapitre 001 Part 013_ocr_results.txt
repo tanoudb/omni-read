@@ -1,0 +1,18 @@
+OCR Results for Chapitre 001 Part 013
+============================================================
+
+[1] bulle (score=0.83)
+    bbox: [51, 565, 401, 809]
+    size: 350x244px
+    OCR text: "WAAAH!! WAAAH!!" 
+    OCR conf: 0.99
+    NLLB brut: "WAAAH!! WAAAH!!" 
+    Traduit: "WAAAH!! WAAAH!!" 
+
+[2] out_text (score=0.50)
+    bbox: [100, 1137, 245, 1210]
+    size: 145x73px
+    OCR text: "ELINCH" 
+    OCR conf: 0.91
+    NLLB brut: "ELINCH" 
+    Traduit: "ELINCH"

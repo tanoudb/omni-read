@@ -1,0 +1,22 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 017.jpg",
+  "image": "Chapitre 001 Part 017",
+  "entries": [
+    {
+      "index": 0,
+      "class": "bulle",
+      "bbox": [
+        92.14814758300781,
+        207,
+        428.679931640625,
+        527
+      ],
+      "ocr_source": "WH-WHAT ABOLTOUR SON??",
+      "nllb_raw": "Qu'est-ce qui est arrivé à notre fils ?",
+      "final_translation": "Qu'est-ce qui est arrivé à notre fils ?",
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.867
+    }
+  ]
+}

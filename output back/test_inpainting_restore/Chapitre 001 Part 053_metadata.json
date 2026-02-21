@@ -1,0 +1,42 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 053.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 053_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        218.8868408203125,
+        0,
+        649.8387451171875,
+        239
+      ],
+      "original": "FLNOF MEFOR ?NOT HAVING A MOM!",
+      "translated": "Avant de ne pas avoir de mère !",
+      "confidence": 0.9286266666666666,
+      "detection_confidence": 0.8304044008255005,
+      "source_lang_detected": "pt",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.875
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        108.04168701171875,
+        771,
+        576.8860473632812,
+        1174
+      ],
+      "original": "SINCE THEY WEREBLLLIES, IT'S ALL RIGHT TO BEAT THEMLP!!",
+      "translated": "Puisqu'ils sont des WEREBLLLIES, il est tout à fait légitime de les battre!!",
+      "confidence": 0.9496625000000001,
+      "detection_confidence": 0.7165894508361816,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.778
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 001.jpg",
+  "output": "output\\benchmark_phase31_steady\\Chapitre 001 Part 001_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "out_text",
+      "bbox": [
+        209.9961700439453,
+        505,
+        481.3970031738281,
+        566
+      ],
+      "original": "AL AL jiHV S",
+      "translated": "AL AL jiHV S",
+      "confidence": 0.6349575,
+      "detection_confidence": 0.7067850828170776,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.633
+    }
+  ]
+}

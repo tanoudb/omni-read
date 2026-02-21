@@ -1,0 +1,22 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 015.jpg",
+  "image": "Chapitre 001 Part 015",
+  "entries": [
+    {
+      "index": 0,
+      "class": "bulle",
+      "bbox": [
+        140.20553588867188,
+        1023,
+        559.865234375,
+        1278
+      ],
+      "ocr_source": "HONEY, ARE YOU OKAY?!",
+      "nllb_raw": "Chérie, tout va bien ?",
+      "final_translation": "Chérie, tout va bien ?",
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.95,
+      "global_confidence": 0.883
+    }
+  ]
+}

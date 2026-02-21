@@ -9,7 +9,6 @@ import torch
 import psutil
 from typing import Optional, Any
 from contextlib import contextmanager
-import numpy as np
 
 
 class MemoryManager:

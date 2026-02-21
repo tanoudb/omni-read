@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 023.jpg",
+  "output": "output\\test_strict20_the_cleaner\\Chapitre 001 Part 023_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        256.70025634765625,
+        490,
+        673.6555786132812,
+        834
+      ],
+      "original": "WEKNEW THIS WOULDHAPPEN, DIDN'TWE?",
+      "translated": "Vous saviez que ça arriverait, non ?",
+      "confidence": 0.95586,
+      "detection_confidence": 0.7303000688552856,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.852
+    }
+  ]
+}

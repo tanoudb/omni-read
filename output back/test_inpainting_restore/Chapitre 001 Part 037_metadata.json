@@ -1,0 +1,42 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 037.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 037_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        234.07820638020834,
+        0,
+        637.8238525390625,
+        272
+      ],
+      "original": "LOOKFORWARD TOIT",
+      "translated": "Je suis l'agent 1O1.",
+      "confidence": 0.922515,
+      "detection_confidence": 0.7995375394821167,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.795
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        33.483402252197266,
+        992,
+        438.7383117675781,
+        1280
+      ],
+      "original": ".AGENT 1O1.",
+      "translated": "Ça va.",
+      "confidence": 0.88615,
+      "detection_confidence": 0.7666469216346741,
+      "source_lang_detected": "pt",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.833
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+class: System
+bbox: [8.24127197265625, 3552, 706.927978515625, 4156]
+ocr: BUT HE REALIZED THAT EVEN A LIFE- TIME WOULDN'T BE ENOUGH TO REACH THEM
+translation: Mais il s' est rendu compte
+Même une vie ne suffirait pas pour les atteindre.
+style: system_card
+mask_regions: 5

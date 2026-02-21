@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 038.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 038_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        323.6907958984375,
+        568,
+        631.2388305664062,
+        858
+      ],
+      "original": "..OKAY.",
+      "translated": "Je le ferai.",
+      "confidence": 0.76531,
+      "detection_confidence": 0.8191637396812439,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.731
+    }
+  ]
+}

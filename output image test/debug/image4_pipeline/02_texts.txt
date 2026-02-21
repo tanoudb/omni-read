@@ -1,6 +1,0 @@
-class: out_text
-bbox: [96.7645772298177, 2186.6884562174478, 306.9956868489583, 2253.0979817708335]
-ocr: NONE SHA
-translation: NONE SHA
-style: dialogue
-mask_regions: 1

@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 040.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 040_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        132.40631103515625,
+        312,
+        549.943603515625,
+        672
+      ],
+      "original": "I WILL.",
+      "translated": "On vient de commencer.",
+      "confidence": 0.96367,
+      "detection_confidence": 0.6370356678962708,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.757
+    }
+  ]
+}

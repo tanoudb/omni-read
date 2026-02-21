@@ -1,0 +1,42 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 025.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 025_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        197.09239196777344,
+        127,
+        643.1796875,
+        497
+      ],
+      "original": "THISIS MY FIRST... ANDLASTREQLEST AS YOLR WIFE.",
+      "translated": "S'il vous plaît, aidez notre fils pour qu'il puisse vivre la vie qu'il veut.",
+      "confidence": 0.91778,
+      "detection_confidence": 0.7595229148864746,
+      "source_lang_detected": "pt",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.845
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        61.56489562988281,
+        469,
+        507.66748046875,
+        839
+      ],
+      "original": "PLEASE HELP OUR SON. SO HE CAN LIVE THE LIFE THAT HEWANTS.",
+      "translated": "Je suis tellement heureuse d'être ta femme.",
+      "confidence": 0.9589679999999999,
+      "detection_confidence": 0.7276840806007385,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.95,
+      "global_confidence": 0.876
+    }
+  ]
+}

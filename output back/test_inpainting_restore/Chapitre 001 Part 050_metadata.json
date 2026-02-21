@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 050.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 050_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        205.10244750976562,
+        131,
+        651.546630859375,
+        500
+      ],
+      "original": "WELL,THAT'S WHAT YOUGETFOR HITTING YOURCLASSMATES.",
+      "translated": "Mais il y a une raison !",
+      "confidence": 0.94785,
+      "detection_confidence": 0.7282195687294006,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.847
+    }
+  ]
+}

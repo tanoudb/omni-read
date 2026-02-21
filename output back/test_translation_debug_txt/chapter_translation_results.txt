@@ -1,0 +1,114 @@
+OCR + Traductions (chapitre)
+============================================================
+
+Image: Chapitre 001 Part 001.jpg
+------------------------------------------------------------
+(aucune ligne traduite)
+
+Image: Chapitre 001 Part 002.jpg
+------------------------------------------------------------
+(aucune ligne traduite)
+
+Image: Chapitre 001 Part 007.jpg
+------------------------------------------------------------
+[1] bulle (score=0.74)
+    bbox: [154, 96, 539, 472]
+    size: 385x376px
+    OCR text: "KRGH...KHOFF... ERGH..." 
+    OCR conf: 0.86
+    NLLB brut: "KRGH...KHOFF... ERGH..." 
+    Traduit: "KRGH...KHOFF... ERGH..." 
+
+Image: Chapitre 001 Part 008.jpg
+------------------------------------------------------------
+(aucune ligne traduite)
+
+Image: Chapitre 001 Part 009.jpg
+------------------------------------------------------------
+(aucune ligne traduite)
+
+Image: Chapitre 001 Part 010.jpg
+------------------------------------------------------------
+(aucune ligne traduite)
+
+Image: Chapitre 001 Part 011.jpg
+------------------------------------------------------------
+(aucune ligne traduite)
+
+Image: Chapitre 001 Part 012.jpg
+------------------------------------------------------------
+(aucune ligne traduite)
+
+Image: Chapitre 001 Part 013.jpg
+------------------------------------------------------------
+[1] bulle (score=0.83)
+    bbox: [51, 565, 401, 809]
+    size: 350x244px
+    OCR text: "WAAAH!! WAAAH!!" 
+    OCR conf: 0.99
+    NLLB brut: "WAAAH!! WAAAH!!" 
+    Traduit: "WAAAH!! WAAAH!!" 
+
+[2] out_text (score=0.50)
+    bbox: [100, 1137, 245, 1210]
+    size: 145x73px
+    OCR text: "ELINCH" 
+    OCR conf: 0.91
+    NLLB brut: "ELINCH" 
+    Traduit: "ELINCH" 
+
+Image: Chapitre 001 Part 014.jpg
+------------------------------------------------------------
+[1] bulle (score=0.68)
+    bbox: [156, 135, 543, 419]
+    size: 387x284px
+    OCR text: "HONEY!!" 
+    OCR conf: 0.99
+    NLLB brut: "Le miel !" 
+    Traduit: "Chérie!!" 
+
+Image: Chapitre 001 Part 015.jpg
+------------------------------------------------------------
+[1] bulle (score=0.80)
+    bbox: [140, 1023, 559, 1278]
+    size: 419x255px
+    OCR text: "HONEY, ARE YOU OKAY?!" 
+    OCR conf: 0.91
+    NLLB brut: "Chérie, tout va bien ?" 
+    Traduit: "Chérie, tout va bien ?" 
+
+Image: Chapitre 001 Part 016.jpg
+------------------------------------------------------------
+(aucune ligne traduite)
+
+Image: Chapitre 001 Part 017.jpg
+------------------------------------------------------------
+[1] bulle (score=0.78)
+    bbox: [92, 207, 428, 527]
+    size: 336x320px
+    OCR text: "WH-WHAT ABOLTOUR SON??" 
+    OCR conf: 0.95
+    NLLB brut: "Qu'est-ce qui est arrivé à notre fils ?" 
+    Traduit: "Qu'est-ce qui est arrivé à notre fils ?" 
+
+Image: Chapitre 001 Part 018.jpg
+------------------------------------------------------------
+[1] bulle (score=0.86)
+    bbox: [322, 18, 606, 292]
+    size: 284x274px
+    OCR text: "HE'S... OKAY." 
+    OCR conf: 0.89
+    NLLB brut: "Il va bien." 
+    Traduit: "Il va bien." 
+
+[2] bulle (score=0.79)
+    bbox: [77, 920, 429, 1279]
+    size: 352x359px
+    OCR text: "THERE'S SOMETHING. IWANT TO.. TELL YOU." 
+    OCR conf: 0.93
+    NLLB brut: "Il y a quelque chose que je veux te dire." 
+    Traduit: "Il y a quelque chose que je veux te dire." 
+
+Image: Chapitre 001 Part 019.jpg
+------------------------------------------------------------
+(aucune ligne traduite)

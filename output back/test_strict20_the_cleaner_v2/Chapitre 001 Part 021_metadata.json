@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 021.jpg",
+  "output": "output\\test_strict20_the_cleaner_v2\\Chapitre 001 Part 021_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        67.79714965820312,
+        637,
+        503.83416748046875,
+        1014
+      ],
+      "original": "IT'STOOLATE.. I CAN FEEL MYSELF FADING.",
+      "translated": "Je peux me sentir m'affaiblir.",
+      "confidence": 0.9494166666666667,
+      "detection_confidence": 0.7337708473205566,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.784
+    }
+  ]
+}

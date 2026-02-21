@@ -1,6 +1,0 @@
-class: out_text
-bbox: [179.3021697998047, 3982.3416442871094, 560.3412475585938, 4064.0824584960938]
-ocr: THIS WAS
-translation: THIS WAS
-style: dialogue
-mask_regions: 1

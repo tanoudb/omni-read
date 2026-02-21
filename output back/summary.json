@@ -1,0 +1,33 @@
+{
+  "total_images": 1,
+  "processed": 1,
+  "failed": 0,
+  "total_detections": 9,
+  "total_translated": 6,
+  "total_skipped": 1,
+  "total_time_seconds": 52.26730751991272,
+  "results": [
+    {
+      "image": "image.png",
+      "width": 709,
+      "height": 10000,
+      "detections": 9,
+      "translatable": 7,
+      "translated": 6,
+      "skipped": 1,
+      "skip_reasons": {
+        "watermark": 1
+      },
+      "time_seconds": 51.644952058792114,
+      "timings": {
+        "yolo_seconds": 2.745,
+        "sam2_seconds": 0.059,
+        "ocr_seconds": 2.401,
+        "llm_seconds": 19.337,
+        "llm_generation_seconds": 0.0,
+        "inpainting_seconds": 20.853,
+        "text_render_seconds": 0.642
+      }
+    }
+  ]
+}

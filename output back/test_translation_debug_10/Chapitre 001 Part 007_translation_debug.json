@@ -1,0 +1,22 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 007.jpg",
+  "image": "Chapitre 001 Part 007",
+  "entries": [
+    {
+      "index": 0,
+      "class": "bulle",
+      "bbox": [
+        154.95477294921875,
+        96,
+        539.1419677734375,
+        472
+      ],
+      "ocr_source": "KRGH...KHOFF... ERGH...",
+      "nllb_raw": "KRGH...KHOFF... ERGH...",
+      "final_translation": "KRGH...KHOFF... ERGH...",
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.746
+    }
+  ]
+}

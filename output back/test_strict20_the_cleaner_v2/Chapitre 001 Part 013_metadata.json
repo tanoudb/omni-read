@@ -1,0 +1,42 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 013.jpg",
+  "output": "output\\test_strict20_the_cleaner_v2\\Chapitre 001 Part 013_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        51.899288177490234,
+        565,
+        401.5563659667969,
+        809
+      ],
+      "original": "WAAAH!! WAAAH!!",
+      "translated": "WAAAH!! WAAAH!!",
+      "confidence": 0.985415,
+      "detection_confidence": 0.8345411419868469,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.836
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        100.58773803710938,
+        1137,
+        245.5646209716797,
+        1210
+      ],
+      "original": "ELINCH",
+      "translated": "ELINCH",
+      "confidence": 0.91199,
+      "detection_confidence": 0.4980991780757904,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.685
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 020.jpg",
+  "output": "output\\test_strict20_the_cleaner\\Chapitre 001 Part 020_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        30.668102264404297,
+        236,
+        470.4208984375,
+        504
+      ],
+      "original": "Y-YOU'RE BLEEDING...!!",
+      "translated": "Vous saignez...",
+      "confidence": 0.8826050000000001,
+      "detection_confidence": 0.7720351815223694,
+      "source_lang_detected": "es",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.833
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        254.6373291015625,
+        439,
+        680.5704956054688,
+        778
+      ],
+      "original": "HOLD STILL, I'LL PATCH THE 'dnaNnOM OKAY?",
+      "translated": "Restez calme, je vais faire le patch.",
+      "confidence": 0.8584425,
+      "detection_confidence": 0.7404466867446899,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.811
+    }
+  ]
+}

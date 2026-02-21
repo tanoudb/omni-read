@@ -1,6 +1,0 @@
-class: out_text
-bbox: [0.0, 1537.094497680664, 436.29541015625, 1636.8639068603516]
-ocr: A PORTAL TO ANOTHER WC SUDDENLY APPEARED
-translation: Un portail à un autre WC a soudainement apparu
-style: dialogue
-mask_regions: 1

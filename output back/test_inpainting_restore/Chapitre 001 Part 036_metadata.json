@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 036.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 036_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        51.01559829711914,
+        807,
+        536.1448364257812,
+        1204
+      ],
+      "original": "ONCE THAT SENILE OLDCHAIRMANDIES MYSON WILL TAKE OVER IN HIS PLACE",
+      "translated": "Regardez en avant !",
+      "confidence": 0.948515,
+      "detection_confidence": 0.714684784412384,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.843
+    }
+  ]
+}

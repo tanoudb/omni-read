@@ -19,7 +19,6 @@ Config: model_name dans settings.py
 import re
 import json
 import os
-import numpy as np
 import torch
 from typing import List, Optional, Tuple
 from pathlib import Path
@@ -29,6 +28,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import config
 from utils import CacheManager, ImageUtils
+from utils.prompts import (
+    LOCAL_LLM_PAGE_SYSTEM,
+    LOCAL_LLM_SINGLE_SYSTEM,
+    build_single_text_prompt,
+)
 
 try:
     import torch
@@ -103,6 +107,8 @@ def clean_ocr_text(text: str) -> str:
     text = re.sub(r'\bDALIGHTER\b', 'DAUGHTER', text, flags=re.IGNORECASE)
     text = re.sub(r'\bDAIGTHER\b', 'DAUGHTER', text, flags=re.IGNORECASE)
     text = re.sub(r'\bWHERE\s+WE\s+ARE\?', 'WHERE ARE WE?', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bABOUT\s+SON\b', 'ABOUT OUR SON', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bABOUT\s+DAUGHTER\b', 'ABOUT OUR DAUGHTER', text, flags=re.IGNORECASE)
     
     # Nettoyer espaces multiples
     text = re.sub(r'\s+', ' ', text).strip()
@@ -139,6 +145,12 @@ class NLLBTranslator:
         "oh", "there", "here", "please", "help", "wait", "look",
         "yes", "no", "what", "when", "where", "why", "how",
         "stop", "start", "go", "come", "now", "again"
+    }
+
+    SFX_TOKENS = {
+        "AH", "AAH", "WAAH", "WAAAH", "UGH", "URGH", "ARGH", "ERGH", "KRGH", "KHOFF",
+        "HUFF", "PANT", "GASP", "SOB", "SNIFF", "HMPH", "GRR", "BAM", "BOOM", "CRASH",
+        "BANG", "THUD", "SNAP", "TAP", "CLAP", "WHAM", "WHOOSH"
     }
 
     LANGUAGE_STOPWORDS = {
@@ -525,7 +537,11 @@ class NLLBTranslator:
         self.gguf_model_path = model_path
 
         n_ctx = int(max(2048, int(getattr(self.cfg, 'max_length', 640)) * 2))
-        n_threads = max(1, (os.cpu_count() or 8) // 2)
+        cpu_count = os.cpu_count() or 8
+        n_threads = int(os.environ.get("WEBTOON_GGUF_THREADS", str(max(1, cpu_count - 1))))
+        n_threads = max(1, min(cpu_count, n_threads))
+        n_batch = int(os.environ.get("WEBTOON_GGUF_N_BATCH", "512"))
+        n_batch = max(64, min(2048, n_batch))
         n_gpu_layers = int(os.environ.get("WEBTOON_GGUF_N_GPU_LAYERS", "-1")) if (self.device == 'cuda' and torch.cuda.is_available()) else 0
 
         print(f"⏳ Chargement LLM GGUF: {model_path}...")
@@ -533,12 +549,22 @@ class NLLBTranslator:
             model_path=str(model_path),
             n_ctx=n_ctx,
             n_threads=n_threads,
+            n_batch=n_batch,
             n_gpu_layers=n_gpu_layers,
             verbose=False,
         )
         self.tokenizer = None
         print(f"✅ LLM GGUF chargé ! ({model_path.name})")
-        print(f"✅ GGUF runtime: n_ctx={n_ctx}, n_gpu_layers={n_gpu_layers}\n")
+        print(f"✅ GGUF runtime: n_ctx={n_ctx}, n_threads={n_threads}, n_batch={n_batch}, n_gpu_layers={n_gpu_layers}\n")
+
+    def _adaptive_page_max_tokens(self, texts: List[str], fallback: int = 512) -> int:
+        hard_cap = int(getattr(self.cfg, 'llm_max_new_tokens', fallback))
+        count = max(1, len(texts))
+        total_chars = sum(len(str(t or "")) for t in texts)
+        estimate = int(total_chars * 0.95)
+        floor = 96 if count <= 2 else 160
+        dynamic_cap = min(hard_cap, max(floor, estimate, count * 12))
+        return int(dynamic_cap)
 
     @staticmethod
     def _gguf_extract_content(response: dict) -> str:
@@ -576,11 +602,10 @@ class NLLBTranslator:
     def _build_llm_prompt(self, text: str, source_lang_code: str) -> str:
         source_lang = source_lang_code or self.cfg.source_lang
         target_lang = self.cfg.target_lang
-        template = getattr(self.cfg, 'llm_prompt_template', None) or (
-            "Translate from {source_lang} to {target_lang}. Output only the translation.\n"
-            "TEXT:\n{text}\nTRANSLATION:"
-        )
-        return template.format(source_lang=source_lang, target_lang=target_lang, text=text)
+        template = getattr(self.cfg, 'llm_prompt_template', None)
+        if template:
+            return template.format(source_lang=source_lang, target_lang=target_lang, text=text)
+        return build_single_text_prompt(source_lang, target_lang, text)
 
     @staticmethod
     def _extract_llm_translation(raw_output: str, prompt: str) -> str:
@@ -627,14 +652,7 @@ class NLLBTranslator:
             repeat_penalty = float(getattr(self.cfg, 'llm_repetition_penalty', 1.05))
 
             messages = [
-                {
-                    'role': 'system',
-                    'content': (
-                        'You are a translation engine. Return only the translated text on a single line. '
-                        'Never start with Hello/I am/Here is. '
-                        'If the input is onomatopoeia/SFX or watermark/credits/URL/@handle, return it unchanged.'
-                    ),
-                },
+                {'role': 'system', 'content': LOCAL_LLM_SINGLE_SYSTEM},
                 {'role': 'user', 'content': prompt},
             ]
 
@@ -654,14 +672,7 @@ class NLLBTranslator:
 
         if hasattr(self.tokenizer, 'apply_chat_template'):
             messages = [
-                {
-                    'role': 'system',
-                    'content': (
-                        'You are a translation engine. Return only the translated text on a single line. '
-                        'Never start with Hello/I am/Here is. '
-                        'If the input is onomatopoeia/SFX or watermark/credits/URL/@handle, return it unchanged.'
-                    ),
-                },
+                {'role': 'system', 'content': LOCAL_LLM_SINGLE_SYSTEM},
                 {'role': 'user', 'content': prompt},
             ]
             inputs = self.tokenizer.apply_chat_template(
@@ -725,20 +736,12 @@ class NLLBTranslator:
     def _translate_page_with_local_llm(self, texts: List[str]) -> dict:
         numbered_lines = [f"{idx}. {txt}" for idx, txt in enumerate(texts)]
         user_prompt = "\n".join(numbered_lines)
-        system_prompt = (
-            "Tu es un traducteur expert manga/webtoon/manhwa EN→FR.\n"
-            "Règles : français naturel jamais littéral. Conserve le ton émotionnel.\n"
-            "Les onomatopées (HUFF, AHH, BOOM, CRASH...) restent EXACTEMENT en original, ne jamais traduire.\n"
-            "Si c'est un watermark/crédit/scanlation/URL/@handle, renvoie le texte inchangé.\n"
-            "Ne commence jamais par Hello/I am/Here is.\n"
-            "Respecte la ponctuation et effets stylistiques (!!!, ...).\n"
-            "Réponds uniquement en JSON strict de la forme {\"0\":\"...\",\"1\":\"...\"}.\n"
-            "Ne mets aucun texte hors JSON."
-        )
+        system_prompt = LOCAL_LLM_PAGE_SYSTEM
 
         self.last_page_payload_lines = list(numbered_lines)
         self.last_page_system_prompt = system_prompt
         self.last_page_user_prompt = user_prompt
+        page_max_tokens = self._adaptive_page_max_tokens(texts, fallback=512)
 
         if self.llm_backend == "gguf":
             import time
@@ -751,8 +754,9 @@ class NLLBTranslator:
                 ],
                 temperature=float(getattr(self.cfg, 'llm_temperature', 0.0)),
                 top_p=float(getattr(self.cfg, 'llm_top_p', 1.0)),
-                max_tokens=int(getattr(self.cfg, 'llm_max_new_tokens', 512)),
+                max_tokens=page_max_tokens,
                 repeat_penalty=float(getattr(self.cfg, 'llm_repetition_penalty', 1.05)),
+                stop=["\nHuman:", "\nUser:", "\nSystem:"],
             )
             self.generation_seconds_total += max(0.0, time.perf_counter() - t0)
             raw = self._gguf_extract_content(response).strip()
@@ -780,7 +784,7 @@ class NLLBTranslator:
             inputs = {k: v.to('cuda') for k, v in inputs.items()}
 
         generate_kwargs = {
-            'max_new_tokens': int(getattr(self.cfg, 'llm_max_new_tokens', 512)),
+            'max_new_tokens': page_max_tokens,
             'repetition_penalty': float(getattr(self.cfg, 'llm_repetition_penalty', 1.05)),
             'pad_token_id': self.tokenizer.eos_token_id,
             'eos_token_id': self.tokenizer.eos_token_id,
@@ -952,6 +956,16 @@ class NLLBTranslator:
         if not text:
             return True
         text = text.strip()
+
+        alpha_tokens = re.findall(r"[A-Za-z]+", text.upper())
+        if alpha_tokens:
+            looks_like_sfx_token = all(
+                tok in self.SFX_TOKENS or re.search(r"(.)\1{2,}", tok) for tok in alpha_tokens
+            )
+            has_dialogue_words = any(tok in {"I", "YOU", "WE", "HE", "SHE", "THE", "A", "AN", "AND", "BUT"} for tok in alpha_tokens)
+            if looks_like_sfx_token and not has_dialogue_words:
+                return True
+
         if self.cfg.skip_numeric_only:
             if all(c.isdigit() or c.isspace() or c in '.,;:' for c in text):
                 return True

@@ -31,6 +31,7 @@ class Detection:
         
         self.text_original: Optional[str] = None
         self.text_translated: Optional[str] = None
+        self.text_nllb_raw: Optional[str] = None
         self.ocr_confidence: float = 0.0
         self.text_regions: List[Dict] = []  # bbox OCR pour inpainting précis
         self.ocr_upscale_factor: float = 1.0
@@ -181,7 +182,6 @@ class YOLODetector:
                     window,
                     conf=0.15,
                     verbose=False,
-                    half=False,
                     device=self.device,
                 )
             except RuntimeError as pred_error:

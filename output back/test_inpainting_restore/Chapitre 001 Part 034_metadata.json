@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 034.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 034_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        38.16019185384115,
+        510,
+        489.6978352864583,
+        890
+      ],
+      "original": "BLTYOUKNOW THAT CHEONGDO NEVERFORGETS A TRAITOR.",
+      "translated": "Il va tuer le fils de quelqu'un.",
+      "confidence": 0.9495049999999999,
+      "detection_confidence": 0.7237668037414551,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.75,
+      "global_confidence": 0.831
+    }
+  ]
+}

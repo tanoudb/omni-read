@@ -1,0 +1,11 @@
+{
+  "oeuvre": "the_cleaner",
+  "chapter": "Chapitre 001",
+  "limit": 4,
+  "processed": 4,
+  "success": 4,
+  "errors": 0,
+  "elapsed_seconds": 62.889,
+  "failed_images": [],
+  "output_dir": "output\\test_strict_smoke4_the_cleaner"
+}

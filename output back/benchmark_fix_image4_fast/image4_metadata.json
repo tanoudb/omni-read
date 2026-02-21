@@ -1,0 +1,186 @@
+{
+  "source": "image test\\image4.png",
+  "output": "output\\benchmark_fix_image4_fast\\image4_translated.png",
+  "dimensions": {
+    "width": 720,
+    "height": 13329
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        45.207275390625,
+        1035,
+        712.2498779296875,
+        1198
+      ],
+      "original": "MAI MADRASCANS",
+      "translated": "- Je ne sais pas.",
+      "confidence": 0.86486,
+      "detection_confidence": 0.596613883972168,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.698
+    },
+    {
+      "class": "System",
+      "bbox": [
+        42.0360107421875,
+        1202,
+        699.9202880859375,
+        1318
+      ],
+      "original": "THIS CHAPTER WAS BROUGHT TO YOU BY MADARATEAM",
+      "translated": "Ce chapitre vous a été présenté par MADARATEAM",
+      "confidence": 0.96987,
+      "detection_confidence": 0.648505687713623,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.95,
+      "global_confidence": 0.853
+    },
+    {
+      "class": "System",
+      "bbox": [
+        1.86181640625,
+        1473,
+        531.258056640625,
+        1649
+      ],
+      "original": "WEF PROVIDE HIGH-QUALITY SCANS WITH NO ADS OR PAYWALLS BUT WE NEED YOUR SUPPORT",
+      "translated": "Nous fournissons des scans de haute qualité sans publicité ni paywall mais nous avons besoin de votre soutien",
+      "confidence": 0.9513810000000001,
+      "detection_confidence": 0.5705379247665405,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.728
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        4.84722900390625,
+        1786,
+        470.23382568359375,
+        1864
+      ],
+      "original": "JOIN OURL DISCORD DISCORD.GG/PWPSCYF88Y",
+      "translated": "Je ne suis pas d'accord avec toi.",
+      "confidence": 0.9504533333333334,
+      "detection_confidence": 0.6169984936714172,
+      "source_lang_detected": "es",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.81
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        33.13238525390625,
+        2146,
+        697.1769409179688,
+        2222
+      ],
+      "original": "\"TRUEPOWER LIES IN UNITY. ALONE WE FALL-TOGETHER, WE BECOME UNSTOPPABLE. MADARAUCHIHA",
+      "translated": "\"Le vrai pouvoir réside dans l'unité.",
+      "confidence": 0.97392,
+      "detection_confidence": 0.6834376454353333,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.777
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        226.9183349609375,
+        3113,
+        494.1234130859375,
+        3234
+      ],
+      "original": "FROMADARK HOLE,ANHER WORLD EXPANDS.",
+      "translated": "D'un trou sombre, un autre monde s'étend.",
+      "confidence": 0.9700533333333334,
+      "detection_confidence": 0.8051254153251648,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.818
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        225.45977783203125,
+        5682,
+        467.52239990234375,
+        5739
+      ],
+      "original": "UNGEON.",
+      "translated": "- Je ne sais pas.",
+      "confidence": 0.99034,
+      "detection_confidence": 0.6275848746299744,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.765
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        396.13861083984375,
+        7135,
+        636.7675170898438,
+        7181
+      ],
+      "original": "NESTING BWITHIN,",
+      "translated": "À l'intérieur du nid,",
+      "confidence": 0.922855,
+      "detection_confidence": 0.6038825511932373,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.727
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        144.08303833007812,
+        8552,
+        311.8999938964844,
+        8637
+      ],
+      "original": "POWERFUL MONSTERS.",
+      "translated": "Des monstres puissants.",
+      "confidence": 0.98555,
+      "detection_confidence": 0.7547909021377563,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.808
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        393.89495849609375,
+        10984,
+        639.0713500976562,
+        11115
+      ],
+      "original": "50YEARS AGO, WHEN THEY FIRST APPEARED",
+      "translated": "Il y a 50 ans, quand ils sont apparus pour la première fois",
+      "confidence": 0.9609833333333334,
+      "detection_confidence": 0.8017318844795227,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.813
+    },
+    {
+      "class": "System",
+      "bbox": [
+        46.72395324707031,
+        11002,
+        469.11419677734375,
+        11547
+      ],
+      "original": "50 WHEN THEY REMAIN TOTHISDAYA THREAT TO HUMANITY",
+      "translated": "50 quand ils restent TOTHISDAYA menace à l'humanité",
+      "confidence": 0.93804,
+      "detection_confidence": 0.3728064000606537,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.653
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "source": "image test\\image3.png",
+  "output": "output\\benchmark_final_standardized_isolated\\image3_translated.png",
+  "dimensions": {
+    "width": 1380,
+    "height": 15000
+  },
+  "detections": [
+    {
+      "class": "out_text",
+      "bbox": [
+        0.0,
+        13,
+        1320.6962890625,
+        336
+      ],
+      "original": "REAO MORE CHAPTERS AT SURY YASCA COI VS.",
+      "translated": "REAO Plus de chapitres à Sury YASCA COI contre",
+      "confidence": 0.9621519999999999,
+      "detection_confidence": 0.5615334510803223,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.73
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        643.902587890625,
+        6599,
+        1101.6334228515625,
+        6774
+      ],
+      "original": "We wishyour nerry christmas",
+      "translated": "Nous vous souhaitons un joyeux Noël.",
+      "confidence": 0.986395,
+      "detection_confidence": 0.654403567314148,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.773
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        484.24871826171875,
+        9175,
+        993.4160766601562,
+        9353
+      ],
+      "original": "We wish your merry christmas.",
+      "translated": "Nous vous souhaitons un joyeux Noël.",
+      "confidence": 0.97739,
+      "detection_confidence": 0.658666729927063,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.77
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        883.427734375,
+        10412,
+        1311.123046875,
+        10574
+      ],
+      "original": "Whoa~ It's Gv!MOVs",
+      "translated": "C'est le GV !",
+      "confidence": 0.7589466666666667,
+      "detection_confidence": 0.33320364356040955,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.558
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        336.1846923828125,
+        11973,
+        793.3865966796875,
+        12142
+      ],
+      "original": "We wishyour merry christmas",
+      "translated": "Nous vous souhaitons un joyeux Noël",
+      "confidence": 0.94754,
+      "detection_confidence": 0.6200477480888367,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.743
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        687.392578125,
+        13086,
+        1060.1341145833333,
+        13278
+      ],
+      "original": "And a happy newyear 月",
+      "translated": "Et bonne année",
+      "confidence": 0.96768,
+      "detection_confidence": 0.6548156142234802,
+      "source_lang_detected": "zh",
+      "source_lang_confidence": 0.99,
+      "global_confidence": 0.863
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        764.2318725585938,
+        13977,
+        971.6763916015625,
+        14037
+      ],
+      "original": "入 0",
+      "translated": "Dans 0",
+      "confidence": 0.79698,
+      "detection_confidence": 0.5112655162811279,
+      "source_lang_detected": "zh",
+      "source_lang_confidence": 0.99,
+      "global_confidence": 0.736
+    }
+  ]
+}

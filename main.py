@@ -90,8 +90,8 @@ def main():
 
     parser.add_argument(
         '--translation-mode',
-        choices=['hybrid', 'nllb', 'qwen'],
-        help='Mode traduction: hybrid (NLLB→Qwen), nllb, qwen'
+        choices=['hybrid', 'hybrid_quality', 'nllb', 'qwen'],
+        help='Mode traduction: hybrid (NLLB→Qwen), hybrid_quality (NLLB + correction Qwen), nllb, qwen'
     )
     
     args = parser.parse_args()
@@ -146,8 +146,10 @@ def main():
     else:
         config.translation.translation_mode = "hybrid"
 
-    if config.translation.translation_mode == "hybrid":
+    if config.translation.translation_mode in {"hybrid", "qwen"}:
         config.translation.backend = "local_llm"
+    elif config.translation.translation_mode == "nllb":
+        config.translation.backend = "nllb"
     
     # Initialiser logger
     log_file = LOGS_DIR / "webtoon_v5.log"

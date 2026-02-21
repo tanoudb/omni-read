@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 031.jpg",
+  "output": "output\\test_speed_patch_limit30\\Chapitre 001 Part 031_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        40.75989278157552,
+        549,
+        488.3793538411458,
+        931
+      ],
+      "original": "LSING AWEDDING AS A TRAP?",
+      "translated": "La peur du sang comme un piège?",
+      "confidence": 0.92733,
+      "detection_confidence": 0.7191084623336792,
+      "source_lang_detected": "pt",
+      "source_lang_confidence": 0.95,
+      "global_confidence": 0.859
+    }
+  ]
+}

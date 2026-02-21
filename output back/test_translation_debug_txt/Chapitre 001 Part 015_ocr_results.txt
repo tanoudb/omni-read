@@ -1,0 +1,10 @@
+OCR Results for Chapitre 001 Part 015
+============================================================
+
+[1] bulle (score=0.80)
+    bbox: [140, 1023, 559, 1278]
+    size: 419x255px
+    OCR text: "HONEY, ARE YOU OKAY?!" 
+    OCR conf: 0.91
+    NLLB brut: "Chérie, tout va bien ?" 
+    Traduit: "Chérie, tout va bien ?"

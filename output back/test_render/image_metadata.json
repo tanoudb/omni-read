@@ -1,0 +1,167 @@
+{
+  "source": "input\\image.png",
+  "output": "output\\test_render\\image_translated.png",
+  "dimensions": {
+    "width": 709,
+    "height": 10000
+  },
+  "stats": {
+    "image": "image.png",
+    "width": 709,
+    "height": 10000,
+    "detections": 9,
+    "translatable": 7,
+    "translated": 6,
+    "skipped": 1,
+    "skip_reasons": {
+      "watermark": 1
+    },
+    "time_seconds": 0
+  },
+  "detections": [
+    {
+      "class": "out_text",
+      "bbox": [
+        140.06302897135416,
+        1487,
+        636.4684651692709,
+        1750
+      ],
+      "original": "HE SOUGHT THE ULTIMATE HEIGHTS OF MARTIAL ARTS",
+      "translated": "Il a atteint les sommets des arts martiaux .",
+      "mask_regions_count": 3,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        14,
+        15,
+        16
+      ],
+      "font_hint": "thin",
+      "confidence": 0.9748466666666666,
+      "detection_confidence": 0.47643184661865234,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.771
+    },
+    {
+      "class": "System",
+      "bbox": [
+        8.24127197265625,
+        3552,
+        706.927978515625,
+        4156
+      ],
+      "original": "BUT HE REALIZED THAT EVEN A LIFE- TIME WOULDN'T BE ENOUGH TO REACH THEM",
+      "translated": "Mais il s' est rendu compte\nMême une vie ne suffirait pas pour les atteindre.",
+      "mask_regions_count": 5,
+      "text_style": "system_card",
+      "text_color_rgb": [
+        17,
+        24,
+        23
+      ],
+      "font_hint": "regular",
+      "confidence": 0.959826,
+      "detection_confidence": 0.5471141338348389,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.75,
+      "global_confidence": 0.773
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.0,
+        5436,
+        708.0,
+        5861
+      ],
+      "original": "TO OVERTURN THIS TRUTH, HE CLUNG TO AN AN- CIENT LEGEND",
+      "translated": "Pour renverser cette vérité, il s'appuie sur une ancienne légende.",
+      "mask_regions_count": 4,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        8,
+        8,
+        8
+      ],
+      "font_hint": "thin",
+      "confidence": 0.9699800000000001,
+      "detection_confidence": 0.6529902815818787,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.831
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        237.40869140625,
+        6308,
+        708.0,
+        6664
+      ],
+      "original": "DEEP WITHIN THE SACRED SANCTUARY PROTECTED BY A DIVINE DRAGON LIES A GOLDEN FRUIT",
+      "translated": "Au fond du sanctuaire sacré protégé par un dragon divin se trouve un fruit doré",
+      "mask_regions_count": 1,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        229,
+        229,
+        229
+      ],
+      "font_hint": "regular",
+      "confidence": 0.9549540000000001,
+      "detection_confidence": 0.8836413621902466,
+      "source_lang_detected": "pt",
+      "source_lang_confidence": 0.95,
+      "global_confidence": 0.929
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.0,
+        7747,
+        486.8179524739583,
+        8165
+      ],
+      "original": "THAT FRUIT IS SAID TO HOLD THE POWER OF IMMORTALITY",
+      "translated": "On dit que ce fruit détient le pouvoir de l'immortalité",
+      "mask_regions_count": 2,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        233,
+        233,
+        233
+      ],
+      "font_hint": "thin",
+      "confidence": 0.9727725,
+      "detection_confidence": 0.8939647078514099,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.95,
+      "global_confidence": 0.941
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        205.08015950520834,
+        9633,
+        556.1505533854166,
+        10000
+      ],
+      "original": "SO IT REALLY DOES EXIST",
+      "translated": "Donc, il existe vraiment",
+      "mask_regions_count": 2,
+      "text_style": "dialogue",
+      "text_color_rgb": [
+        231,
+        238,
+        243
+      ],
+      "font_hint": "thin",
+      "confidence": 0.96971,
+      "detection_confidence": 0.8832777738571167,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.846
+    }
+  ]
+}

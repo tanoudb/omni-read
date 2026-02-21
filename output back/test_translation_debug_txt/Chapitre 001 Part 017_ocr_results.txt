@@ -1,0 +1,10 @@
+OCR Results for Chapitre 001 Part 017
+============================================================
+
+[1] bulle (score=0.78)
+    bbox: [92, 207, 428, 527]
+    size: 336x320px
+    OCR text: "WH-WHAT ABOLTOUR SON??" 
+    OCR conf: 0.95
+    NLLB brut: "Qu'est-ce qui est arrivé à notre fils ?" 
+    Traduit: "Qu'est-ce qui est arrivé à notre fils ?"

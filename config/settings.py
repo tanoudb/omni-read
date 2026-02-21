@@ -100,7 +100,7 @@ class PerformanceConfig:
     max_batch_size: int = 8
     prefetch_images: bool = False
     num_workers: int = 4
-    enable_cache: bool = True
+    enable_cache: bool = False
     cache_max_size_mb: int = 500
 
 
@@ -205,6 +205,29 @@ class OCRConfig:
     enable_contrast_enhancement: bool = False
     enable_denoising: bool = False
     convert_to_rgb: bool = True
+
+    # MULTI-PASS CROP PREPROCESSING
+    multipass_enabled: bool = _env_bool("WEBTOON_OCR_MULTIPASS_ENABLED", True)
+    multipass_max_variants: int = _env_int("WEBTOON_OCR_MULTIPASS_MAX_VARIANTS", 7)
+    crop_padding_px: int = _env_int("WEBTOON_OCR_CROP_PADDING_PX", 16)
+    target_text_px_min: int = _env_int("WEBTOON_OCR_TARGET_TEXT_PX_MIN", 36)
+    target_text_px_max: int = _env_int("WEBTOON_OCR_TARGET_TEXT_PX_MAX", 50)
+    upscale_min_factor: float = float(os.environ.get("WEBTOON_OCR_UPSCALE_MIN_FACTOR", "1.0"))
+    upscale_max_factor: float = float(os.environ.get("WEBTOON_OCR_UPSCALE_MAX_FACTOR", "3.0"))
+
+    # BINARIZATION / MORPHOLOGY
+    enable_otsu_binarization: bool = _env_bool("WEBTOON_OCR_ENABLE_OTSU", True)
+    enable_adaptive_binarization: bool = _env_bool("WEBTOON_OCR_ENABLE_ADAPTIVE", True)
+    adaptive_block_size: int = _env_int("WEBTOON_OCR_ADAPTIVE_BLOCK_SIZE", 31)
+    adaptive_c: int = _env_int("WEBTOON_OCR_ADAPTIVE_C", 9)
+    enable_morph_dilate: bool = _env_bool("WEBTOON_OCR_ENABLE_DILATE", True)
+    morph_kernel_size: int = _env_int("WEBTOON_OCR_MORPH_KERNEL", 2)
+
+    # RAPIDOCR PP-OCR tuning
+    rapidocr_use_angle_cls: bool = _env_bool("WEBTOON_RAPIDOCR_USE_ANGLE_CLS", True)
+    rapidocr_unclip_ratio: float = float(os.environ.get("WEBTOON_RAPIDOCR_UNCLIP_RATIO", "2.0"))
+    rapidocr_box_thresh: float = float(os.environ.get("WEBTOON_RAPIDOCR_BOX_THRESH", "0.45"))
+    rapidocr_det_db_score_mode: str = os.environ.get("WEBTOON_RAPIDOCR_DB_SCORE_MODE", "slow").strip().lower()
     
     # ── VALIDATION - SEUILS ASSOUPLIS ──
     min_confidence: float = 0.1
@@ -240,6 +263,7 @@ class SegmentationConfig:
 @dataclass
 class TranslationConfig:
     backend: str = os.environ.get("WEBTOON_TRANSLATION_BACKEND", "local_llm").strip().lower()
+    # Modes valides: hybrid | hybrid_quality | nllb | qwen
     translation_mode: str = os.environ.get("WEBTOON_TRANSLATION_MODE", "hybrid").strip().lower()
 
     # NLLB (legacy)
@@ -348,7 +372,15 @@ class TranslationConfig:
         "MISO.": "Miso.",
         "GHISLAIN PERDIUM.": "GHISLAIN PERDIUM.",
         "YUNHO! HELP ME!": "YUNHO! HELP ME!",
-        "LOOK HERE, MRS. YUJIN JUNG!": "Regardez ici, Mme YUJIN JUNG !"
+        "LOOK HERE, MRS. YUJIN JUNG!": "Regardez ici, Mme YUJIN JUNG !",
+        "WAAAH!! WAAAH!!": "WAAAH !! WAAAH !!",
+        "WAAAH! WAAAH!": "WAAAH ! WAAAH !",
+        "HONEY!!": "Chéri !!",
+        "BUT DAAAD!!!": "Mais PAPA !!!",
+        "LOOK FORWARD TO IT.": "Préparez-vous.",
+        "USING A WEDDING AS A TRAP?": "Utiliser un mariage comme piège ?",
+        "WELL,THAT'S WHAT YOU GET FOR HITTING YOUR CLASSMATES.": "Voilà ce que tu récoltes pour avoir frappé tes camarades de classe.",
+        "WELL, THAT'S WHAT YOU GET FOR HITTING YOUR CLASSMATES.": "Voilà ce que tu récoltes pour avoir frappé tes camarades de classe."
     })
 
 
@@ -364,11 +396,12 @@ class RenderingConfig:
     inpaint_method: str = "telea"
     background_detection: str = "median_border"
     background_sample_ratio: float = 0.1
+    primary_font_path: str = os.environ.get("WEBTOON_PRIMARY_FONT_PATH", "").strip()
     
     font_paths: List[str] = field(default_factory=_discover_font_paths)
     
     enable_dynamic_sizing: bool = True
-    target_fill_ratio: float = 0.70
+    target_fill_ratio: float = 0.80
     min_font_size: int = 12
     max_font_size: int = 80
     font_size_step: int = 2
@@ -377,7 +410,7 @@ class RenderingConfig:
     horizontal_align: str = "center"
     vertical_align: str = "center"
     line_spacing_ratio: float = 0.20
-    word_wrap_ratio: float = 0.72
+    word_wrap_ratio: float = 0.90
     padding_horizontal: int = 8
     padding_vertical: int = 6
     
@@ -398,6 +431,10 @@ class RenderingConfig:
     lock_text_system_only: bool = _env_bool("WEBTOON_LOCK_TEXT_SYSTEM_ONLY", True)
     precise_masks: bool = _env_bool("WEBTOON_PRECISE_MASKS", True)
     inpaint_out_text: bool = _env_bool("WEBTOON_INPAINT_OUT_TEXT", True)
+    inpaint_mask_dilate_kernel: int = int(os.environ.get("WEBTOON_INPAINT_MASK_DILATE", "7"))
+    bubble_inpaint_mask_dilate_kernel: int = min(9, int(os.environ.get("WEBTOON_BUBBLE_INPAINT_MASK_DILATE", os.environ.get("WEBTOON_INPAINT_MASK_DILATE", "7"))))
+    out_text_mask_dilate_kernel: int = int(os.environ.get("WEBTOON_OUT_TEXT_DILATE", "11"))
+    inpaint_pass2_enabled: bool = _env_bool("WEBTOON_INPAINT_PASS2", False)
     inpainting_model_id: str = os.environ.get("WEBTOON_INPAINTING_MODEL_ID", "dreMaz/AnimeMangaInpainting")
     inpainting_model_path: Path = INPAINTING_CACHE_DIR / "dreMaz--AnimeMangaInpainting"
 

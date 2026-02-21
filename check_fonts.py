@@ -3,9 +3,7 @@ Script: Vérifier les polices Windows disponibles
 Aide à déboguer les problèmes de polices manquantes
 """
 
-import subprocess
 from pathlib import Path
-import os
 
 FONTS_DIR = Path("C:/Windows/Fonts")
 

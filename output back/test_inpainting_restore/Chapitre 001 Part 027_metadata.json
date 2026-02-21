@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 027.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 027_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        137.8931121826172,
+        201,
+        544.3057250976562,
+        592
+      ],
+      "original": ".AND ALSO, I'M SO HAPPY IGOTTO BE.. YOLR WIFE..",
+      "translated": "La peur du sang comme un piège?",
+      "confidence": 0.884235,
+      "detection_confidence": 0.7504996657371521,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.827
+    }
+  ]
+}

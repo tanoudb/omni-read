@@ -1,0 +1,122 @@
+{
+  "source": "image test\\image.png",
+  "output": "output\\benchmark_final_standardized\\image_translated.png",
+  "dimensions": {
+    "width": 720,
+    "height": 12359
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        58.61414337158203,
+        2139,
+        181.16204833984375,
+        2237
+      ],
+      "original": "Hngh.",
+      "translated": "Je vous en prie.",
+      "confidence": 0.95682,
+      "detection_confidence": 0.8664717078208923,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.834
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        586.4224853515625,
+        2662,
+        684.0645751953125,
+        2749
+      ],
+      "original": "Uh.",
+      "translated": "Je suis désolée.",
+      "confidence": 0.6332,
+      "detection_confidence": 0.6907827854156494,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.627
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        335.4439290364583,
+        3900,
+        693.963134765625,
+        4150
+      ],
+      "original": "SOMETHING TICKLES...",
+      "translated": "Quelque chose le chatouille...",
+      "confidence": 0.98505,
+      "detection_confidence": 0.8771191835403442,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.85
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        58.099446614583336,
+        6929,
+        431.5416259765625,
+        7196
+      ],
+      "original": "WH-WHAT THE HECKIS GOING ON?",
+      "translated": "Qu'est-ce qui est en train de se passer ?",
+      "confidence": 0.9621833333333333,
+      "detection_confidence": 0.8750686645507812,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.95,
+      "global_confidence": 0.929
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        340.4405924479167,
+        7711,
+        676.756103515625,
+        8002
+      ],
+      "original": "WHO THE HELL...?",
+      "translated": "Qui c'est ?",
+      "confidence": 0.91119,
+      "detection_confidence": 0.8569359183311462,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.876
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        192.07283528645834,
+        9730,
+        577.084716796875,
+        10004
+      ],
+      "original": "T-TAEGEON?!",
+      "translated": "T-TAEGEON?! Je suis désolé.",
+      "confidence": 0.98807,
+      "detection_confidence": 0.9029983282089233,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.861
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        49.302215576171875,
+        10727,
+        353.2807210286458,
+        10951
+      ],
+      "original": "NO WAY...",
+      "translated": "Pas du tout.",
+      "confidence": 0.94805,
+      "detection_confidence": 0.8712236285209656,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.832
+    }
+  ]
+}

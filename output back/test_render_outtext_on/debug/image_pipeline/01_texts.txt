@@ -1,0 +1,6 @@
+class: out_text
+bbox: [140.06302897135416, 1487, 636.4684651692709, 1750]
+ocr: HE SOUGHT THE ULTIMATE HEIGHTS OF MARTIAL ARTS
+translation: Il a atteint les sommets des arts martiaux .
+style: dialogue
+mask_regions: 3

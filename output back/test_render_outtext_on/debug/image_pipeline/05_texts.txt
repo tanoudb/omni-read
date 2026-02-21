@@ -1,0 +1,6 @@
+class: bulle
+bbox: [0.0, 7747, 486.8179524739583, 8165]
+ocr: THAT FRUIT IS SAID TO HOLD THE POWER OF IMMORTALITY
+translation: On dit que ce fruit détient le pouvoir de l'immortalité.
+style: dialogue
+mask_regions: 2

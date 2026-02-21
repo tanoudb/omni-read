@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 054.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 054_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        72.61142985026042,
+        1108,
+        400.517333984375,
+        1279
+      ],
+      "original": "OH,",
+      "translated": "OH,",
+      "confidence": 0.95685,
+      "detection_confidence": 0.8871982097625732,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.907
+    }
+  ]
+}

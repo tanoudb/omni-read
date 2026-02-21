@@ -1,0 +1,10 @@
+OCR Results for Chapitre 001 Part 007
+============================================================
+
+[1] bulle (score=0.74)
+    bbox: [154, 96, 539, 472]
+    size: 385x376px
+    OCR text: "KRGH...KHOFF... ERGH..." 
+    OCR conf: 0.86
+    NLLB brut: "KRGH...KHOFF... ERGH..." 
+    Traduit: "KRGH...KHOFF... ERGH..."

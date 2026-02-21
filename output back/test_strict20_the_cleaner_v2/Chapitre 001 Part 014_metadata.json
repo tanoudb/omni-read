@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 014.jpg",
+  "output": "output\\test_strict20_the_cleaner_v2\\Chapitre 001 Part 014_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        156.42039489746094,
+        135,
+        543.5894165039062,
+        419
+      ],
+      "original": "HONEY!!",
+      "translated": "MIEL!!",
+      "confidence": 0.98693,
+      "detection_confidence": 0.6772480607032776,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.781
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 033.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 033_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        102.93768310546875,
+        0,
+        572.0150146484375,
+        223
+      ],
+      "original": "BADYOL WANTED TC TAKE MEDOWN? KHO",
+      "translated": "Tu sais bien que Cheongdo n'oublie jamais un traître.",
+      "confidence": 0.9237033333333334,
+      "detection_confidence": 0.7555299997329712,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.78
+    }
+  ]
+}

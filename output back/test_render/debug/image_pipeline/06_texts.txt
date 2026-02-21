@@ -1,0 +1,6 @@
+class: bulle
+bbox: [205.08015950520834, 9633, 556.1505533854166, 10000]
+ocr: SO IT REALLY DOES EXIST
+translation: Donc, il existe vraiment
+style: dialogue
+mask_regions: 2

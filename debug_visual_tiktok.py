@@ -11,7 +11,7 @@ Génère 5 images étape par étape dans output_tiktok/<image_name>/ :
 
 import argparse
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import cv2
 import numpy as np

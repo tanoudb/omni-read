@@ -1,0 +1,53 @@
+OCR Results for image
+============================================================
+
+[1] System (score=0.56)
+    bbox: [10, 98, 708, 1165]
+    size: 698x1067px
+    OCR text: "(none)" 
+    OCR conf: 0.93
+    Traduit: "(none)" 
+
+[2] out_text (score=0.48)
+    bbox: [140, 1487, 636, 1750]
+    size: 496x263px
+    OCR text: "HE SOUGHT THE ULTIMATE HEIGHTS OF MARTIAL ARTS" 
+    OCR conf: 0.97
+    Traduit: "Il a atteint les sommets des arts martiaux ." 
+
+[3] System (score=0.55)
+    bbox: [8, 3552, 706, 4156]
+    size: 698x604px
+    OCR text: "BUT HE REALIZED THAT EVEN A LIFE- TIME WOULDN'T BE ENOUGH TO REACH THEM" 
+    OCR conf: 0.96
+    Traduit: "Mais il s' est rendu compte
+Même une vie ne suffirait pas pour les atteindre." 
+
+[4] bulle (score=0.65)
+    bbox: [0, 5436, 708, 5861]
+    size: 708x425px
+    OCR text: "TO OVERTURN THIS TRUTH, HE CLUNG TO AN AN- CIENT LEGEND" 
+    OCR conf: 0.97
+    Traduit: "Pour renverser cette vérité, il s'appuie sur une ancienne légende." 
+
+[5] bulle (score=0.88)
+    bbox: [237, 6308, 708, 6664]
+    size: 471x356px
+    OCR text: "DEEP WITHIN THE SACRED SANCTUARY PROTECTED BY A DIVINE DRAGON LIES A GOLDEN FRUIT" 
+    OCR conf: 0.95
+    Traduit: "Au fond du sanctuaire sacré protégé par un dragon divin se trouve un fruit doré" 
+
+[6] bulle (score=0.89)
+    bbox: [0, 7747, 486, 8165]
+    size: 486x418px
+    OCR text: "THAT FRUIT IS SAID TO HOLD THE POWER OF IMMORTALITY" 
+    OCR conf: 0.97
+    Traduit: "On dit que ce fruit détient le pouvoir de l'immortalité" 
+
+[7] bulle (score=0.88)
+    bbox: [205, 9633, 556, 10000]
+    size: 351x367px
+    OCR text: "SO IT REALLY DOES EXIST" 
+    OCR conf: 0.97
+    Traduit: "Donc, il existe vraiment" 
+

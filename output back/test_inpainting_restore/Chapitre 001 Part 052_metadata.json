@@ -1,0 +1,42 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 052.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 052_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        26.22589874267578,
+        3,
+        417.5561116536458,
+        353
+      ],
+      "original": "THEY WERE BLLLYING ANOTHER KID!",
+      "translated": "Puisqu'ils sont des WEREBLLLIES, il est tout à fait légitime de les battre!!",
+      "confidence": 0.9572766666666667,
+      "detection_confidence": 0.7461586594581604,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.792
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        234.24803161621094,
+        1106,
+        657.240234375,
+        1279
+      ],
+      "original": "ANO THEV OVW",
+      "translated": "ANO THEV OVW",
+      "confidence": 0.80306,
+      "detection_confidence": 0.8673000931739807,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.765
+    }
+  ]
+}

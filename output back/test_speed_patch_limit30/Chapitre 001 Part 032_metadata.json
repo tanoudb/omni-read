@@ -1,0 +1,42 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 032.jpg",
+  "output": "output\\test_speed_patch_limit30\\Chapitre 001 Part 032_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        213.2284698486328,
+        676,
+        685.201904296875,
+        1080
+      ],
+      "original": "ONLYBASTARDS LIKE YOL COLLD COME LP WITH A DIRTYPLAN LIKETHAT....",
+      "translated": "Des bâtards comme YOL COLLD viendraient avec un avion sale comme ça...",
+      "confidence": 0.9226599999999999,
+      "detection_confidence": 0.6889238357543945,
+      "source_lang_detected": "pt",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.822
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        121.19668579101562,
+        1223,
+        457.2618408203125,
+        1280
+      ],
+      "original": "IS THAT HOW",
+      "translated": "IS THAT HOW",
+      "confidence": 0.9821933333333334,
+      "detection_confidence": 0.6594855189323425,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.839
+    }
+  ]
+}

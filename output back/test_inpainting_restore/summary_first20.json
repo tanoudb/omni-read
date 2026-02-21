@@ -1,0 +1,11 @@
+{
+  "oeuvre": "the_cleaner",
+  "chapter": "Chapitre 001",
+  "limit": 50,
+  "processed": 50,
+  "success": 50,
+  "errors": 0,
+  "elapsed_seconds": 294.889,
+  "failed_images": [],
+  "output_dir": "output\\test_inpainting_restore"
+}

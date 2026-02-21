@@ -13,9 +13,11 @@ from typing import List, Dict, Optional, Tuple
 import time
 import json
 import gc
+import re
+from concurrent.futures import ThreadPoolExecutor
 
 from config import config
-from utils import MemoryManager, model_context, memory_profiler, WebtoonLogger
+from utils import MemoryManager, model_context, WebtoonLogger
 from core import YOLODetector, OCREngine, NLLBTranslator, TextRenderer, Detection, SmartSegmenter
 
 # Couleurs par classe pour le debug (v3 + legacy v2)
@@ -201,12 +203,32 @@ class TranslationPipeline:
         y2 = min(h_img, det.y2 + margin)
         crop_expand = img[y1:y2, x1:x2]
 
+        # Offset réel entre crop élargi et crop original
+        off_x = det.x1 - x1
+        off_y = det.y1 - y1
+
+        def _shift_regions(regions, dx, dy):
+            """Ramène les text_regions d'un crop décalé vers le crop original."""
+            if not regions or (dx == 0 and dy == 0):
+                return regions
+            result = []
+            for region in regions:
+                if not isinstance(region, dict):
+                    result.append(region)
+                    continue
+                pts = region.get('bbox')
+                if pts:
+                    pts = [[p[0] - dx, p[1] - dy] for p in pts]
+                result.append({**region, 'bbox': pts})
+            return result
+
         if crop_expand.size > 0:
             t2, c2, v2, r2, reg2, u2 = self.ocr_engine.extract_text(crop_expand)
             if v2 and c2 >= max(0.35, confidence):
+                reg2 = _shift_regions(reg2, off_x, off_y)
                 return t2, c2, v2, r2, reg2, u2, "expanded"
 
-        # Retry 2: contraste CLAHE + sharpen
+        # Retry 2: contraste CLAHE + sharpen (crop original → pas de décalage)
         gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
         clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
         enhanced = clahe.apply(gray)
@@ -252,6 +274,68 @@ class TranslationPipeline:
             if txt not in lines:
                 lines.append(txt)
         return lines
+
+    @staticmethod
+    def _is_render_noise_text(text: str, confidence: float) -> bool:
+        value = str(text or "").strip()
+        if not value:
+            return True
+
+        # Tokens alpha très faibles: bruit OCR typique
+        alpha_tokens = re.findall(r"[A-Za-z']+", value)
+        if not alpha_tokens:
+            return True
+
+        # Mélange lettres/chiffres ou répétitions anormales sur faible confiance
+        if re.search(r"[A-Za-z]+\d+[A-Za-z]+", value) and float(confidence) < 0.92:
+            return True
+
+        weird = 0
+        for tok in alpha_tokens:
+            t = tok.strip("'")
+            if len(t) < 4:
+                continue
+            vowels = sum(1 for c in t.lower() if c in "aeiouy")
+            vowel_ratio = vowels / max(1, len(t))
+            repeated = re.search(r"(.)\1{3,}", t.lower()) is not None
+            mixed = any(c.islower() for c in t) and any(c.isupper() for c in t)
+            if (repeated and (mixed or vowel_ratio < 0.45)) or (mixed and vowel_ratio < 0.25):
+                weird += 1
+
+            if len(alpha_tokens) == 1 and len(t) >= 6 and float(confidence) < 0.90:
+                if re.search(r"[a-z]{2,}[A-Z]", t) or re.search(r"[A-Z]{2,}[a-z]{2,}", t):
+                    weird += 1
+
+        if weird >= max(1, len(alpha_tokens) // 2) and float(confidence) < 0.93:
+            return True
+        return False
+
+    @staticmethod
+    def _run_pre_inpainting(
+        img: np.ndarray,
+        detections: List[Detection],
+        renderer: TextRenderer,
+    ) -> Tuple[np.ndarray, float]:
+        t0 = time.perf_counter()
+        out = img.copy()
+        for det in detections:
+            cls = str(getattr(det, 'class_name', '') or '').strip().lower()
+            if cls == 'system':
+                effective_regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None)
+            else:
+                effective_regions = getattr(det, 'text_regions', None) or getattr(det, 'mask_regions', None)
+            out = renderer.inpaint_region(
+                out,
+                det.x1,
+                det.y1,
+                det.x2,
+                det.y2,
+                text_regions=effective_regions,
+                class_name=getattr(det, 'class_name', ''),
+                chirurgical_mask=getattr(det, 'chirurgical_mask', None),
+                bubble_mask=getattr(det, 'mask_binary', None),
+            )
+        return out, max(0.0, time.perf_counter() - t0)
     
     # ─────────────────────────────────────────────────────────────────────────
     # DEBUG : Visualisation détections
@@ -364,7 +448,8 @@ class TranslationPipeline:
                 f.write(f"    size: {det.x2-det.x1}x{det.y2-det.y1}px\n")
                 f.write(f"    OCR text: \"{det.text_original or '(none)'}\" \n")
                 f.write(f"    OCR conf: {det.ocr_confidence:.2f}\n")
-                f.write(f"    Traduit: \"{det.text_translated or '(none)'}\" \n")
+                f.write(f"    Traduction NLLB: \"{getattr(det, 'text_nllb_raw', None) or '(none)'}\" \n")
+                f.write(f"    Traduction finale: \"{det.text_translated or '(none)'}\" \n")
                 f.write("\n")
         
         self.logger.info(f"   🐛 Résultats OCR: {ocr_path}")
@@ -644,6 +729,60 @@ class TranslationPipeline:
             f.write(f"style: {getattr(det, 'text_style', 'dialogue')}\n")
             f.write(f"mask_regions: {len(getattr(det, 'mask_regions', []) or [])}\n")
 
+    def save_debug_inpaint_only_bundle(
+        self,
+        output_dir: Path,
+        image_name: str,
+        index: int,
+        det: Detection,
+        cleaned_crop: np.ndarray,
+    ) -> None:
+        debug_dir = output_dir / "debug" / f"{image_name}_pipeline"
+        debug_dir.mkdir(parents=True, exist_ok=True)
+
+        if cleaned_crop is None or cleaned_crop.size == 0:
+            return
+
+        h, w = cleaned_crop.shape[:2]
+        mask = np.zeros((h, w), dtype=np.uint8)
+        cls = str(getattr(det, 'class_name', '') or '').strip().lower()
+        if cls == 'system':
+            mask_regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None) or []
+        else:
+            mask_regions = getattr(det, 'text_regions', None) or getattr(det, 'mask_regions', None) or []
+        for region in mask_regions:
+            pts = region.get('bbox') if isinstance(region, dict) else None
+            if not pts:
+                continue
+            arr = np.array(pts, dtype=np.int32)
+            if arr.ndim != 2 or arr.shape[0] < 3:
+                continue
+            arr[:, 0] = np.clip(arr[:, 0], 0, max(0, w - 1))
+            arr[:, 1] = np.clip(arr[:, 1], 0, max(0, h - 1))
+            cv2.fillPoly(mask, [arr], 255)
+
+        if getattr(det, 'chirurgical_mask', None) is not None:
+            cmask = det.chirurgical_mask
+            if isinstance(cmask, np.ndarray) and cmask.size > 0:
+                if cmask.shape[:2] != (h, w):
+                    cmask = cv2.resize(cmask, (w, h), interpolation=cv2.INTER_NEAREST)
+                mask = cv2.bitwise_or(mask, cmask.astype(np.uint8))
+
+        overlay = cleaned_crop.copy()
+        if np.sum(mask) > 0:
+            color = np.zeros_like(overlay)
+            color[:, :] = (0, 0, 255)
+            alpha = (mask.astype(np.float32) / 255.0) * 0.35
+            alpha = np.expand_dims(alpha, axis=2)
+            overlay = (overlay.astype(np.float32) * (1.0 - alpha) + color.astype(np.float32) * alpha).astype(np.uint8)
+
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cv2.drawContours(overlay, contours, -1, (0, 255, 255), 1)
+
+        cv2.imwrite(str(debug_dir / f"{index:02d}_inpaint_only.png"), cleaned_crop)
+        cv2.imwrite(str(debug_dir / f"{index:02d}_inpaint_mask_overlay.png"), overlay)
+        cv2.imwrite(str(debug_dir / f"{index:02d}_inpaint_mask.png"), mask)
+
     def save_debug_render_overview(
         self,
         output_dir: Path,
@@ -883,8 +1022,35 @@ class TranslationPipeline:
                     stats['skip_reasons'][skip_reason] = stats['skip_reasons'].get(skip_reason, 0) + 1
                     continue
 
+                # Filtre de Bruit : confiance OCR < 0.85 ET texte < 4 caractères
+                # (artefacts OCR typiques : "ii", "HOnn", etc.)
+                if float(confidence) < 0.85 and len((text or "").strip()) < 4:
+                    stats['skipped'] += 1
+                    stats['skip_reasons']['ocr_noise_short'] = (
+                        stats['skip_reasons'].get('ocr_noise_short', 0) + 1
+                    )
+                    self.logger.info(
+                        f"      ⚠️  Ignoré (bruit court): conf={confidence:.2f} "
+                        f"len={len((text or '').strip())} text='{(text or '').strip()}'"
+                    )
+                    continue
+
                 det.text_original = text
-                det.text_regions = text_regions or []
+                raw_regions = text_regions or []
+                uf = float(upscale_factor) if upscale_factor and float(upscale_factor) > 1.0 else 1.0
+                if uf != 1.0:
+                    remapped = []
+                    for region in raw_regions:
+                        if not isinstance(region, dict):
+                            remapped.append(region)
+                            continue
+                        pts = region.get('bbox')
+                        if pts:
+                            pts = [[p[0] / uf, p[1] / uf] for p in pts]
+                        remapped.append({**region, 'bbox': pts})
+                    det.text_regions = remapped
+                else:
+                    det.text_regions = raw_regions
                 det.ocr_lines = self._extract_ocr_lines_from_regions(det.text_regions)
 
                 if self.segmenter:
@@ -915,24 +1081,50 @@ class TranslationPipeline:
                             det.chirurgical_mask = ocr_mask_dilated
                         else:
                             # det.mask_binary is crop-local mask; build OCR mask same shape
-                            ocr_mask = np.zeros_like(det.mask_binary)
-                            for region in det.text_regions or []:
-                                pts = region.get('bbox') if isinstance(region, dict) else None
-                                if not pts:
-                                    continue
-                                arr = np.array(pts, dtype=np.int32)
-                                if arr.ndim != 2 or arr.shape[0] < 3:
-                                    continue
-                                arr[:, 0] = np.clip(arr[:, 0], 0, max(0, ocr_mask.shape[1] - 1))
-                                arr[:, 1] = np.clip(arr[:, 1], 0, max(0, ocr_mask.shape[0] - 1))
-                                _cv2.fillPoly(ocr_mask, [arr], 255)
-                            kernel = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (11, 11))
-                            ocr_mask_dilated = _cv2.dilate(ocr_mask, kernel, iterations=1)
-                            # Intersection avec mask binaire SAM2
-                            try:
-                                det.chirurgical_mask = _cv2.bitwise_and(ocr_mask_dilated, det.mask_binary)
-                            except Exception:
-                                det.chirurgical_mask = ocr_mask_dilated
+                                h_det = max(1, det.y2 - det.y1)
+                                w_det = max(1, det.x2 - det.x1)
+                                # debug shapes
+                                try:
+                                    mb_shape = det.mask_binary.shape
+                                except Exception:
+                                    mb_shape = None
+                                print(f"[DEBUG CHIR] mask_binary.shape={mb_shape} expected=({h_det},{w_det})")
+
+                                # Always build OCR mask with detection dimensions
+                                ocr_mask = np.zeros((h_det, w_det), dtype=np.uint8)
+                                for region in det.text_regions or []:
+                                    pts = region.get('bbox') if isinstance(region, dict) else None
+                                    if not pts:
+                                        continue
+                                    arr = np.array(pts, dtype=np.int32)
+                                    if arr.ndim != 2 or arr.shape[0] < 3:
+                                        continue
+                                    arr[:, 0] = np.clip(arr[:, 0], 0, max(0, ocr_mask.shape[1] - 1))
+                                    arr[:, 1] = np.clip(arr[:, 1], 0, max(0, ocr_mask.shape[0] - 1))
+                                    _cv2.fillPoly(ocr_mask, [arr], 255)
+                                kernel = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (11, 11))
+                                ocr_mask_dilated = _cv2.dilate(ocr_mask, kernel, iterations=1)
+                                # Intersection avec mask binaire SAM2 (resize mask_binary if needed)
+                                try:
+                                    mask_binary_local = det.mask_binary
+                                    if mask_binary_local is None:
+                                        det.chirurgical_mask = ocr_mask_dilated
+                                    else:
+                                        if getattr(mask_binary_local, 'ndim', 0) == 3:
+                                            mask_binary_local = mask_binary_local[:, :, 0]
+                                        if mask_binary_local.shape[:2] != (h_det, w_det):
+                                            try:
+                                                mask_binary_resized = _cv2.resize(mask_binary_local, (w_det, h_det), interpolation=_cv2.INTER_NEAREST)
+                                                print(f"[DEBUG CHIR] resized mask_binary from {mb_shape} to {(h_det,w_det)}")
+                                            except Exception:
+                                                mask_binary_resized = mask_binary_local
+                                        else:
+                                            mask_binary_resized = mask_binary_local
+                                        # ensure uint8
+                                        mask_binary_resized = (mask_binary_resized > 0).astype(np.uint8) * 255
+                                        det.chirurgical_mask = _cv2.bitwise_and(ocr_mask_dilated, mask_binary_resized)
+                                except Exception:
+                                    det.chirurgical_mask = ocr_mask_dilated
                         # closing pour boucher trous entre lettres
                         kernel_close = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (5, 5))
                         if getattr(det, 'chirurgical_mask', None) is not None:
@@ -945,6 +1137,29 @@ class TranslationPipeline:
                     det.mask_regions = det.text_regions
                     det.mask_binary = None
                     det.seg_backend = "none"
+                    # Construire un chirurgical_mask minimal depuis text_regions (même sans segmenter)
+                    try:
+                        import cv2 as _cv2
+                        h_det = max(1, det.y2 - det.y1)
+                        w_det = max(1, det.x2 - det.x1)
+                        ocr_mask = np.zeros((h_det, w_det), dtype=np.uint8)
+                        for _region in det.text_regions or []:
+                            _pts = _region.get('bbox') if isinstance(_region, dict) else None
+                            if not _pts:
+                                continue
+                            _arr = np.array(_pts, dtype=np.int32)
+                            if _arr.ndim != 2 or _arr.shape[0] < 3:
+                                continue
+                            _arr[:, 0] = np.clip(_arr[:, 0], 0, max(0, w_det - 1))
+                            _arr[:, 1] = np.clip(_arr[:, 1], 0, max(0, h_det - 1))
+                            _cv2.fillPoly(ocr_mask, [_arr], 255)
+                        if np.sum(ocr_mask) > 0:
+                            _k = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (7, 7))
+                            det.chirurgical_mask = _cv2.dilate(ocr_mask, _k, iterations=1)
+                        else:
+                            det.chirurgical_mask = None
+                    except Exception:
+                        det.chirurgical_mask = None
 
                 if self.debug:
                     self.save_debug_mask_bundle(
@@ -961,6 +1176,19 @@ class TranslationPipeline:
         
         # Filtrer détections sans texte
         valid_detections = [d for d in translatable_detections if d.text_original]
+
+        # Sécurité rendu: ignorer les artefacts OCR (pas d'inpainting ni texte)
+        cleaned_for_render: List[Detection] = []
+        for det in valid_detections:
+            if self._is_render_noise_text(det.text_original, det.ocr_confidence):
+                stats['skipped'] += 1
+                stats['skip_reasons']['ocr_noise_render'] = stats['skip_reasons'].get('ocr_noise_render', 0) + 1
+                self.logger.info(
+                    f"      ⚠️  Zone ignorée (bruit OCR) conf={det.ocr_confidence:.2f} text='{(det.text_original or '')[:80]}'"
+                )
+                continue
+            cleaned_for_render.append(det)
+        valid_detections = cleaned_for_render
         
         self.logger.info(f"\n✅ {len(valid_detections)} textes extraits")
         
@@ -975,6 +1203,20 @@ class TranslationPipeline:
             stats['time_seconds'] = time.time() - start_time
             stats['timings'] = {k: round(v, 3) for k, v in timings.items()}
             return stats
+
+        renderer = TextRenderer()
+        inpaint_executor: Optional[ThreadPoolExecutor] = None
+        inpaint_future = None
+        try:
+            inpaint_executor = ThreadPoolExecutor(max_workers=2)
+            inpaint_future = inpaint_executor.submit(self._run_pre_inpainting, img, valid_detections, renderer)
+            self.logger.info("   ⚙️  Pré-inpainting lancé en arrière-plan pendant la traduction")
+        except Exception as exc:
+            inpaint_future = None
+            if inpaint_executor is not None:
+                inpaint_executor.shutdown(wait=False)
+                inpaint_executor = None
+            self.logger.warning(f"   ⚠️  Pré-inpainting async indisponible: {exc}")
         
         # ✅ NOUVEAU: Décharger OCR pour libérer ~2GB de VRAM avant traduction
         self.logger.info("\n🧹 Déchargement OCR pour libérer RAM/VRAM...")
@@ -1031,8 +1273,21 @@ class TranslationPipeline:
 
                 system_detections = [d for d in valid_detections if str(getattr(d, 'class_name', '')).lower() == 'system']
                 regular_detections = [d for d in valid_detections if str(getattr(d, 'class_name', '')).lower() != 'system']
+                translation_mode = str(getattr(config.translation, 'translation_mode', 'hybrid')).lower()
 
-                if regular_detections:
+                if regular_detections and translation_mode == 'qwen':
+                    self.logger.info(f"\n   🤖 Qwen page entière ({len(regular_detections)} bulles)")
+                    payload_texts = [d.text_original for d in regular_detections]
+                    translations_map = translator.translate_page_json(payload_texts)
+                    for det_idx, det in enumerate(regular_detections):
+                        det.text_nllb_raw = (translations_map.get(str(det_idx)) or translations_map.get(det_idx) or det.text_original)
+                        det.text_translated = det.text_nllb_raw
+                        tr_preview = (det.text_translated or "").replace("\n", " ")
+                        if len(tr_preview) > 140:
+                            tr_preview = tr_preview[:140] + "..."
+                        self.logger.info(f"      [QWEN][{det_idx}] {tr_preview}")
+
+                elif regular_detections:
                     self.logger.info(f"\n   🌍 Traduction page entière ({len(regular_detections)} bulles)")
                     payload_texts = [d.text_original for d in regular_detections]
                     for pidx, ptxt in enumerate(payload_texts):
@@ -1077,7 +1332,8 @@ class TranslationPipeline:
                         }
 
                     for det_idx, det in enumerate(regular_detections):
-                        det.text_translated = (translations_map.get(str(det_idx)) or translations_map.get(det_idx) or det.text_original)
+                        det.text_nllb_raw = (translations_map.get(str(det_idx)) or translations_map.get(det_idx) or det.text_original)
+                        det.text_translated = det.text_nllb_raw
 
                         src = (det.text_original or "").strip()
                         out = (det.text_translated or "").strip()
@@ -1130,11 +1386,14 @@ class TranslationPipeline:
                         title_tr = translator.translate(title_for_translation).strip()
                         body_tr = translator.translate(body_for_translation).strip()
                         if title_tr and body_tr:
+                            det.text_nllb_raw = f"{title_tr}\n{body_tr}"
                             det.text_translated = f"{title_tr}\n{body_tr}"
                         else:
-                            det.text_translated = translator.translate(det.text_original or "")
+                            det.text_nllb_raw = translator.translate(det.text_original or "")
+                            det.text_translated = det.text_nllb_raw
                     else:
-                        det.text_translated = translator.translate(det.text_original or "")
+                        det.text_nllb_raw = translator.translate(det.text_original or "")
+                        det.text_translated = det.text_nllb_raw
                 
                 cache_stats = translator.get_cache_stats()
                 if cache_stats:
@@ -1160,9 +1419,21 @@ class TranslationPipeline:
         # ─────────────────────────────────────────────────────────────────
         
         self.logger.phase("Rendering", 4, 4)
-        
+
         img_translated = img.copy()
-        renderer = TextRenderer()
+        pre_inpaint_done = False
+        if inpaint_future is not None:
+            try:
+                img_translated, inpaint_async_sec = inpaint_future.result()
+                timings['inpainting_seconds'] += max(0.0, inpaint_async_sec)
+                pre_inpaint_done = True
+            except Exception as exc:
+                self.logger.warning(f"   ⚠️  Pré-inpainting échoué, fallback séquentiel: {exc}")
+            finally:
+                if inpaint_executor is not None:
+                    inpaint_executor.shutdown(wait=False)
+                    inpaint_executor = None
+
         inpaint_backend = "anime" if getattr(renderer, 'anime_inpainter_ready', False) else ("simple-lama" if getattr(renderer, 'lama', None) is not None else "cv2-telea")
         self.logger.info(f"   🩹 Inpainting backend actif: {inpaint_backend}")
         
@@ -1200,22 +1471,91 @@ class TranslationPipeline:
             before_crop = None
             if self.debug:
                 before_crop = img_translated[det.y1:det.y2, det.x1:det.x2].copy()
-            
-            img_translated, inpaint_sec, render_text_sec = renderer.render_text_with_timing(
-                img_translated,
-                det.text_translated,
-                det.x1, det.y1, det.x2, det.y2,
-                text_regions=getattr(det, 'text_regions', None),
-                mask_regions=getattr(det, 'mask_regions', None),
-                text_color_rgb=getattr(det, 'text_color_rgb', None),
-                text_style=getattr(det, 'text_style', 'dialogue'),
-                font_hint=getattr(det, 'font_hint', 'regular'),
-                class_name=getattr(det, 'class_name', ''),
-                chirurgical_mask=getattr(det, 'chirurgical_mask', None),
-                bubble_mask=getattr(det, 'mask_binary', None),
-            )
-            timings['inpainting_seconds'] += max(0.0, inpaint_sec)
-            timings['text_render_seconds'] += max(0.0, render_text_sec)
+
+            if pre_inpaint_done:
+                if self.debug:
+                    inpaint_only_crop = img_translated[det.y1:det.y2, det.x1:det.x2].copy()
+                    self.save_debug_inpaint_only_bundle(
+                        output_dir,
+                        image_stem,
+                        i + 1,
+                        det,
+                        inpaint_only_crop,
+                    )
+
+                render_t0 = time.perf_counter()
+                effective_regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None)
+                img_translated = renderer.insert_text(
+                    img_translated,
+                    det.text_translated,
+                    det.x1,
+                    det.y1,
+                    det.x2,
+                    det.y2,
+                    text_regions=effective_regions,
+                    text_color_rgb=getattr(det, 'text_color_rgb', None),
+                    text_style=getattr(det, 'text_style', 'dialogue'),
+                    font_hint=getattr(det, 'font_hint', 'regular'),
+                    class_name=getattr(det, 'class_name', ''),
+                )
+                timings['text_render_seconds'] += max(0.0, time.perf_counter() - render_t0)
+            else:
+                if self.debug:
+                    effective_regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None)
+                    inpaint_t0 = time.perf_counter()
+                    img_translated = renderer.inpaint_region(
+                        img_translated,
+                        det.x1,
+                        det.y1,
+                        det.x2,
+                        det.y2,
+                        text_regions=effective_regions,
+                        class_name=getattr(det, 'class_name', ''),
+                        chirurgical_mask=getattr(det, 'chirurgical_mask', None),
+                        bubble_mask=getattr(det, 'mask_binary', None),
+                    )
+                    timings['inpainting_seconds'] += max(0.0, time.perf_counter() - inpaint_t0)
+
+                    inpaint_only_crop = img_translated[det.y1:det.y2, det.x1:det.x2].copy()
+                    self.save_debug_inpaint_only_bundle(
+                        output_dir,
+                        image_stem,
+                        i + 1,
+                        det,
+                        inpaint_only_crop,
+                    )
+
+                    render_t0 = time.perf_counter()
+                    img_translated = renderer.insert_text(
+                        img_translated,
+                        det.text_translated,
+                        det.x1,
+                        det.y1,
+                        det.x2,
+                        det.y2,
+                        text_regions=effective_regions,
+                        text_color_rgb=getattr(det, 'text_color_rgb', None),
+                        text_style=getattr(det, 'text_style', 'dialogue'),
+                        font_hint=getattr(det, 'font_hint', 'regular'),
+                        class_name=getattr(det, 'class_name', ''),
+                    )
+                    timings['text_render_seconds'] += max(0.0, time.perf_counter() - render_t0)
+                else:
+                    img_translated, inpaint_sec, render_text_sec = renderer.render_text_with_timing(
+                        img_translated,
+                        det.text_translated,
+                        det.x1, det.y1, det.x2, det.y2,
+                        text_regions=getattr(det, 'text_regions', None),
+                        mask_regions=getattr(det, 'mask_regions', None),
+                        text_color_rgb=getattr(det, 'text_color_rgb', None),
+                        text_style=getattr(det, 'text_style', 'dialogue'),
+                        font_hint=getattr(det, 'font_hint', 'regular'),
+                        class_name=getattr(det, 'class_name', ''),
+                        chirurgical_mask=getattr(det, 'chirurgical_mask', None),
+                        bubble_mask=getattr(det, 'mask_binary', None),
+                    )
+                    timings['inpainting_seconds'] += max(0.0, inpaint_sec)
+                    timings['text_render_seconds'] += max(0.0, render_text_sec)
 
             if self.debug and before_crop is not None:
                 after_crop = img_translated[det.y1:det.y2, det.x1:det.x2].copy()

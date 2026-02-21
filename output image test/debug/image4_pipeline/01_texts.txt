@@ -1,6 +1,0 @@
-class: out_text
-bbox: [264.58642578125, 1299.5418701171875, 669.4251708984375, 1402.6978759765625]
-ocr: GOOS BY THE BELOVED AND EVEN THOSE
-translation: Les oiseaux par les bien-aimés et même ceux
-style: dialogue
-mask_regions: 1

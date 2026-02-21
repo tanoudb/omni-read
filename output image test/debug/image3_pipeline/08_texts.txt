@@ -1,6 +1,0 @@
-class: out_text
-bbox: [766.5917154947916, 13993.0, 983.885498046875, 14037.839284261068]
-ocr: N PA
-translation: N PA
-style: dialogue
-mask_regions: 1

@@ -1,0 +1,11 @@
+{
+  "oeuvre": "the_cleaner",
+  "chapter": "Chapitre 001",
+  "limit": 15,
+  "processed": 15,
+  "success": 15,
+  "errors": 0,
+  "elapsed_seconds": 149.643,
+  "failed_images": [],
+  "output_dir": "output\\test_translation_debug_txt"
+}

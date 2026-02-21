@@ -1,0 +1,11 @@
+{
+  "oeuvre": "the_cleaner",
+  "chapter": "Chapitre 001",
+  "limit": 20,
+  "processed": 20,
+  "success": 20,
+  "errors": 0,
+  "elapsed_seconds": 204.674,
+  "failed_images": [],
+  "output_dir": "output\\test_strict20_the_cleaner_v2"
+}

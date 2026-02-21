@@ -1,0 +1,6 @@
+class: bulle
+bbox: [0.0, 5436, 708.0, 5861]
+ocr: TO OVERTURN THIS TRUTH, HE CLUNG TO AN AN- CIENT LEGEND
+translation: Pour renverser cette vérité, il s'appuie sur une vieille légende.
+style: dialogue
+mask_regions: 4

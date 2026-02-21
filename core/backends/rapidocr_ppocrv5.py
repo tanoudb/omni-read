@@ -9,6 +9,7 @@ from typing import Tuple, List, Dict, Any
 import cv2
 import numpy as np
 
+from config import config
 from .base import OCRBackend
 
 
@@ -25,13 +26,30 @@ class RapidOCRPPOCRv5Backend(OCRBackend):
     def load(self, device: str) -> None:
         from rapidocr import RapidOCR, EngineType, OCRVersion
 
-        params = {
+        base_params = {
             "Det.engine_type": EngineType.ONNXRUNTIME,
             "Cls.engine_type": EngineType.ONNXRUNTIME,
             "Rec.engine_type": EngineType.ONNXRUNTIME,
             "Rec.ocr_version": OCRVersion.PPOCRV5,
         }
-        self.engine = RapidOCR(params=params)
+
+        tuned_params = dict(base_params)
+        ocr_cfg = getattr(config, "ocr", None)
+        if ocr_cfg is not None:
+            tuned_params.update(
+                {
+                    "Global.use_cls": bool(getattr(ocr_cfg, "rapidocr_use_angle_cls", True)),
+                    "Det.unclip_ratio": float(getattr(ocr_cfg, "rapidocr_unclip_ratio", 2.0)),
+                    "Det.box_thresh": float(getattr(ocr_cfg, "rapidocr_box_thresh", 0.45)),
+                    "Det.score_mode": str(getattr(ocr_cfg, "rapidocr_det_db_score_mode", "slow") or "slow"),
+                }
+            )
+
+        try:
+            self.engine = RapidOCR(params=tuned_params)
+        except Exception as exc:
+            print(f"⚠️ RapidOCR params tuning ignoré ({exc}), fallback paramètres par défaut")
+            self.engine = RapidOCR(params=base_params)
         self._force_cuda_provider()
 
     @staticmethod

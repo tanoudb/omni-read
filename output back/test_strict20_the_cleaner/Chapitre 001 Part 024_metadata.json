@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 024.jpg",
+  "output": "output\\test_strict20_the_cleaner\\Chapitre 001 Part 024_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        35.81731160481771,
+        501,
+        339.37913004557294,
+        793
+      ],
+      "original": "SO PLEASE...",
+      "translated": "Alors s'il vous plaît...",
+      "confidence": 0.87791,
+      "detection_confidence": 0.8203712105751038,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.782
+    }
+  ]
+}

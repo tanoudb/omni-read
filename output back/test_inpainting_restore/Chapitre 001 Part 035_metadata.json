@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 035.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 035_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "out_text",
+      "bbox": [
+        191.2122039794922,
+        703,
+        517.3814697265625,
+        806
+      ],
+      "original": ".HE'LL KILL ano人 SON.",
+      "translated": "Une fois que le sénile ancien président Mason prendra sa place",
+      "confidence": 0.87486,
+      "detection_confidence": 0.6727712750434875,
+      "source_lang_detected": "zh",
+      "source_lang_confidence": 0.99,
+      "global_confidence": 0.827
+    }
+  ]
+}

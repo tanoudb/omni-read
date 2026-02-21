@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 049.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 049_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "out_text",
+      "bbox": [
+        99.2516581217448,
+        898,
+        323.9176839192708,
+        1010
+      ],
+      "original": "SMMIGH G",
+      "translated": "Une semaine d'entraînement spartiate.",
+      "confidence": 0.6755,
+      "detection_confidence": 0.5345460772514343,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.591
+    }
+  ]
+}

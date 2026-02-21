@@ -1,0 +1,6 @@
+class: bulle
+bbox: [237.40869140625, 6308, 708.0, 6664]
+ocr: DEEP WITHIN THE SACRED SANCTUARY PROTECTED BY A DIVINE DRAGON LIES A GOLDEN FRUIT
+translation: Au fond du sanctuaire sacré protégé par un dragon divin se trouve un fruit d'or
+style: dialogue
+mask_regions: 1

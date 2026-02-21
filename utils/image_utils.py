@@ -6,7 +6,7 @@ IMAGE UTILITIES - Manipulation et preprocessing images
 
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont, ImageEnhance
+from PIL import Image
 from typing import Tuple, Optional, List
 from pathlib import Path
 

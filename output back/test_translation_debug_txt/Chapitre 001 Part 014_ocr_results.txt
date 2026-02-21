@@ -1,0 +1,10 @@
+OCR Results for Chapitre 001 Part 014
+============================================================
+
+[1] bulle (score=0.68)
+    bbox: [156, 135, 543, 419]
+    size: 387x284px
+    OCR text: "HONEY!!" 
+    OCR conf: 0.99
+    NLLB brut: "Le miel !" 
+    Traduit: "Chérie!!"

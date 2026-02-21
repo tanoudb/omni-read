@@ -1,0 +1,42 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 047.jpg",
+  "output": "output\\test_inpainting_restore\\Chapitre 001 Part 047_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "out_text",
+      "bbox": [
+        237.93528747558594,
+        332,
+        354.7696228027344,
+        401
+      ],
+      "original": "WHINE",
+      "translated": "WHINE",
+      "confidence": 0.99021,
+      "detection_confidence": 0.4503428339958191,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.703
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        49.862770080566406,
+        772,
+        390.2016296386719,
+        1091
+      ],
+      "original": "BUTDAAAD!!!",
+      "translated": "BUTDAAAD!!!",
+      "confidence": 0.94324,
+      "detection_confidence": 0.7957671284675598,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.803
+    }
+  ]
+}

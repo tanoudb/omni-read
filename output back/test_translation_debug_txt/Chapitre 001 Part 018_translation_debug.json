@@ -1,0 +1,38 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 018.jpg",
+  "image": "Chapitre 001 Part 018",
+  "entries": [
+    {
+      "index": 0,
+      "class": "bulle",
+      "bbox": [
+        322.5809631347656,
+        18,
+        606.1751708984375,
+        292
+      ],
+      "ocr_source": "HE'S... OKAY.",
+      "nllb_raw": "Il va bien.",
+      "final_translation": "Il va bien.",
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.803
+    },
+    {
+      "index": 1,
+      "class": "bulle",
+      "bbox": [
+        77.213134765625,
+        920,
+        429.46392822265625,
+        1279
+      ],
+      "ocr_source": "THERE'S SOMETHING. IWANT TO.. TELL YOU.",
+      "nllb_raw": "Il y a quelque chose que je veux te dire.",
+      "final_translation": "Il y a quelque chose que je veux te dire.",
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.859
+    }
+  ]
+}

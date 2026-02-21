@@ -1,0 +1,38 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 013.jpg",
+  "image": "Chapitre 001 Part 013",
+  "entries": [
+    {
+      "index": 0,
+      "class": "bulle",
+      "bbox": [
+        51.899288177490234,
+        565,
+        401.5563659667969,
+        809
+      ],
+      "ocr_source": "WAAAH!! WAAAH!!",
+      "nllb_raw": "WAAAH!! WAAAH!!",
+      "final_translation": "WAAAH!! WAAAH!!",
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.836
+    },
+    {
+      "index": 1,
+      "class": "out_text",
+      "bbox": [
+        100.58773803710938,
+        1137,
+        245.5646209716797,
+        1210
+      ],
+      "ocr_source": "ELINCH",
+      "nllb_raw": "ELINCH",
+      "final_translation": "ELINCH",
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.685
+    }
+  ]
+}

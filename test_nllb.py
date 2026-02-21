@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from core.translation.translator_nllb import NLLBCT2Translator
 from config import config

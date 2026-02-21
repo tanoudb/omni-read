@@ -1,0 +1,26 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001 Part 007.jpg",
+  "output": "output\\test_speed_patch_limit3\\Chapitre 001 Part 007_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 1280
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        154.95477294921875,
+        96,
+        539.1419677734375,
+        472
+      ],
+      "original": "KRGH...KHOFF... ERGH...",
+      "translated": "KRGH...KHOFF... ERGH...",
+      "confidence": 0.857785,
+      "detection_confidence": 0.7416353821754456,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.746
+    }
+  ]
+}

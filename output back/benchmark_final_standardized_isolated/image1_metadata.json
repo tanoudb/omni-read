@@ -1,0 +1,170 @@
+{
+  "source": "image test\\image1.png",
+  "output": "output\\benchmark_final_standardized_isolated\\image1_translated.png",
+  "dimensions": {
+    "width": 800,
+    "height": 13255
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        116.37066650390625,
+        429,
+        691.6602783203125,
+        690
+      ],
+      "original": "'THE GREAT CATACLYSM'",
+      "translated": "La grande catastrophe",
+      "confidence": 0.987255,
+      "detection_confidence": 0.773577094078064,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.815
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        16.13421630859375,
+        1536,
+        515.237548828125,
+        1625
+      ],
+      "original": "A PORTAL TO ANOTHER WORLD SUDDENLY APPEARED,",
+      "translated": "Un portail vers un autre monde est soudainement apparu.",
+      "confidence": 0.956345,
+      "detection_confidence": 0.3995276987552643,
+      "source_lang_detected": "pt",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.736
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        260.312744140625,
+        3276,
+        800.0,
+        3554
+      ],
+      "original": "AND DEMONS CAME OUT OF IT",
+      "translated": "Et les démons en sont sortis.",
+      "confidence": 0.95541,
+      "detection_confidence": 0.6130680441856384,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.811
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        117.465576171875,
+        3870,
+        717.7940673828125,
+        4191
+      ],
+      "original": "THIS WAS IT,",
+      "translated": "C'était ça.",
+      "confidence": 0.99103,
+      "detection_confidence": 0.5182949900627136,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.793
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        19.61474609375,
+        4537,
+        439.8422037760417,
+        4852
+      ],
+      "original": "AHH!",
+      "translated": "Ça alors !",
+      "confidence": 0.99484,
+      "detection_confidence": 0.8562905788421631,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.847
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        301.6048177083333,
+        6583,
+        787.5704752604166,
+        6937
+      ],
+      "original": "SAVE ME!!!",
+      "translated": "Sauvez-moi tout de suite !",
+      "confidence": 0.95241,
+      "detection_confidence": 0.8547397255897522,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.828
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        29.200358072916668,
+        7397,
+        772.6382649739584,
+        7756
+      ],
+      "original": "THE END OF HUMANITY",
+      "translated": "La fin de l'humanité",
+      "confidence": 0.97246,
+      "detection_confidence": 0.8362149596214294,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.83,
+      "global_confidence": 0.896
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        66.47036743164062,
+        8315,
+        342.0167643229167,
+        8587
+      ],
+      "original": "HUFF....",
+      "translated": "Je ne sais pas.",
+      "confidence": 0.8777,
+      "detection_confidence": 0.8970152735710144,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.809
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        472.1986490885417,
+        9440,
+        749.8689778645834,
+        9716
+      ],
+      "original": "HUFF....",
+      "translated": "Je ne sais pas.",
+      "confidence": 0.89717,
+      "detection_confidence": 0.9150404930114746,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.824
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        354.63916015625,
+        12812,
+        780.4251302083334,
+        13100
+      ],
+      "original": "AHH!!",
+      "translated": "Ça alors !",
+      "confidence": 0.83407,
+      "detection_confidence": 0.8588575124740601,
+      "source_lang_detected": "en",
+      "source_lang_confidence": 0.5,
+      "global_confidence": 0.776
+    }
+  ]
+}

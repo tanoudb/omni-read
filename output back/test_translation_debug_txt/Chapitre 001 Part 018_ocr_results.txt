@@ -1,0 +1,18 @@
+OCR Results for Chapitre 001 Part 018
+============================================================
+
+[1] bulle (score=0.86)
+    bbox: [322, 18, 606, 292]
+    size: 284x274px
+    OCR text: "HE'S... OKAY." 
+    OCR conf: 0.89
+    NLLB brut: "Il va bien." 
+    Traduit: "Il va bien." 
+
+[2] bulle (score=0.79)
+    bbox: [77, 920, 429, 1279]
+    size: 352x359px
+    OCR text: "THERE'S SOMETHING. IWANT TO.. TELL YOU." 
+    OCR conf: 0.93
+    NLLB brut: "Il y a quelque chose que je veux te dire." 
+    Traduit: "Il y a quelque chose que je veux te dire."
