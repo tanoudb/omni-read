@@ -55,6 +55,7 @@ class TranslationPipeline:
         self.shared_ocr_engine = shared_ocr_engine
         self.shared_translator = shared_translator
         self.segmenter = None
+        self.detector = None  # Added YOLO persistent detector
         
         self.logger.info(f"🖥️  Device: {self.device}")
         
@@ -66,6 +67,7 @@ class TranslationPipeline:
         if not self.lazy_models:
             self._ensure_ocr_engine()
             self._ensure_segmenter()
+            self._ensure_detector()  # Ensure YOLO is loaded once
 
     def _ensure_ocr_engine(self) -> bool:
         if self.ocr_engine is not None:
@@ -90,6 +92,21 @@ class TranslationPipeline:
         except Exception as e:
             self.logger.error(f"Échec initialisation segmenter: {e}")
             self.segmenter = None
+            return False
+
+    def _ensure_detector(self):
+        """Load YOLO once and keep it in memory."""
+        if self.detector is not None:
+            return True
+        try:
+            from core import YOLODetector
+            from config import config
+            self.detector = YOLODetector(config.YOLO_MODEL_PATH, self.device)
+            self.logger.info(f"   🎯 YOLO loaded (persistent)")
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to load YOLO: {e}")
+            self.detector = None
             return False
 
     def _release_ocr_engine(self):
@@ -881,7 +898,7 @@ class TranslationPipeline:
         
         detections = []
         
-        # ── Padding noir optionnel haut/bas pour les bords ──
+        #─ Padding noir optionnel haut/bas pour les bords ──
         # Désactivé par défaut (WEBTOON_USE_BLACK_PADDING=false)
         use_black_padding = bool(
             getattr(config.detection, 'black_bars_enabled', getattr(config.detection, 'use_black_padding', False))
@@ -899,36 +916,37 @@ class TranslationPipeline:
         
         yolo_t0 = time.perf_counter()
         yolo_report: Dict = {}
-        with model_context(lambda: YOLODetector(config.YOLO_MODEL_PATH, self.device)) as detector:
-            max_h = int(getattr(config.detection, 'max_height', 0) or 0)
-            detection_img = img_padded
-            detection_scale = 1.0
 
-            if max_h > 0 and img_padded.shape[0] > max_h:
-                detection_scale = img_padded.shape[0] / float(max_h)
-                resized_w = max(1, int(img_padded.shape[1] / detection_scale))
-                detection_img = cv2.resize(img_padded, (resized_w, max_h), interpolation=cv2.INTER_AREA)
-                self.logger.info(f"   ↕️ Limite hauteur active: {img_padded.shape[0]} -> {max_h}px")
+        max_h = int(getattr(config.detection, 'max_height', 0) or 0)
+        detection_img = img_padded
+        detection_scale = 1.0
 
-            detections = detector.detect(detection_img, logger=self.logger)
-            yolo_report = detector.get_last_debug_report()
-            if detection_scale != 1.0:
-                for det in detections:
-                    det.bbox = [
-                        float(det.bbox[0] * detection_scale),
-                        float(det.bbox[1] * detection_scale),
-                        float(det.bbox[2] * detection_scale),
-                        float(det.bbox[3] * detection_scale),
-                    ]
+        if max_h > 0 and img_padded.shape[0] > max_h:
+            detection_scale = img_padded.shape[0] / float(max_h)
+            resized_w = max(1, int(img_padded.shape[1] / detection_scale))
+            detection_img = cv2.resize(img_padded, (resized_w, max_h), interpolation=cv2.INTER_AREA)
+            self.logger.info(f"   ↕️ Limite hauteur active: {img_padded.shape[0]} -> {max_h}px")
 
-            if pad_h > 0:
-                for det in detections:
-                    new_y1 = max(0, int(det.bbox[1]) - pad_h)
-                    new_y2 = min(h, int(det.bbox[3]) - pad_h)
-                    det.bbox = [det.bbox[0], new_y1, det.bbox[2], new_y2]
+        detections = self.detector.detect(detection_img, logger=self.logger)
+        yolo_report = self.detector.get_last_debug_report()
 
-            detections = [d for d in detections if d.y2 > 0 and d.y1 < h]
-            translatable_detections = detector.get_translatable_detections(detections)
+        if detection_scale != 1.0:
+            for det in detections:
+                det.bbox = [
+                    float(det.bbox[0] * detection_scale),
+                    float(det.bbox[1] * detection_scale),
+                    float(det.bbox[2] * detection_scale),
+                    float(det.bbox[3] * detection_scale),
+                ]
+
+        if pad_h > 0:
+            for det in detections:
+                new_y1 = max(0, int(det.bbox[1]) - pad_h)
+                new_y2 = min(h, int(det.bbox[3]) - pad_h)
+                det.bbox = [det.bbox[0], new_y1, det.bbox[2], new_y2]
+
+        detections = [d for d in detections if d.y2 > 0 and d.y1 < h]
+        translatable_detections = self.detector.get_translatable_detections(detections)
         timings['yolo_seconds'] += max(0.0, time.perf_counter() - yolo_t0)
 
         # Garde-fou: ne jamais traduire les SFX, même si la config change.
@@ -947,7 +965,7 @@ class TranslationPipeline:
         stats['detections'] = len(detections)
         stats['translatable'] = len(translatable_detections)
         
-        # ── DEBUG : sauvegarder visualisation ──
+        #─ DEBUG : sauvegarder visualisation ──
         if self.debug:
             self.save_debug_detections(img, detections, translatable_detections,
                                        output_dir, image_stem)
@@ -1150,8 +1168,8 @@ class TranslationPipeline:
                             _arr = np.array(_pts, dtype=np.int32)
                             if _arr.ndim != 2 or _arr.shape[0] < 3:
                                 continue
-                            _arr[:, 0] = np.clip(_arr[:, 0], 0, max(0, w_det - 1))
-                            _arr[:, 1] = np.clip(_arr[:, 1], 0, max(0, h_det - 1))
+                            _arr[:, 0] = np.clip(_arr[:, 0], 0, max(0, ocr_mask.shape[1] - 1))
+                            _arr[:, 1] = np.clip(_arr[:, 1], 0, max(0, ocr_mask.shape[0] - 1))
                             _cv2.fillPoly(ocr_mask, [_arr], 255)
                         if np.sum(ocr_mask) > 0:
                             _k = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (7, 7))
@@ -1205,31 +1223,20 @@ class TranslationPipeline:
             return stats
 
         renderer = TextRenderer()
-        inpaint_executor: Optional[ThreadPoolExecutor] = None
-        inpaint_future = None
-        try:
-            inpaint_executor = ThreadPoolExecutor(max_workers=2)
-            inpaint_future = inpaint_executor.submit(self._run_pre_inpainting, img, valid_detections, renderer)
-            self.logger.info("   ⚙️  Pré-inpainting lancé en arrière-plan pendant la traduction")
-        except Exception as exc:
-            inpaint_future = None
-            if inpaint_executor is not None:
-                inpaint_executor.shutdown(wait=False)
-                inpaint_executor = None
-            self.logger.warning(f"   ⚠️  Pré-inpainting async indisponible: {exc}")
-        
-        # ✅ NOUVEAU: Décharger OCR pour libérer ~2GB de VRAM avant traduction
-        self.logger.info("\n🧹 Déchargement OCR pour libérer RAM/VRAM...")
+
+        # Release OCR and segmenter (not needed for translation)
         self._release_ocr_engine()
         self._release_segmenter()
-        MemoryManager.cleanup_aggressive()  # Nettoyer agressivement
-        self._release_stage_memory("OCR/SAM2")
-        self._force_unload_before_translation()
-        
+
+        # LIGHT cleanup (not aggressive — keep YOLO in memory)
+        gc.collect()
+
+        self.logger.info("🧹 OCR/segmenter released")
+
         vram = MemoryManager.get_vram_usage()
         if vram:
-            self.logger.info(f"   💾 VRAM après: {vram['allocated_gb']:.2f} GB")
-        
+            self.logger.info(f"   💾 VRAM: {vram['allocated_gb']:.2f} GB")
+
         # ─────────────────────────────────────────────────────────────────
         # PHASE 3 : TRADUCTION
         # ─────────────────────────────────────────────────────────────────
@@ -1248,22 +1255,8 @@ class TranslationPipeline:
                 translator = translator_cm.__enter__()
             try:
                 llm_gen_before = float(getattr(translator, 'get_generation_seconds_total', lambda: 0.0)())
-                if self.debug:
-                    self.logger.info("\n   🔎 Langue source détectée (par bulle)")
-                    for idx, det in enumerate(valid_detections, start=1):
-                        src_text = det.text_original or ""
-                        detected_lang, lang_conf = translator.detect_source_language_with_confidence(src_text)
-                        det.source_lang_detected = detected_lang
-                        det.source_lang_confidence = lang_conf
-                        det.global_confidence = self._compute_global_confidence(det.score, det.ocr_confidence, lang_conf)
-                        preview = src_text.replace("\n", " ").strip()
-                        if len(preview) > 80:
-                            preview = preview[:77] + "..."
-                        self.logger.info(
-                            f"      [{idx:02d}] lang={detected_lang} ({lang_conf:.0%}) | global={det.global_confidence:.0%} | \"{preview}\""
-                        )
 
-                # Toujours alimenter les champs de confiance, même hors debug.
+                # Detect source language for all detections
                 for det in valid_detections:
                     src_text = det.text_original or ""
                     detected_lang, lang_conf = translator.detect_source_language_with_confidence(src_text)
@@ -1275,57 +1268,18 @@ class TranslationPipeline:
                 regular_detections = [d for d in valid_detections if str(getattr(d, 'class_name', '')).lower() != 'system']
                 translation_mode = str(getattr(config.translation, 'translation_mode', 'hybrid')).lower()
 
-                if regular_detections and translation_mode == 'qwen':
-                    self.logger.info(f"\n   🤖 Qwen page entière ({len(regular_detections)} bulles)")
-                    payload_texts = [d.text_original for d in regular_detections]
-                    translations_map = translator.translate_page_json(payload_texts)
-                    for det_idx, det in enumerate(regular_detections):
-                        det.text_nllb_raw = (translations_map.get(str(det_idx)) or translations_map.get(det_idx) or det.text_original)
-                        det.text_translated = det.text_nllb_raw
-                        tr_preview = (det.text_translated or "").replace("\n", " ")
-                        if len(tr_preview) > 140:
-                            tr_preview = tr_preview[:140] + "..."
-                        self.logger.info(f"      [QWEN][{det_idx}] {tr_preview}")
-
-                elif regular_detections:
+                if regular_detections:
                     self.logger.info(f"\n   🌍 Traduction page entière ({len(regular_detections)} bulles)")
                     payload_texts = [d.text_original for d in regular_detections]
-                    for pidx, ptxt in enumerate(payload_texts):
-                        preview = (ptxt or "").replace("\n", " ")
-                        if len(preview) > 140:
-                            preview = preview[:140] + "..."
-                        self.logger.info(f"      [LLM->][{pidx}] {preview}")
-                        self.logger.info(f"      [LLM INPUT] {pidx}: \"{(ptxt or '').replace(chr(10), ' ')}\"")
-
-                    payload_before = getattr(translator, 'get_last_page_payload_debug', lambda: {})()
-                    if payload_before:
-                        pass
 
                     translations_map = translator.translate_page_json(payload_texts)
-
-                    payload_debug = getattr(translator, 'get_last_page_payload_debug', lambda: {})()
-                    if isinstance(payload_debug, dict):
-                        sys_prompt = str(payload_debug.get('system_prompt', '') or '')
-                        user_prompt = str(payload_debug.get('user_prompt', '') or '')
-                        if sys_prompt:
-                            self.logger.info("      [LLM PROMPT][SYSTEM] >>>")
-                            for line in sys_prompt.splitlines():
-                                self.logger.info(f"      [LLM PROMPT][SYSTEM] {line}")
-                            self.logger.info("      [LLM PROMPT][SYSTEM] <<<")
-                        if user_prompt:
-                            self.logger.info("      [LLM PROMPT][USER] >>>")
-                            for line in user_prompt.splitlines():
-                                self.logger.info(f"      [LLM PROMPT][USER] {line}")
-                            self.logger.info("      [LLM PROMPT][USER] <<<")
-
-                    self.logger.info(f"      [LLM<-] map={translations_map}")
 
                     map_ok = isinstance(translations_map, dict) and all(
                         (str(i) in translations_map or i in translations_map)
                         for i in range(len(payload_texts))
                     )
                     if not map_ok:
-                        self.logger.warning("      ⚠️  JSON LLM non indexé correctement, fallback bulle par bulle")
+                        self.logger.warning("      ⚠️  JSON LLM non indexé, fallback bulle par bulle")
                         translations_map = {
                             str(i): translator.translate(txt)
                             for i, txt in enumerate(payload_texts)
@@ -1335,62 +1289,13 @@ class TranslationPipeline:
                         det.text_nllb_raw = (translations_map.get(str(det_idx)) or translations_map.get(det_idx) or det.text_original)
                         det.text_translated = det.text_nllb_raw
 
-                        src = (det.text_original or "").strip()
-                        out = (det.text_translated or "").strip()
-
-                        same_text = src and out and src.lower() == out.lower()
-                        src_compact = src.strip().upper()
-                        src_alpha = __import__('re').sub(r"[^A-Z]", "", src_compact)
-                        sfx_whitelist = {
-                            "AHH", "AHHH", "HUFF", "GASP", "SIGH", "BOOM", "BAM", "POW",
-                            "CRASH", "SLAM", "THUD", "WHOOSH", "BANG", "UGH", "HMM"
-                        }
-                        looks_like_sfx = (
-                            src_alpha in sfx_whitelist
-                            or (__import__('re').fullmatch(r"[A-Z]{2,6}(?:[.!?~\-]{0,4})", src_compact) is not None and " " not in src_compact)
-                        )
-                        looks_like_watermark = (
-                            ("http://" in src.lower())
-                            or ("https://" in src.lower())
-                            or ("www." in src.lower())
-                            or ("@" in src)
-                            or (".com" in src.lower())
-                            or ("discord" in src.lower())
-                            or ("patreon" in src.lower())
-                            or ("instagram" in src.lower())
-                        )
-
-                        if same_text and not looks_like_sfx and not looks_like_watermark and any(c.isalpha() for c in src):
-                            det.text_translated = translator.translate(src)
-
-                        tr_preview = (det.text_translated or "").replace("\n", " ")
-                        if len(tr_preview) > 140:
-                            tr_preview = tr_preview[:140] + "..."
-                        self.logger.info(f"      [LLM=][{det_idx}] {tr_preview}")
-
-                # Traduction spécifique des cartes System: conserver structure titre + description
                 for det in system_detections:
                     lines = [ln.strip() for ln in getattr(det, 'ocr_lines', []) if ln and ln.strip()]
                     if len(lines) >= 2:
-                        raw_title = lines[0]
-                        raw_body = " ".join(lines[1:])
-
-                        title_for_translation = raw_title
-                        if raw_title.isupper() and len(raw_title.split()) <= 5:
-                            title_for_translation = raw_title.title()
-
-                        body_for_translation = raw_body
-                        if raw_body.isupper():
-                            body_for_translation = raw_body.lower().capitalize()
-
-                        title_tr = translator.translate(title_for_translation).strip()
-                        body_tr = translator.translate(body_for_translation).strip()
-                        if title_tr and body_tr:
-                            det.text_nllb_raw = f"{title_tr}\n{body_tr}"
-                            det.text_translated = f"{title_tr}\n{body_tr}"
-                        else:
-                            det.text_nllb_raw = translator.translate(det.text_original or "")
-                            det.text_translated = det.text_nllb_raw
+                        title_tr = translator.translate(lines[0]).strip()
+                        body_tr = translator.translate(" ".join(lines[1:])).strip()
+                        det.text_nllb_raw = f"{title_tr}\n{body_tr}"
+                        det.text_translated = det.text_nllb_raw
                     else:
                         det.text_nllb_raw = translator.translate(det.text_original or "")
                         det.text_translated = det.text_nllb_raw
@@ -1421,21 +1326,9 @@ class TranslationPipeline:
         self.logger.phase("Rendering", 4, 4)
 
         img_translated = img.copy()
-        pre_inpaint_done = False
-        if inpaint_future is not None:
-            try:
-                img_translated, inpaint_async_sec = inpaint_future.result()
-                timings['inpainting_seconds'] += max(0.0, inpaint_async_sec)
-                pre_inpaint_done = True
-            except Exception as exc:
-                self.logger.warning(f"   ⚠️  Pré-inpainting échoué, fallback séquentiel: {exc}")
-            finally:
-                if inpaint_executor is not None:
-                    inpaint_executor.shutdown(wait=False)
-                    inpaint_executor = None
 
-        inpaint_backend = "anime" if getattr(renderer, 'anime_inpainter_ready', False) else ("simple-lama" if getattr(renderer, 'lama', None) is not None else "cv2-telea")
-        self.logger.info(f"   🩹 Inpainting backend actif: {inpaint_backend}")
+        inpaint_backend = "lama" if getattr(renderer, 'lama', None) is not None else "cv2-telea"
+        self.logger.info(f"   🩹 Inpainting backend: {inpaint_backend}")
         
         for i, det in enumerate(valid_detections):
             if not det.text_translated:
@@ -1449,113 +1342,48 @@ class TranslationPipeline:
             )
             det.text_color_rgb = renderer.extract_original_text_color(
                 img,
-                det.x1,
-                det.y1,
-                det.x2,
-                det.y2,
+                det.x1, det.y1, det.x2, det.y2,
                 getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
             )
             det.font_hint = renderer.detect_font_hint(
                 img,
-                det.x1,
-                det.y1,
-                det.x2,
-                det.y2,
+                det.x1, det.y1, det.x2, det.y2,
                 getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
             )
             
             self.logger.info(
-                f"   [{i+1}/{len(valid_detections)}] place bbox=({det.x1},{det.y1},{det.x2},{det.y2}) class={det.class_name} text=\"{det.text_translated}\""
+                f"   [{i+1}/{len(valid_detections)}] bbox=({det.x1},{det.y1},{det.x2},{det.y2}) class={det.class_name}"
             )
 
             before_crop = None
             if self.debug:
                 before_crop = img_translated[det.y1:det.y2, det.x1:det.x2].copy()
 
-            if pre_inpaint_done:
-                if self.debug:
-                    inpaint_only_crop = img_translated[det.y1:det.y2, det.x1:det.x2].copy()
-                    self.save_debug_inpaint_only_bundle(
-                        output_dir,
-                        image_stem,
-                        i + 1,
-                        det,
-                        inpaint_only_crop,
-                    )
+            effective_regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None)
 
-                render_t0 = time.perf_counter()
-                effective_regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None)
-                img_translated = renderer.insert_text(
-                    img_translated,
-                    det.text_translated,
-                    det.x1,
-                    det.y1,
-                    det.x2,
-                    det.y2,
-                    text_regions=effective_regions,
-                    text_color_rgb=getattr(det, 'text_color_rgb', None),
-                    text_style=getattr(det, 'text_style', 'dialogue'),
-                    font_hint=getattr(det, 'font_hint', 'regular'),
-                    class_name=getattr(det, 'class_name', ''),
-                )
-                timings['text_render_seconds'] += max(0.0, time.perf_counter() - render_t0)
-            else:
-                if self.debug:
-                    effective_regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None)
-                    inpaint_t0 = time.perf_counter()
-                    img_translated = renderer.inpaint_region(
-                        img_translated,
-                        det.x1,
-                        det.y1,
-                        det.x2,
-                        det.y2,
-                        text_regions=effective_regions,
-                        class_name=getattr(det, 'class_name', ''),
-                        chirurgical_mask=getattr(det, 'chirurgical_mask', None),
-                        bubble_mask=getattr(det, 'mask_binary', None),
-                    )
-                    timings['inpainting_seconds'] += max(0.0, time.perf_counter() - inpaint_t0)
+            # Inpainting
+            inpaint_t0 = time.perf_counter()
+            img_translated = renderer.inpaint_region(
+                img_translated,
+                det.x1, det.y1, det.x2, det.y2,
+                text_regions=effective_regions,
+                class_name=getattr(det, 'class_name', ''),
+            )
+            timings['inpainting_seconds'] += max(0.0, time.perf_counter() - inpaint_t0)
 
-                    inpaint_only_crop = img_translated[det.y1:det.y2, det.x1:det.x2].copy()
-                    self.save_debug_inpaint_only_bundle(
-                        output_dir,
-                        image_stem,
-                        i + 1,
-                        det,
-                        inpaint_only_crop,
-                    )
-
-                    render_t0 = time.perf_counter()
-                    img_translated = renderer.insert_text(
-                        img_translated,
-                        det.text_translated,
-                        det.x1,
-                        det.y1,
-                        det.x2,
-                        det.y2,
-                        text_regions=effective_regions,
-                        text_color_rgb=getattr(det, 'text_color_rgb', None),
-                        text_style=getattr(det, 'text_style', 'dialogue'),
-                        font_hint=getattr(det, 'font_hint', 'regular'),
-                        class_name=getattr(det, 'class_name', ''),
-                    )
-                    timings['text_render_seconds'] += max(0.0, time.perf_counter() - render_t0)
-                else:
-                    img_translated, inpaint_sec, render_text_sec = renderer.render_text_with_timing(
-                        img_translated,
-                        det.text_translated,
-                        det.x1, det.y1, det.x2, det.y2,
-                        text_regions=getattr(det, 'text_regions', None),
-                        mask_regions=getattr(det, 'mask_regions', None),
-                        text_color_rgb=getattr(det, 'text_color_rgb', None),
-                        text_style=getattr(det, 'text_style', 'dialogue'),
-                        font_hint=getattr(det, 'font_hint', 'regular'),
-                        class_name=getattr(det, 'class_name', ''),
-                        chirurgical_mask=getattr(det, 'chirurgical_mask', None),
-                        bubble_mask=getattr(det, 'mask_binary', None),
-                    )
-                    timings['inpainting_seconds'] += max(0.0, inpaint_sec)
-                    timings['text_render_seconds'] += max(0.0, render_text_sec)
+            # Text rendering
+            render_t0 = time.perf_counter()
+            img_translated = renderer.insert_text(
+                img_translated,
+                det.text_translated,
+                det.x1, det.y1, det.x2, det.y2,
+                text_regions=effective_regions,
+                text_color_rgb=getattr(det, 'text_color_rgb', None),
+                text_style=getattr(det, 'text_style', 'dialogue'),
+                font_hint=getattr(det, 'font_hint', 'regular'),
+                class_name=getattr(det, 'class_name', ''),
+            )
+            timings['text_render_seconds'] += max(0.0, time.perf_counter() - render_t0)
 
             if self.debug and before_crop is not None:
                 after_crop = img_translated[det.y1:det.y2, det.x1:det.x2].copy()
@@ -1585,39 +1413,30 @@ class TranslationPipeline:
                     'bbox': d.bbox,
                     'original': d.text_original,
                     'translated': d.text_translated,
-                    'mask_regions_count': len(getattr(d, 'mask_regions', []) or []),
-                    'text_style': getattr(d, 'text_style', 'dialogue'),
-                    'text_color_rgb': getattr(d, 'text_color_rgb', None),
-                    'font_hint': getattr(d, 'font_hint', 'regular'),
                     'confidence': d.ocr_confidence,
                     'detection_confidence': d.score,
-                    'source_lang_detected': getattr(d, 'source_lang_detected', config.translation.source_lang),
-                    'source_lang_confidence': getattr(d, 'source_lang_confidence', 0.5),
-                    'global_confidence': getattr(d, 'global_confidence', self._compute_global_confidence(d.score, d.ocr_confidence, 0.5))
                 }
                 for d in valid_detections if d.text_translated
             ]
         }
         
         with open(metadata_path, 'w', encoding='utf-8') as f:
-            json.dump(metadata, f, ensure_ascii=False, indent=2)  # ensure_ascii=False !
+            json.dump(metadata, f, ensure_ascii=False, indent=2)
         
         stats['time_seconds'] = time.time() - start_time
         stats['timings'] = {k: round(v, 3) for k, v in timings.items()}
         self.logger.info(
-            "📈 Bench étapes | "
+            "📈 Bench | "
             f"YOLO={stats['timings']['yolo_seconds']:.2f}s | "
-            f"SAM2={stats['timings']['sam2_seconds']:.2f}s | "
             f"OCR={stats['timings']['ocr_seconds']:.2f}s | "
             f"LLM={stats['timings']['llm_seconds']:.2f}s | "
-            f"LLM_GEN={stats['timings'].get('llm_generation_seconds', 0.0):.2f}s | "
             f"INPAINT={stats['timings'].get('inpainting_seconds', 0.0):.2f}s | "
             f"TEXT={stats['timings'].get('text_render_seconds', 0.0):.2f}s"
         )
         self.logger.info(f"⏱️  {stats['time_seconds']:.1f}s")
         
         return stats
-    
+
     # ─────────────────────────────────────────────────────────────────────────
     # TRAITEMENT BATCH
     # ─────────────────────────────────────────────────────────────────────────

@@ -35,6 +35,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import config
 from utils import ImageUtils
+from utils.mask_builder import (
+    build_inpainting_mask,
+    build_inpainting_mask_bbox_fallback,
+    regions_to_crop_coords,
+)
 
 # ── Charger LaMa ──
 try:
@@ -186,240 +191,100 @@ class TextRenderer:
     # INPAINTING LOCAL (LaMa sur crop, pas image entière)
     # ─────────────────────────────────────────────────────────────────────────
     
-    def inpaint_region(self, img: np.ndarray, x1: int, y1: int, x2: int, y2: int,
-                        text_regions: Optional[List[Dict]] = None,
-                        class_name: str = "",
-                        chirurgical_mask: Optional[np.ndarray] = None,
-                        bubble_mask: Optional[np.ndarray] = None) -> np.ndarray:
+    def inpaint_region(self, img, x1, y1, x2, y2,
+                   text_regions=None, class_name="",
+                   chirurgical_mask=None, bubble_mask=None):
         """
-        Inpainting sur un crop local autour de la bulle.
-        
-        IMPORTANT : si pas de text_regions OCR, on skip l'inpainting.
-        Ça évite d'effacer des bulles vides ou des faux positifs.
-        
-        ✅ NOUVEAU: Skip inpainting si bulle trop petite (< 150px haut)
-        LaMa crée des artefacts sur micro-texte
+        Inpainting simplifié en 4 étapes :
+        1. Crop local (bbox + marge)
+        2. Masque unique via mask_builder
+        3. UN appel LaMa
+        4. Blend + recolle
+
+        chirurgical_mask et bubble_mask sont acceptés mais IGNORÉS.
+        Le mask_builder centralisé produit un masque stable et universel.
         """
+        import cv2
+        import numpy as np
+        from utils.mask_builder import (
+            build_inpainting_mask,
+            build_inpainting_mask_bbox_fallback,
+            regions_to_crop_coords,
+        )
+
         h_img, w_img = img.shape[:2]
         x1, y1 = max(0, int(x1)), max(0, int(y1))
         x2, y2 = min(w_img, int(x2)), min(h_img, int(y2))
 
         cls = (class_name or "").strip().lower()
-        if cls == "out_text" and not bool(getattr(self.cfg, 'inpaint_out_text', True)):
-            print(f"[OUT_TEXT] skip inpaint bbox=({x1},{y1},{x2},{y2})")
-            return img
-        
+
+        # Gardes : skip si zone trop petite ou pas de régions OCR
         if x2 - x1 < 10 or y2 - y1 < 10:
             return img
-        
-        # ✅ NOUVEAU: Skip inpainting pour bulles trop petites
-        bubble_height = y2 - y1
-        if bubble_height < self.INPAINT_MIN_HEIGHT:
-            print(f"[SKIP LAMA] petite zone ({bubble_height}px < {self.INPAINT_MIN_HEIGHT}px) bbox=({x1},{y1},{x2},{y2})")
-            return img  # Pas d'inpainting, juste du rendu texte
-        
-        # Pas de régions OCR → pas d'inpainting (on sait pas quoi effacer)
-        if not text_regions or len(text_regions) == 0:
-            print(f"[SKIP LAMA] pas de mask_regions bbox=({x1},{y1},{x2},{y2})")
+
+        if not text_regions and cls != 'system':
             return img
-        
+
         # ── Crop local avec marge ──
         m = self.CROP_MARGIN
-        crop_x1 = max(0, x1 - m)
-        crop_y1 = max(0, y1 - m)
-        crop_x2 = min(w_img, x2 + m)
-        crop_y2 = min(h_img, y2 + m)
-        
-        crop = img[crop_y1:crop_y2, crop_x1:crop_x2].copy()
+        cx1 = max(0, x1 - m)
+        cy1 = max(0, y1 - m)
+        cx2 = min(w_img, x2 + m)
+        cy2 = min(h_img, y2 + m)
+
+        crop = img[cy1:cy2, cx1:cx2].copy()
         crop_h, crop_w = crop.shape[:2]
 
+        # Skip si fond blanc uniforme (pas besoin d'inpainter)
         if self._is_white_background(crop):
-            print(f"[SKIP LAMA] fond blanc bbox=({x1},{y1},{x2},{y2})")
             return img
-        
-        # Build OCR mask in crop coords. Prefer provided chirurgical_mask when present.
-        mask = np.zeros((crop_h, crop_w), dtype=np.uint8)
 
-        def _place_local_mask(src_mask: np.ndarray, dst_shape, dx, dy):
-            if src_mask is None or not isinstance(src_mask, np.ndarray):
-                return np.zeros(dst_shape, dtype=np.uint8)
-            h_src, w_src = src_mask.shape[:2]
-            h_dst, w_dst = dst_shape
-            out = np.zeros(dst_shape, dtype=np.uint8)
-            sx = max(0, dx)
-            sy = max(0, dy)
-            ex = min(w_dst, dx + w_src)
-            ey = min(h_dst, dy + h_src)
-            src_x0 = max(0, -dx)
-            src_y0 = max(0, -dy)
-            src_x1 = src_x0 + (ex - sx)
-            src_y1 = src_y0 + (ey - sy)
-            if ex > sx and ey > sy:
-                out[sy:ey, sx:ex] = src_mask[src_y0:src_y1, src_x0:src_x1]
-            return out
-
-        # Text regions are relative to detection (x1,y1). We need to map them into crop coords (crop_x1, crop_y1)
+        # ── Construction du masque via mask_builder ──
         if text_regions:
-            for region in text_regions:
-                bbox_points = region.get('bbox')
-                if not bbox_points:
-                    continue
-                local_points = []
-                for pt in bbox_points:
-                    lx = int(pt[0]) + (x1 - crop_x1)
-                    ly = int(pt[1]) + (y1 - crop_y1)
-                    lx = max(0, min(lx, crop_w - 1))
-                    ly = max(0, min(ly, crop_h - 1))
-                    local_points.append([lx, ly])
-                pts = np.array(local_points, dtype=np.int32)
-                if pts.shape[0] >= 3:
-                    cv2.fillPoly(mask, [pts], 255)
+            crop_regions = regions_to_crop_coords(
+                text_regions, x1, y1, cx1, cy1, crop_w, crop_h
+            )
+            mask = build_inpainting_mask(
+                crop_h, crop_w, crop_regions,
+                dilate_px=10,
+                close_kernel=15,
+                use_convex_hull=(cls != 'out_text'),
+                # out_text: pas d'enveloppe convexe (texte dispersé)
+            )
+        elif cls == 'system':
+            # System sans régions OCR : masque basé sur la bbox
+            mask = build_inpainting_mask_bbox_fallback(
+                crop_h, crop_w, x1, y1, x2, y2, cx1, cy1
+            )
+        else:
+            return img
 
-        # If a chirurgical_mask (from pipeline) is provided use it preferentially.
-        if isinstance(chirurgical_mask, np.ndarray) and chirurgical_mask.size > 0:
-            # chirurgical_mask expected in detection-local coords (h_det, w_det)
-            dx = x1 - crop_x1
-            dy = y1 - crop_y1
-            placed = _place_local_mask(chirurgical_mask, (crop_h, crop_w), dx, dy)
-            if np.sum(placed) > 0:
-                mask = placed
-        
-        # Dilater pour couvrir anti-alias
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
-        mask = cv2.dilate(mask, kernel, iterations=1)
-        
         if np.sum(mask) == 0:
             return img
-        
-        # Decide mode based on class_name and background complexity
-        # OUT_TEXT: single pass on OCR strict (dilated 12px), blend sigma=1.0
-        # SYSTEM: mask = full bbox; skip LaMa if white background (variance <15 and median>220)
-        # BUBBLE (default): pass1 = chirurgical_mask (OCR∩SAM), pass2 optional background outside bubble
 
-        def _run_lama_once(mask_use: np.ndarray, sigma_blur: float = 1.5) -> Optional[np.ndarray]:
-            try:
-                if self.anime_inpainter_ready and self.anime_inpainter is not None:
-                    out = self._inpaint_anime(crop, mask_use)
-                elif self.lama is not None:
-                    out = self._inpaint_lama(crop, mask_use)
-                else:
-                    out = cv2.inpaint(crop, mask_use, inpaintRadius=7, flags=cv2.INPAINT_TELEA)
-                alpha = cv2.GaussianBlur(mask_use, (0, 0), sigmaX=sigma_blur, sigmaY=sigma_blur).astype(np.float32) / 255.0
-                alpha = np.clip(alpha, 0.0, 1.0)
-                alpha = np.expand_dims(alpha, axis=2)
-                blended = (crop.astype(np.float32) * (1.0 - alpha) + out.astype(np.float32) * alpha).astype(np.uint8)
-                return blended
-            except Exception:
-                return None
-
-        # Prepare masks for decisions
-        # Build ocr_mask_dilated (in crop coords) if needed
-        ocr_mask = mask.copy()
-        if np.sum(ocr_mask) == 0 and text_regions:
-            # fallback: rebuild from regions
-            ocr_mask = np.zeros((crop_h, crop_w), dtype=np.uint8)
-            for region in text_regions:
-                bbox_points = region.get('bbox')
-                if not bbox_points:
-                    continue
-                local_points = []
-                for pt in bbox_points:
-                    lx = int(pt[0]) + (x1 - crop_x1)
-                    ly = int(pt[1]) + (y1 - crop_y1)
-                    lx = max(0, min(lx, crop_w - 1))
-                    ly = max(0, min(ly, crop_h - 1))
-                    local_points.append([lx, ly])
-                pts = np.array(local_points, dtype=np.int32)
-                if pts.shape[0] >= 3:
-                    cv2.fillPoly(ocr_mask, [pts], 255)
-
-        kernel_big = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
-        ocr_mask_dilated = cv2.dilate(ocr_mask, kernel_big, iterations=1)
-
-        # Map bubble_mask (detection-local) into crop coords if provided
-        bubble_in_crop = None
-        if isinstance(bubble_mask, np.ndarray) and bubble_mask.size > 0:
-            dx = x1 - crop_x1
-            dy = y1 - crop_y1
-            bubble_in_crop = _place_local_mask(bubble_mask, (crop_h, crop_w), dx, dy)
-
-        # CASES
-        if cls == 'out_text':
-            # For out_text: use strict OCR mask (no intersection), dilate 12px, single LaMa pass, sigma=1.0
-            kernel_ot = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (23, 23))
-            ot_mask = cv2.dilate(ocr_mask, kernel_ot, iterations=1)
-            if np.sum(ot_mask) == 0:
-                return img
-            out_crop = _run_lama_once(ot_mask, sigma_blur=1.0)
-            if out_crop is None:
-                return img
-            img[crop_y1:crop_y2, crop_x1:crop_x2] = out_crop
+        # ── UN SEUL appel inpainting ──
+        try:
+            if self.anime_inpainter_ready and self.anime_inpainter is not None:
+                result = self._inpaint_anime(crop, mask)
+            elif self.lama is not None:
+                result = self._inpaint_lama(crop, mask)
+            else:
+                result = cv2.inpaint(crop, mask, inpaintRadius=7, flags=cv2.INPAINT_TELEA)
+        except Exception:
             return img
 
-        if cls == 'system':
-            # system: mask = full bbox
-            sys_mask = np.zeros((crop_h, crop_w), dtype=np.uint8)
-            cv2.rectangle(sys_mask, (x1 - crop_x1, y1 - crop_y1), (x2 - crop_x1 - 1, y2 - crop_y1 - 1), 255, -1)
-            # Check white background heuristics
-            mask_pixels = crop[sys_mask > 0]
-            if mask_pixels.size > 0:
-                var = float(np.var(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)[sys_mask > 0]))
-                med = float(np.median(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)[sys_mask > 0]))
-                if var < 15.0 and med > 220.0:
-                    # fill white rectangle in original image coordinates
-                    img[crop_y1:crop_y2, crop_x1:crop_x2][sys_mask > 0] = 255
-                    return img
-            out_crop = _run_lama_once(sys_mask, sigma_blur=1.5)
-            if out_crop is None:
-                return img
-            img[crop_y1:crop_y2, crop_x1:crop_x2] = out_crop
-            return img
+        # ── Blend doux (transition naturelle sur les bords du masque) ──
+        alpha = cv2.GaussianBlur(mask, (0, 0), sigmaX=1.5, sigmaY=1.5)
+        alpha = alpha.astype(np.float32) / 255.0
+        alpha = np.clip(alpha, 0.0, 1.0)
+        alpha = np.expand_dims(alpha, axis=2)
 
-        # Default / bubble: Pass 1 - chirurgical mask preferred
-        pass1_mask = mask.copy()
-        if np.sum(pass1_mask) == 0 and isinstance(chirurgical_mask, np.ndarray) and chirurgical_mask.size > 0:
-            dx = x1 - crop_x1
-            dy = y1 - crop_y1
-            pass1_mask = _place_local_mask(chirurgical_mask, (crop_h, crop_w), dx, dy)
+        blended = (crop.astype(np.float32) * (1.0 - alpha)
+               + result.astype(np.float32) * alpha).astype(np.uint8)
 
-        if np.sum(pass1_mask) == 0:
-            # fallback to ocr_mask_dilated
-            pass1_mask = ocr_mask_dilated.copy()
-
-        # Run pass1
-        out_crop = _run_lama_once(pass1_mask, sigma_blur=1.5)
-        if out_crop is None:
-            # fallback single-pass as before
-            out_crop = _run_lama_once(pass1_mask, sigma_blur=3.0)
-            if out_crop is None:
-                return img
-
-        # Decide on pass2: only if background complex (variance > 30) OR out_text handled earlier
-        gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-        var_full = float(np.var(gray_crop))
-
-        do_pass2 = False
-        if var_full > 30.0:
-            do_pass2 = True
-
-        if do_pass2 and bubble_in_crop is not None:
-            # mask = ocr_mask_dilated - bubble_mask (only text outside bubble)
-            bg_mask = cv2.bitwise_and(ocr_mask_dilated, cv2.bitwise_not(bubble_in_crop))
-            if np.sum(bg_mask) > 0:
-                out_crop2 = _run_lama_once(bg_mask, sigma_blur=1.5)
-                if out_crop2 is not None:
-                    # Merge out_crop and out_crop2: prefer pass2 pixels where mask>0
-                    alpha2 = (cv2.GaussianBlur(bg_mask, (0, 0), sigmaX=1.5).astype(np.float32) / 255.0)
-                    alpha2 = np.clip(alpha2, 0.0, 1.0)
-                    alpha2 = np.expand_dims(alpha2, axis=2)
-                    merged = (out_crop.astype(np.float32) * (1.0 - alpha2) + out_crop2.astype(np.float32) * alpha2).astype(np.uint8)
-                    img[crop_y1:crop_y2, crop_x1:crop_x2] = merged
-                    return img
-
-        # If no pass2 or it failed, place pass1 result
-        img[crop_y1:crop_y2, crop_x1:crop_x2] = out_crop
+        img[cy1:cy2, cx1:cx2] = blended
         return img
-    
+
     def _inpaint_lama(self, crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
         """LaMa sur un crop local (rapide !)"""
         h_orig, w_orig = crop.shape[:2]
@@ -912,10 +777,10 @@ class TextRenderer:
         preview = (text or "").replace("\n", " ").strip()
         if len(preview) > 60:
             preview = preview[:60] + "..."
-        print(
-            f"[RENDER_FS] bbox=({x1},{y1},{x2},{y2}) inner=({inner_w}x{inner_h}) "
-            f"fs={fs} lines={len(lines)} lh={lh} sp={sp} style={text_style} text='{preview}'"
-        )
+        # print(
+        #     f"[RENDER_FS] bbox=({x1},{y1},{x2},{y2}) inner=({inner_w}x{inner_h}) "
+        #     f"fs={fs} lines={len(lines)} lh={lh} sp={sp} style={text_style} text='{preview}'"
+        # )
         
         img_pil = ImageUtils.cv2_to_pil(img)
         draw = ImageDraw.Draw(img_pil)

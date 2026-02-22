@@ -96,7 +96,7 @@ def _discover_font_paths() -> List[str]:
 class PerformanceConfig:
     device: str = "cuda"
     use_fp16: bool = True
-    aggressive_cleanup: bool = True
+    aggressive_cleanup: bool = False
     max_batch_size: int = 8
     prefetch_images: bool = False
     num_workers: int = 4
@@ -115,7 +115,7 @@ class DetectionConfig:
     # SLICING ADAPTATIF
     enable_adaptive_slicing: bool = True
     base_window_height: int = 2048
-    overlap_ratio: float = 0.30
+    overlap_ratio: float = 0.20
     auto_calibrate_window: bool = False
     min_window_height: int = 1024
     max_window_height: int = 4096
@@ -123,13 +123,11 @@ class DetectionConfig:
     
     # MULTI-SCALE
     enable_multi_scale: bool = True
-    detection_scales: List[float] = field(default_factory=lambda: [1.0, 0.75, 0.5])
+    detection_scales: List[float] = field(default_factory=lambda: [1.0, 0.6])
     
     multi_scale_fusion: str = "weighted"
     scale_weights: Dict[float, float] = field(default_factory=lambda: {
-        1.0: 1.0,
-        0.75: 0.8,
-        0.5: 0.6
+        1.0: 1.0, 0.6: 0.7
     })
     
     # ── CONFIDENCE - YOLO v3 (4 classes) ──
@@ -207,8 +205,8 @@ class OCRConfig:
     convert_to_rgb: bool = True
 
     # MULTI-PASS CROP PREPROCESSING
-    multipass_enabled: bool = _env_bool("WEBTOON_OCR_MULTIPASS_ENABLED", True)
-    multipass_max_variants: int = _env_int("WEBTOON_OCR_MULTIPASS_MAX_VARIANTS", 7)
+    multipass_enabled: bool = _env_bool("WEBTOON_OCR_MULTIPASS_ENABLED", False)
+    multipass_max_variants: int = 1
     crop_padding_px: int = _env_int("WEBTOON_OCR_CROP_PADDING_PX", 16)
     target_text_px_min: int = _env_int("WEBTOON_OCR_TARGET_TEXT_PX_MIN", 36)
     target_text_px_max: int = _env_int("WEBTOON_OCR_TARGET_TEXT_PX_MAX", 50)
@@ -368,20 +366,7 @@ class TranslationConfig:
     preserve_emphasis: bool = True
 
     # Glossaire/overrides manuels pour cohérence de style
-    forced_translations: Dict[str, str] = field(default_factory=lambda: {
-        "MISO.": "Miso.",
-        "GHISLAIN PERDIUM.": "GHISLAIN PERDIUM.",
-        "YUNHO! HELP ME!": "YUNHO! HELP ME!",
-        "LOOK HERE, MRS. YUJIN JUNG!": "Regardez ici, Mme YUJIN JUNG !",
-        "WAAAH!! WAAAH!!": "WAAAH !! WAAAH !!",
-        "WAAAH! WAAAH!": "WAAAH ! WAAAH !",
-        "HONEY!!": "Chéri !!",
-        "BUT DAAAD!!!": "Mais PAPA !!!",
-        "LOOK FORWARD TO IT.": "Préparez-vous.",
-        "USING A WEDDING AS A TRAP?": "Utiliser un mariage comme piège ?",
-        "WELL,THAT'S WHAT YOU GET FOR HITTING YOUR CLASSMATES.": "Voilà ce que tu récoltes pour avoir frappé tes camarades de classe.",
-        "WELL, THAT'S WHAT YOU GET FOR HITTING YOUR CLASSMATES.": "Voilà ce que tu récoltes pour avoir frappé tes camarades de classe."
-    })
+    forced_translations: Dict[str, str] = field(default_factory=dict)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
