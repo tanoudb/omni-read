@@ -123,6 +123,15 @@ class TextRenderer:
     
     def _load_fonts(self) -> List[str]:
         fonts = []
+        # Prioritise explicit primary font if provided
+        primary = getattr(self.cfg, 'primary_font_path', '') or ''
+        if primary and Path(primary).exists():
+            try:
+                ImageFont.truetype(primary, 24)
+                fonts.append(primary)
+            except Exception:
+                pass
+
         for font_path in self.cfg.font_paths:
             if Path(font_path).exists():
                 try:
@@ -511,6 +520,17 @@ class TextRenderer:
             tc, oc = (0, 0, 0), (255, 255, 255)
         else:
             tc, oc = (255, 255, 255), (0, 0, 0)
+
+        # Ensure sufficient contrast between text and background; if not, fallback to defaults
+        def luma(c):
+            return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+
+        bg_l = luma(bg_color)
+        tc_l = luma(tc)
+        if abs(bg_l - tc_l) < 40:
+            # Not enough contrast — use configured defaults
+            tc = tuple(self.cfg.default_text_color)
+            oc = tuple(self.cfg.default_outline_color)
         
         return (tc[2], tc[1], tc[0]), (oc[2], oc[1], oc[0])
     

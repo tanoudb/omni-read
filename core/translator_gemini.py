@@ -100,9 +100,27 @@ class GeminiTranslator:
 
         self._client = genai.Client(api_key=self.api_key)
 
-        # State: créer un dossier spécifique par série
-        base_state_dir = STATE_DIR / self.series_name
-        existed = base_state_dir.exists()
+        # State: créer (ou réutiliser) un dossier spécifique par série
+        orig_dir = STATE_DIR / self.series_name
+        # Check if the exact directory already exists
+        existed = orig_dir.exists()
+
+        # If not, try to find a similar existing directory (ignore separators/case)
+        base_state_dir = orig_dir
+        if not existed and STATE_DIR.exists():
+            try:
+                def _norm(name: str) -> str:
+                    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+                for p in STATE_DIR.iterdir():
+                    if p.is_dir() and _norm(p.name) == _norm(self.series_name):
+                        base_state_dir = p
+                        existed = True
+                        break
+            except Exception:
+                pass
+
+        # Ensure directory exists (will be reused if we matched an existing one)
         base_state_dir.mkdir(parents=True, exist_ok=True)
         self._state_file = base_state_dir / "global_state.json"
         self._intrigue_file = base_state_dir / "intrigue.txt"

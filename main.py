@@ -26,6 +26,16 @@ except ImportError:
 import os
 os.environ['FLAGS_allocator_strategy'] = 'auto_growth'
 
+# Ensure stdout/stderr use UTF-8 (helps on Windows consoles with cp1252)
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    else:
+        os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+except Exception:
+    pass
+
 def print_banner():
     """Affiche le banner de démarrage"""
     banner = """

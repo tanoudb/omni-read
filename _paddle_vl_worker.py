@@ -246,8 +246,15 @@ def handle_batch(images_data: list) -> list:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def send(data: dict):
-    sys.stdout.write("RESULT:" + json.dumps(data, ensure_ascii=False) + "\n")
-    sys.stdout.flush()
+    out = "RESULT:" + json.dumps(data, ensure_ascii=False) + "\n"
+    try:
+        # Write as UTF-8 bytes to avoid Windows cp1252 encoding errors
+        sys.stdout.buffer.write(out.encode("utf-8"))
+        sys.stdout.buffer.flush()
+    except Exception:
+        # Fallback to text write if buffer unavailable
+        sys.stdout.write(out)
+        sys.stdout.flush()
 
 
 def main():

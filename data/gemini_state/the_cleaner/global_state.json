@@ -1,55 +1,32 @@
 {
   "personnages": {
-    "Isu Jin": true,
-    "Papa": true,
-    "Agent 101": true,
-    "CHNH": true,
-    "Soyeon": true,
-    "L'agresseur": true,
-    "L'infirmière": true,
-    "Les officiers": true,
-    "Le capitaine": true,
-    "Yongjun": true,
-    "Agresseur 1": true,
-    "Agresseur 2": true,
-    "VIP": true,
-    "Président Jin": true,
-    "Seongjun Jin": true,
-    "Les alliés mystérieux": true,
-    "L'agent de terrain": true,
-    "Amber": true,
-    "Vina": true,
-    "Amber YunhaJung": true,
-    "Le sous-fifre": true,
-    "Le crétin": true,
-    "Le vieux gâteux": true
+    "La femme de l'Agent 101": "Mère d'Isu et épouse de l'Agent 101.",
+    "L'Agent 101 (CHNH)": "Père d'Isu, époux de la femme décédée, et ancien agent.",
+    "Isu": "Fils de l'Agent 101 et de sa femme.",
+    "Daeseong Jin": "Nouveau président du groupe Cheongdo, petit-fils de Daeho Jin.",
+    "Daeho Jin": "Ancien président du groupe Cheongdo, grand-père de Daeseong Jin.",
+    "Jeune président Jin": "Probablement Daeseong Jin, mentionné par les assaillants.",
+    "Assaillant": "Un des hommes envoyés pour tuer l'Agent 101."
   },
   "organisations": {
-    "Police": true,
-    "Hôpital": true,
-    "Syndicat": true,
-    "Les supérieurs": true,
-    "EHL Nettoyeur": true,
-    "Équipe artistique": true,
-    "Les hommes de main du Président Jin": true
+    "Cheongdo Group": "Un groupe puissant dont la direction est en pleine transition.",
+    "CSYNEWS": "Un organisme de presse.",
+    "Groupe Cheongdo": "Organisation dirigée par la famille Jin.",
+    "CSY NEWS": "Une chaîne d'information."
   },
   "tutoiement": {
-    "Papa et Isu Jin": true,
-    "L'ennemi et Papa": true,
-    "Papa et Agent 101": true,
-    "Isu Jin (à lui-même)": true,
-    "L'ennemi et CHNH": true,
-    "Isu Jin et Soyeon": true,
-    "L'agresseur et Isu Jin": true,
-    "L'agresseur et Soyeon": true,
-    "L'infirmière (qui donne l'IV) et Isu Jin": true,
-    "Les officiers et Isu Jin": false,
-    "L'infirmière (qui parle à Soyeon) et Soyeon": false,
-    "Les agresseurs entre eux": true,
-    "Le groupe mystérieux et Isu Jin": false,
-    "Les hommes de main du Président Jin et le Président Jin": false,
-    "Le Président Jin et l'agent de terrain (dans la vidéo)": false,
-    "Les hommes de main du Président Jin et les alliés mystérieux": false,
-    "Le Président Jin et le vieux gâteux": true
+    "La femme de l'Agent 101": [
+      "L'Agent 101 (CHNH)"
+    ],
+    "L'Agent 101 (CHNH)": [
+      "La femme de l'Agent 101",
+      "Isu"
+    ],
+    "Isu": [
+      "L'Agent 101 (CHNH)"
+    ],
+    "Voix mystérieuse": [
+      "L'Agent 101 (CHNH)"
+    ]
   }
 }

@@ -19,8 +19,8 @@
         878
       ],
       "original": "EVERY PARENT CARRIES AT LEAST ONE SECRET FROM THEIR CHILDREN.",
-      "translated": "Chaque parent garde au moins un secret de ses enfants.",
-      "confidence": 0.9658875,
+      "translated": "Chaque parent porte au moins un secret vis-à-vis de ses enfants.",
+      "confidence": 0.9652028530836105,
       "detection_confidence": 0.9095691442489624
     },
     {
@@ -31,9 +31,9 @@
         663.4986368815105,
         2480
       ],
-      "original": "I'D BE ABLE TO EXPLAIN IT TO YOU SOME DAY...",
-      "translated": "Je pourrais te l'expliquer un jour...",
-      "confidence": 0.8841600000000001,
+      "original": "I HOPED I'D BE ABLE TO EXPLAIN IT TO YOU SOME DAY...",
+      "translated": "J'espérais pouvoir te l'expliquer un jour...",
+      "confidence": 0.9485996812582016,
       "detection_confidence": 0.9133521318435669
     },
     {
@@ -44,9 +44,9 @@
         609.9480692545574,
         4130
       ],
-      "original": "NOT SLRE ILL BE ABLE TO NOW. DUN",
-      "translated": "Pas sûr que je puisse le faire maintenant.",
-      "confidence": 0.95444,
+      "original": "NOTSUREI'LL BE ABLE TO NOW. DUN",
+      "translated": "Je ne suis pas sûr de pouvoir le faire maintenant. DUN",
+      "confidence": 0.9381192127863566,
       "detection_confidence": 0.44424277544021606
     },
     {
@@ -57,9 +57,9 @@
         607.7544148763021,
         3983
       ],
-      "original": "...BUT I'M NOT SURE I'LL BE ABLE TO NOW.",
+      "original": "â€¦BUT I'M NOT SURe I'LL BE abLe TO noW.",
       "translated": "...Mais je ne suis pas sûr de pouvoir le faire maintenant.",
-      "confidence": 0.9291475,
+      "confidence": 0.7685783704121908,
       "detection_confidence": 0.8498793244361877
     },
     {
@@ -72,7 +72,7 @@
       ],
       "original": "GLUNK",
       "translated": "GLUNK",
-      "confidence": 0.92495,
+      "confidence": 0.8999541997909546,
       "detection_confidence": 0.4614301025867462
     },
     {
@@ -84,8 +84,8 @@
         9748
       ],
       "original": "WH-WHO ARE THESE GUYS?!",
-      "translated": "Q-Qui sont ces types ?!",
-      "confidence": 0.9232199999999999,
+      "translated": "Q-qui sont ces types ?!",
+      "confidence": 0.9536306262016296,
       "detection_confidence": 0.905771017074585
     },
     {
@@ -96,9 +96,9 @@
         465.062255859375,
         11004
       ],
-      "original": "DID THE YOLNGCHAIRMAN JINSEND YOU ALL.",
-      "translated": "Le jeune président Jin vous a-t-il tous envoyés ?",
-      "confidence": 0.9037299999999999,
+      "original": "DID THE YOUNG CHAIRMAN JINSENDYOU ALL...",
+      "translated": "Le jeune président Jin vous a-t-il tous envoyés...",
+      "confidence": 0.9598008096218109,
       "detection_confidence": 0.9009754657745361
     },
     {
@@ -109,9 +109,9 @@
         558.5079956054688,
         11861
       ],
-      "original": "TO KILL ME?",
-      "translated": "Pour me tuer ?",
-      "confidence": 0.90249,
+      "original": "..TO KILL ME?",
+      "translated": "...pour me tuer ?",
+      "confidence": 0.8715535402297974,
       "detection_confidence": 0.9062330722808838
     },
     {
@@ -122,9 +122,9 @@
         634.8054504394531,
         15274
       ],
-      "original": ".THINGS MOVED MORE QLICKLY THAN WE'D PLANNED, YOU SEE.",
-      "translated": "Les choses ont évolué plus vite que prévu, vous voyez.",
-      "confidence": 0.9329525000000001,
+      "original": "...THINGS MOVED MORE QUICKLY THAN WE'D PLANNED, YOU SEE.",
+      "translated": "...Les choses ont évolué plus vite que prévu, voyez-vous.",
+      "confidence": 0.9239442497491837,
       "detection_confidence": 0.9041922092437744
     },
     {
@@ -137,7 +137,7 @@
       ],
       "original": "SINCE CHAIRMAN DAEHO IS FINALLY DEAD,",
       "translated": "Puisque le président Daeho est enfin mort,",
-      "confidence": 0.9677600000000001,
+      "confidence": 0.9685596625010172,
       "detection_confidence": 0.8923555612564087
     },
     {
@@ -148,9 +148,9 @@
         632.1260579427084,
         17237
       ],
-      "original": "THE DIRECTORS NEED YOLR HEAD TO PROVE THEIR LOYALTY.",
+      "original": "THE DIRECTORS NEED YOUR HEAD TO PROVE THEIR LOYALTY.",
       "translated": "Les directeurs ont besoin de votre tête pour prouver leur loyauté.",
-      "confidence": 0.9552849999999999,
+      "confidence": 0.9725336730480194,
       "detection_confidence": 0.8989689350128174
     },
     {
@@ -161,9 +161,9 @@
         403.1454772949219,
         19266
       ],
-      "original": "YOU KNOW VERY WELL..",
+      "original": "YOu KNOW VERY WELL..",
       "translated": "Vous savez très bien...",
-      "confidence": 0.8905000000000001,
+      "confidence": 0.8413729071617126,
       "detection_confidence": 0.8811531662940979
     },
     {
@@ -174,9 +174,9 @@
         616.8282063802084,
         19588
       ],
-      "original": "THAT THOSE IN POWER NEVER FORGET A GRUDGE.",
-      "translated": "Que ceux qui sont au pouvoir n'oublient jamais une rancune.",
-      "confidence": 0.936125,
+      "original": "THAT THOSE IN POWER NEVER FORGET â–³ GRUDGE.",
+      "translated": "Que ceux au pouvoir n'oublient jamais une rancune.",
+      "confidence": 0.9586263597011566,
       "detection_confidence": 0.9006777405738831
     },
     {
@@ -187,9 +187,9 @@
         411.71807861328125,
         21621
       ],
-      "original": "ESPECIALLY.",
+      "original": "ESPECIALLY..",
       "translated": "Surtout...",
-      "confidence": 0.93489,
+      "confidence": 0.9327638745307922,
       "detection_confidence": 0.8965469598770142
     },
     {
@@ -200,9 +200,9 @@
         606.9149271647136,
         22953
       ],
-      "original": ".WHEN FAMILY IS INVOLVED.",
+      "original": "...WHEN FAMILY IS INVOLVED.",
       "translated": "...Quand la famille est impliquée.",
-      "confidence": 0.93672,
+      "confidence": 0.9164297580718994,
       "detection_confidence": 0.909295380115509
     },
     {
@@ -213,9 +213,9 @@
         573.0648803710938,
         26269
       ],
-      "original": "iiavo",
-      "translated": "iiavo",
-      "confidence": 0.68955,
+      "original": "DAD!!",
+      "translated": "Papa !!",
+      "confidence": 0.9595283269882202,
       "detection_confidence": 0.8686413764953613
     },
     {
@@ -226,9 +226,9 @@
         400.7403869628906,
         37919
       ],
-      "original": "SO IT'S TRUE.",
-      "translated": "Alors c'est vrai.",
-      "confidence": 0.88795,
+      "original": "SO IT'S TRUE..",
+      "translated": "Alors c'est vrai...",
+      "confidence": 0.8593184351921082,
       "detection_confidence": 0.8843030333518982
     },
     {
@@ -239,9 +239,9 @@
         649.26513671875,
         39671
       ],
-      "original": "….AGENT I O 1.",
-      "translated": "...AGENT 101.",
-      "confidence": 0.86816,
+      "original": "...AGENT 1 O 1.",
+      "translated": "...Agent 101.",
+      "confidence": 0.8505845665931702,
       "detection_confidence": 0.9073511958122253
     },
     {
@@ -253,8 +253,8 @@
         41177
       ],
       "original": "ALL THE STORIES ABOUT YOU WERE REAL.",
-      "translated": "Toutes les histoires à ton sujet étaient vraies.",
-      "confidence": 0.938515,
+      "translated": "Toutes les histoires à votre sujet étaient vraies.",
+      "confidence": 0.9542388617992401,
       "detection_confidence": 0.8974261283874512
     },
     {
@@ -265,9 +265,9 @@
         604.356180826823,
         42079
       ],
-      "original": "WHAT THE HELL IS HAPPENING RIGHT iiMON",
-      "translated": "Qu'est-ce qui se passe bon sang en ce moment ?!",
-      "confidence": 0.9142233333333333,
+      "original": "WHAT THEHELL IS HAPPENING RIGHT NOW?!",
+      "translated": "Qu'est-ce qui se passe bordel ?!",
+      "confidence": 0.9672637979189554,
       "detection_confidence": 0.9074118733406067
     },
     {
@@ -278,9 +278,9 @@
         675.1556396484375,
         43339
       ],
-      "original": "DAD CUT A GUY IN TWO WITH ONE SWING OF THAT AXE.!!",
-      "translated": "Papa a coupé un gars en deux d'un seul coup de hache !!",
-      "confidence": 0.9489325,
+      "original": "DAD CUT A GUY IN TWO WITH ONE SWING OF THAT AXE...!!",
+      "translated": "Papa a coupé un gars en deux d'un seul coup de hache...!!",
+      "confidence": 0.9393230676651001,
       "detection_confidence": 0.882860004901886
     },
     {
@@ -291,9 +291,9 @@
         486.69769287109375,
         44126
       ],
-      "original": "IWASN'T HAPPY ABOUT THE WHOLE LOT OF US BEING SENT OUT...",
+      "original": "I WASN'T HAPPY ABOUT THE WHOLE LOT OF US BEING SENT OUT...",
       "translated": "Je n'étais pas content que nous soyons tous envoyés...",
-      "confidence": 0.933694,
+      "confidence": 0.9446213006973266,
       "detection_confidence": 0.91265469789505
     },
     {
@@ -304,9 +304,9 @@
         672.3543294270834,
         45667
       ],
-      "original": "TO TAKE OUT A SINGLE TRAITOR..",
-      "translated": "Pour éliminer un seul traître...",
-      "confidence": 0.912465,
+      "original": "...TO TAKE OUT A SINGLE TRAITOR..",
+      "translated": "...pour éliminer un seul traître...",
+      "confidence": 0.8978686928749084,
       "detection_confidence": 0.8962547779083252
     },
     {
@@ -317,9 +317,9 @@
         587.8688557942709,
         46488
       ],
-      "original": "…..BUT THIS MAKES IT ALL WORTH THE TROUBLE.",
+      "original": "...BUT THIS MakeS IT aLL WORTH THE TROUBLE.",
       "translated": "...Mais ça en vaut la peine.",
-      "confidence": 0.9087299999999999,
+      "confidence": 0.8534618814786276,
       "detection_confidence": 0.907836377620697
     },
     {
@@ -330,9 +330,9 @@
         605.961405436198,
         48808
       ],
-      "original": "….YOU'RE GOING TO NEED MORE THAN THAT.",
-      "translated": "...Vous allez avoir besoin de plus que ça.",
-      "confidence": 0.9128275,
+      "original": "..YOU'RE GOING TO NEED MORE THAN THAT.",
+      "translated": "...Il vous faudra plus que ça.",
+      "confidence": 0.933878168463707,
       "detection_confidence": 0.8977077007293701
     },
     {
@@ -343,9 +343,9 @@
         597.1885681152344,
         50186
       ],
-      "original": "SO YOU'RE AFTER MY HEAD, ARE YOU?",
+      "original": "SOYOU'RE AFTER MY HEAD, ARE YOU?",
       "translated": "Alors vous en avez après ma tête, n'est-ce pas ?",
-      "confidence": 0.9183133333333333,
+      "confidence": 0.9091712633768717,
       "detection_confidence": 0.8829911351203918
     },
     {
@@ -356,9 +356,9 @@
         437.4387613932292,
         53734
       ],
-      "original": "AND YOU THOUGHT THIS WOLLD BE ENOUGH?",
+      "original": "AND YOU THOUGHT THIS WOULD BE ENOUGH?",
       "translated": "Et vous pensiez que ce serait suffisant ?",
-      "confidence": 0.9184375,
+      "confidence": 0.948101356625557,
       "detection_confidence": 0.8954268097877502
     },
     {
@@ -369,9 +369,9 @@
         604.2174275716146,
         55176
       ],
-      "original": "I'LL SHOW YOU AMATEURS..",
+      "original": "I'LL SHOW YOU AMATEURS...",
       "translated": "Je vais vous montrer, amateurs...",
-      "confidence": 0.87296,
+      "confidence": 0.922052413225174,
       "detection_confidence": 0.883686900138855
     },
     {
@@ -383,8 +383,8 @@
         57279
       ],
       "original": "...WHAT REAL STRENGTH LOOKS LIKE.",
-      "translated": "...À quoi ressemble la vraie force.",
-      "confidence": 0.9286133333333333,
+      "translated": "...à quoi ressemble la vraie force.",
+      "confidence": 0.9616642594337463,
       "detection_confidence": 0.8997793793678284
     }
   ]
