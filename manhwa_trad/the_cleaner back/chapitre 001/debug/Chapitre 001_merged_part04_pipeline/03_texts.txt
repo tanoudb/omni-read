@@ -1,0 +1,6 @@
+class: bulle
+bbox: [71.39124552408855, 3735, 609.9480692545574, 4130]
+ocr: NOT SLRE ILL BE ABLE TO NOW. DUN
+translation: Je ne suis pas sûr que je le puisse maintenant. dun
+style: dialogue
+mask_regions: 2

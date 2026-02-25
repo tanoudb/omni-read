@@ -1,0 +1,6 @@
+class: bulle
+bbox: [13.680165608723959, 30548, 477.29497273763025, 30939]
+ocr: AGUY'S GOTTATAKEA BREAKSOMETIMES, YOu KNOW?
+translation: Aguy's gotta take a breakparfois, tu le sais ?
+style: dialogue
+mask_regions: 1

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [155.16098022460938, 5797, 532.8996276855469, 6145]
+ocr: OOPS... ITBURST.
+translation: Oups... Je me suis éclaté.
+style: dialogue
+mask_regions: 1

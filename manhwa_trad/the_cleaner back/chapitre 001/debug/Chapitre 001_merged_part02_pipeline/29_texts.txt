@@ -1,0 +1,6 @@
+class: bulle
+bbox: [400.818115234375, 39337, 650.5135498046875, 39574]
+ocr: AHA...
+translation: AHA...
+style: dialogue
+mask_regions: 1

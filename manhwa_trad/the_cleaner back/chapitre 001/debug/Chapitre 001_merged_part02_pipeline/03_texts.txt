@@ -1,0 +1,6 @@
+class: bulle
+bbox: [35.16845703125, 1275, 418.91184488932294, 1638]
+ocr: THEY WERE BULLYING ANOTHERKID!
+translation: Ils harcelaient un autre enfant !
+style: dialogue
+mask_regions: 1

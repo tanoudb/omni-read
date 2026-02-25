@@ -1,0 +1,547 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001_merged_part02.jpg",
+  "output": "manhwa_trad\\the_cleaner\\Chapitre 001\\Chapitre 001_merged_part02_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 58880
+  },
+  "stats": {
+    "detections": 42,
+    "translated": 41
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        61.54693603515625,
+        116,
+        460.0725301106771,
+        486
+      ],
+      "original": "A WEEK OF SPARTAN TRAINING AS PUNISHMENT.",
+      "translated": "Une semaine d'entraînement spartiate en guise de punition.",
+      "confidence": 0.9202566666666666,
+      "detection_confidence": 0.9170408248901367
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        212.5383504231771,
+        429,
+        663.261210123698,
+        729
+      ],
+      "original": "BUT I HAD A REASON!!",
+      "translated": "Mais j'avais une raison !!",
+      "confidence": 0.9400850000000001,
+      "detection_confidence": 0.9111269116401672
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        35.16845703125,
+        1275,
+        418.91184488932294,
+        1638
+      ],
+      "original": "THEY WERE BULLYING ANOTHER KID!",
+      "translated": "Ils intimidaient un autre enfant !",
+      "confidence": 0.96365,
+      "detection_confidence": 0.9173462986946106
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        214.06537373860678,
+        2383,
+        667.4102783203125,
+        2797
+      ],
+      "original": "AND THEY MADE FUN OF ME FOR NOT HAVING A MOM!",
+      "translated": "Et ils se sont moqués de moi parce que je n'avais pas de maman !",
+      "confidence": 0.9307433333333334,
+      "detection_confidence": 0.9205617904663086
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        106.42379760742188,
+        3329,
+        583.3978271484375,
+        3768
+      ],
+      "original": "SINCE THEY WERE BULLIES IT'S ALL RIGHT TO BE AT THEM UP!!",
+      "translated": "Puisqu'ils étaient des brutes, c'est normal de les avoir tabassés !!",
+      "confidence": 0.9520775,
+      "detection_confidence": 0.9242092370986938
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        70.92721557617188,
+        4947,
+        407.2157897949219,
+        5197
+      ],
+      "original": "OH, I SEE....",
+      "translated": "Oh, je vois...",
+      "confidence": 0.857505,
+      "detection_confidence": 0.910041332244873
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        204.47357177734375,
+        5188,
+        541.860595703125,
+        5505
+      ],
+      "original": "WHEN THAT WAY",
+      "translated": "Quand c'est comme ça.",
+      "confidence": 0.969455,
+      "detection_confidence": 0.8870985507965088
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        79.31808471679688,
+        8506,
+        616.3691711425781,
+        9005
+      ],
+      "original": "IL,NOIO ALWAYS TELL YOU NEVER TO LSE VIOLENCE FOR PERSONAL REVENGE?",
+      "translated": "Ne t'ai-je pas toujours dit de ne jamais utiliser la violence pour une vengeance personnelle ?",
+      "confidence": 0.9408280000000001,
+      "detection_confidence": 0.9084677696228027
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        158.66622924804688,
+        9984,
+        646.0430399576824,
+        10438
+      ],
+      "original": "YET YOU USED WHAT I TAUGHT YOU FOR SOMETHING AS PETTY AS THAT?",
+      "translated": "Pourtant, tu as utilisé ce que je t'ai appris pour quelque chose d'aussi mesquin ?",
+      "confidence": 0.9248900000000001,
+      "detection_confidence": 0.9161250591278076
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        102.71255493164062,
+        10920,
+        587.4215698242188,
+        11370
+      ],
+      "original": "GET PUNCHING. IFYOUDON'T HIT TODAY'S QUOTA, THERE'LL BE NO DINNER FOR YOU.",
+      "translated": "Frappe. Si tu n'atteins pas ton quota d'aujourd'hui, il n'y aura pas de dîner pour toi.",
+      "confidence": 0.9298420000000001,
+      "detection_confidence": 0.9187203645706177
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        123.63362630208334,
+        12800,
+        570.1913452148438,
+        13218
+      ],
+      "original": "NO DINNER?!",
+      "translated": "Pas de dîner ?!",
+      "confidence": 0.96821,
+      "detection_confidence": 0.8895367383956909
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        298.97650146484375,
+        14313,
+        625.3257446289062,
+        14613
+      ],
+      "original": "A-ANYTHING BUT THAT...",
+      "translated": "T-Tout sauf ça...",
+      "confidence": 0.9337850000000001,
+      "detection_confidence": 0.9021404385566711
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        127.92093912760417,
+        15901,
+        604.9655151367188,
+        16234
+      ],
+      "original": "I NEED",
+      "translated": "J'ai besoin",
+      "confidence": 0.93661,
+      "detection_confidence": 0.8750155568122864
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        101.30579630533855,
+        18949,
+        586.0831197102865,
+        19294
+      ],
+      "original": "HARDER!!",
+      "translated": "PLUS FORT !!",
+      "confidence": 0.99043,
+      "detection_confidence": 0.8830267786979675
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        59.801025390625,
+        19596,
+        633.4779866536459,
+        20009
+      ],
+      "original": "FASTER!! STRONGER!!",
+      "translated": "PLUS VITE !! PLUS FORT !!",
+      "confidence": 0.971415,
+      "detection_confidence": 0.8714142441749573
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        74.77615356445312,
+        21636,
+        623.4114583333334,
+        22029
+      ],
+      "original": "FOUR LAPS LEFT!!",
+      "translated": "Quatre tours restants !!",
+      "confidence": 0.957395,
+      "detection_confidence": 0.8732277154922485
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        28.391062418619793,
+        23133,
+        506.99162801106775,
+        23455
+      ],
+      "original": "GRAAAAAAH!!",
+      "translated": "GRAAAAAAH!!",
+      "confidence": 0.86587,
+      "detection_confidence": 0.8845037817955017
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        83.14036051432292,
+        23772,
+        609.253896077474,
+        24150
+      ],
+      "original": "OS W,I",
+      "translated": "OS W,I",
+      "confidence": 0.81989,
+      "detection_confidence": 0.8419409394264221
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        42.6392822265625,
+        27473,
+        332.4669189453125,
+        27741
+      ],
+      "original": "NOM HEY,DAD?",
+      "translated": "Hé, Papa ?",
+      "confidence": 0.9786250000000001,
+      "detection_confidence": 0.9004663825035095
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        399.98040771484375,
+        28045,
+        655.9805297851562,
+        28283
+      ],
+      "original": "YEAH?",
+      "translated": "Oui ?",
+      "confidence": 0.96267,
+      "detection_confidence": 0.9003174304962158
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        168.68998209635419,
+        29277,
+        519.7102864583334,
+        29594
+      ],
+      "original": "WHAT WAS MOM LIKE?",
+      "translated": "Comment était Maman ?",
+      "confidence": 0.973785,
+      "detection_confidence": 0.9118920564651489
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        89.06549072265625,
+        31074,
+        411.04901123046875,
+        31374
+      ],
+      "original": "WHY DO YOU ASK.?",
+      "translated": "Pourquoi tu demandes ?",
+      "confidence": 0.88733,
+      "detection_confidence": 0.8892112374305725
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        131.8352762858073,
+        32459,
+        557.8782653808594,
+        32851
+      ],
+      "original": "MY FRIENDS GO EVERY WHERE WITH THEIR \"SWOW",
+      "translated": "Mes amis vont partout avec leurs \"mamans\"",
+      "confidence": 0.88382,
+      "detection_confidence": 0.909981369972229
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        169.8155466715495,
+        33699,
+        661.7845662434896,
+        34150
+      ],
+      "original": "..BUTIDON'T EVEN HAVE A PICTLRE OF MINE...I'M JUST CURIOUS.",
+      "translated": "...Mais je n'ai même pas une photo de la mienne... Je suis juste curieux.",
+      "confidence": 0.87987,
+      "detection_confidence": 0.9168686270713806
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        122.26812744140625,
+        34601,
+        345.1481628417969,
+        34807
+      ],
+      "original": "MM...",
+      "translated": "Mm...",
+      "confidence": 0.81632,
+      "detection_confidence": 0.8733147978782654
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        110.80774943033855,
+        36262,
+        579.9844868977865,
+        36698
+      ],
+      "original": "\"wowano WAS STRONG, THOUGHTFUL, AND SMART.",
+      "translated": "Maman était forte, attentionnée et intelligente.",
+      "confidence": 0.8470274999999999,
+      "detection_confidence": 0.9120573401451111
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        165.8080291748047,
+        38457,
+        651.9776407877605,
+        38885
+      ],
+      "original": "SHE LOVED YOU LNTIL HER DYING MOMENTS, ISU.",
+      "translated": "Elle t'a aimé jusqu'à ses derniers instants, Isu.",
+      "confidence": 0.930885,
+      "detection_confidence": 0.859440267086029
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        59.46573893229167,
+        38870,
+        498.9756266276042,
+        39250
+      ],
+      "original": "AND SHE WAS DROP DEAD GORGEOUS.",
+      "translated": "Et elle était d'une beauté à tomber par terre.",
+      "confidence": 0.9472766666666667,
+      "detection_confidence": 0.8835720419883728
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        400.818115234375,
+        39337,
+        650.5135498046875,
+        39574
+      ],
+      "original": "AHA....",
+      "translated": "Aha...",
+      "confidence": 0.80814,
+      "detection_confidence": 0.8902541995048523
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        91.06307983398438,
+        40754,
+        598.406473795573,
+        41215
+      ],
+      "original": "WHY DOES IT FEEL LIKEYOL'RE EMPHASIZING THE FACT THAT SHE WAS GORGEOUS?",
+      "translated": "Pourquoi ai-je l'impression que tu insistes sur le fait qu'elle était magnifique ?",
+      "confidence": 0.9462820000000001,
+      "detection_confidence": 0.9165164828300476
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        88.59811401367188,
+        42540,
+        415.2274475097656,
+        42844
+      ],
+      "original": "'HO LOOK AT THE TIME!",
+      "translated": "Oh, regarde l'heure !",
+      "confidence": 0.95899,
+      "detection_confidence": 0.8955621719360352
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        335.47388712565106,
+        44126,
+        666.0101826985677,
+        44429
+      ],
+      "original": "idnH BETTER GET GOING.",
+      "translated": "Je ferais mieux d'y aller.",
+      "confidence": 0.9266133333333334,
+      "detection_confidence": 0.8986077904701233
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        143.59638214111328,
+        44985,
+        545.0520833333334,
+        45348
+      ],
+      "original": "CHNH DO YOU WORK TODAY?",
+      "translated": "Chnh, tu travailles aujourd'hui ?",
+      "confidence": 0.9035099999999999,
+      "detection_confidence": 0.9148889780044556
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        111.33061726888022,
+        45827,
+        579.6253967285156,
+        46253
+      ],
+      "original": "OF COURSE! THE WEEKENDS ARE WHEN I GET THE MOST CUSTOMERS",
+      "translated": "Bien sûr ! Les week-ends sont les jours où j'ai le plus de clients.",
+      "confidence": 0.9617319999999999,
+      "detection_confidence": 0.9280804395675659
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        6.57135009765625,
+        47266,
+        541.6685994466146,
+        47624
+      ],
+      "original": "iiavo I HEARD ON TV THAT AI CAN DRIVE NOW!!!",
+      "translated": "J'ai entendu à la télé que l'IA peut conduire maintenant !!!",
+      "confidence": 0.868185,
+      "detection_confidence": 0.862901508808136
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        229.07185872395834,
+        47541,
+        677.6579793294271,
+        47832
+      ],
+      "original": "BUTYOU'RE A DRIVER!",
+      "translated": "Mais tu es chauffeur !",
+      "confidence": 0.94894,
+      "detection_confidence": 0.8520150780677795
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        69.39778645833334,
+        48313,
+        615.5113728841146,
+        48665
+      ],
+      "original": "YOU'RE GONNA HAVE TO FIND ANOTHER JOB SO ON!",
+      "translated": "Tu vas devoir trouver un autre travail bientôt !",
+      "confidence": 0.94443,
+      "detection_confidence": 0.8945972323417664
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        94.29728190104167,
+        50318,
+        596.1505126953125,
+        50793
+      ],
+      "original": "HOW COULD HE SAY THAT SO CHEERFULLY?",
+      "translated": "Comment a-t-il pu dire ça si joyeusement ?",
+      "confidence": 0.9696699999999999,
+      "detection_confidence": 0.9107406139373779
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        123.71302286783855,
+        51883,
+        567.8999328613281,
+        52288
+      ],
+      "original": "HAVE A GOOD DAY AT WORK!",
+      "translated": "Bonne journée de travail !",
+      "confidence": 0.917405,
+      "detection_confidence": 0.9065954685211182
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        159.49595133463544,
+        55460,
+        522.7633666992188,
+        55650
+      ],
+      "original": "HE GETS HIS SMILE FROM YOU, HONEY.",
+      "translated": "Il tient son sourire de toi, chéri.",
+      "confidence": 0.9737499999999999,
+      "detection_confidence": 0.7523229718208313
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        8.39752197265625,
+        58121,
+        658.8018188476562,
+        58229
+      ],
+      "original": "12 YEARS LATE 'ER",
+      "translated": "12 ANS PLUS TARD",
+      "confidence": 0.9365924999999999,
+      "detection_confidence": 0.47651389241218567
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [110.80774943033855, 36262, 579.9844868977865, 36698]
+ocr: YOUR MOM... WAS STRONG, THOUGHTFUL, AND SMART.
+translation: Ta mère... était forte, réfléchie et intelligente.
+style: dialogue
+mask_regions: 1

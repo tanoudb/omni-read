@@ -1,0 +1,6 @@
+class: bulle
+bbox: [155.43736775716147, 2658, 533.4126790364584, 3030]
+ocr: KRGH...KHOFF... ERGH...
+translation: KRGH...KHOFF... ERGH...
+style: dialogue
+mask_regions: 1

@@ -1,0 +1,339 @@
+OCR Results for Chapitre 001_merged_part02
+============================================================
+
+[1] bulle (score=0.92)
+    bbox: [61, 116, 460, 486]
+    size: 399x370px
+    OCR text: "AWEEKOF SPARTANTRAINING AS PUNISHMENT." 
+    OCR conf: 0.96
+    Traduction NLLB: "Une semaine de formation spartiate en punition." 
+    Traduction finale: "Une semaine de formation spartiate en punition." 
+
+[2] bulle (score=0.91)
+    bbox: [212, 429, 663, 729]
+    size: 451x300px
+    OCR text: "BUT I HAD A REASON!!" 
+    OCR conf: 0.92
+    Traduction NLLB: "Mais j'avais une raison!!" 
+    Traduction finale: "Mais j'avais une raison!!" 
+
+[3] bulle (score=0.92)
+    bbox: [35, 1275, 418, 1638]
+    size: 383x363px
+    OCR text: "THEY WERE BULLYING ANOTHERKID!" 
+    OCR conf: 0.98
+    Traduction NLLB: "Ils harcelaient un autre enfant !" 
+    Traduction finale: "Ils harcelaient un autre enfant !" 
+
+[4] bulle (score=0.92)
+    bbox: [214, 2383, 667, 2797]
+    size: 453x414px
+    OCR text: "AND THEY MADE FUNOFMEFORNOT HAVINGAMOM!" 
+    OCR conf: 0.98
+    Traduction NLLB: "Et ils se moquaient de moi pour ne pas avoir de mère !" 
+    Traduction finale: "Et ils se moquaient de moi pour ne pas avoir de mère !" 
+
+[5] bulle (score=0.92)
+    bbox: [106, 3329, 583, 3768]
+    size: 477x439px
+    OCR text: "SINCE THEY WERE BULLIES, IT'S ALL RIGHT TO BE AT THEM UP!!" 
+    OCR conf: 0.95
+    Traduction NLLB: "C'est tout à fait normal de les taquiner, étant donné qu'ils sont des bullies!!" 
+    Traduction finale: "C'est tout à fait normal de les taquiner, étant donné qu'ils sont des bullies!!" 
+
+[6] bulle (score=0.91)
+    bbox: [70, 4947, 407, 5197]
+    size: 337x250px
+    OCR text: "OH, I SEE..." 
+    OCR conf: 0.88
+    Traduction NLLB: "Oh, je vois..." 
+    Traduction finale: "Oh, je vois..." 
+
+[7] bulle (score=0.89)
+    bbox: [204, 5188, 541, 5505]
+    size: 337x317px
+    OCR text: "WHEN YOU PUT IT THAT WAY.." 
+    OCR conf: 0.92
+    Traduction NLLB: "Quand tu le formules comme ça..." 
+    Traduction finale: "Quand tu le formules comme ça..." 
+
+[8] bulle (score=0.91)
+    bbox: [79, 8506, 616, 9005]
+    size: 537x499px
+    OCR text: "DIDN'T I ALWAYS TELL YOU NEVERTOUSEVIOLENCE FORPERSONAL REVENGE?" 
+    OCR conf: 0.99
+    Traduction NLLB: "N'employais-je pas toujours à te le rappeler : ne jamais utiliser la violence pour te venger personnellement ?" 
+    Traduction finale: "N'employais-je pas toujours à te le rappeler : ne jamais utiliser la violence pour te venger personnellement ?" 
+
+[9] bulle (score=0.92)
+    bbox: [158, 9984, 646, 10438]
+    size: 488x454px
+    OCR text: "YET YOU USED WHATITAUGHT YOU FORSOMETHING AS PETTYAS THAT?" 
+    OCR conf: 0.96
+    Traduction NLLB: "Encore vous utilisez-vous ce que j’ai enseigné pour quelque chose d’aussi futile que ça ?" 
+    Traduction finale: "Encore vous utilisez-vous ce que j’ai enseigné pour quelque chose d’aussi futile que ça ?" 
+
+[10] bulle (score=0.92)
+    bbox: [102, 10920, 587, 11370]
+    size: 485x450px
+    OCR text: "GET PUNCHING. IF YOU DON'T HIT TODAY'S QUOTA, THERE'LL BE NO DINNERFORYOU." 
+    OCR conf: 0.95
+    Traduction NLLB: "Frappe ! Si tu ne touches pas ta quota d'aujourd'hui, il n'y aura pas de dîner pour toi." 
+    Traduction finale: "Frappe ! Si tu ne touches pas ta quota d'aujourd'hui, il n'y aura pas de dîner pour toi." 
+
+[11] bulle (score=0.89)
+    bbox: [123, 12800, 570, 13218]
+    size: 447x418px
+    OCR text: "NO DINNER?!" 
+    OCR conf: 0.91
+    Traduction NLLB: "NO DINNER?!" 
+    Traduction finale: "NO DINNER?!" 
+
+[12] bulle (score=0.90)
+    bbox: [298, 14313, 625, 14613]
+    size: 327x300px
+    OCR text: "A-ANYTHING BUT THAT..." 
+    OCR conf: 0.94
+    Traduction NLLB: "A-ANYTHING BUT THAT..." 
+    Traduction finale: "A-ANYTHING BUT THAT..." 
+
+[13] bulle (score=0.88)
+    bbox: [127, 15901, 604, 16234]
+    size: 477x333px
+    OCR text: "I NEED DINNER!!!" 
+    OCR conf: 0.98
+    Traduction NLLB: "I NEED DINNER!!!" 
+    Traduction finale: "I NEED DINNER!!!" 
+
+[14] bulle (score=0.88)
+    bbox: [101, 18949, 586, 19294]
+    size: 485x345px
+    OCR text: "HARDER!!" 
+    OCR conf: 0.97
+    Traduction NLLB: "HARDER!!" 
+    Traduction finale: "HARDER!!" 
+
+[15] bulle (score=0.87)
+    bbox: [59, 19596, 633, 20009]
+    size: 574x413px
+    OCR text: "FASTER!! STRONGER!!" 
+    OCR conf: 0.99
+    Traduction NLLB: "FASTER!! STRONGER!!" 
+    Traduction finale: "FASTER!! STRONGER!!" 
+
+[16] bulle (score=0.87)
+    bbox: [74, 21636, 623, 22029]
+    size: 549x393px
+    OCR text: "FOUR LAPS LEFT!!" 
+    OCR conf: 0.97
+    Traduction NLLB: "FOUR LAPS LEFT!!" 
+    Traduction finale: "FOUR LAPS LEFT!!" 
+
+[17] bulle (score=0.88)
+    bbox: [28, 23133, 506, 23455]
+    size: 478x322px
+    OCR text: "GRAAAAAAH!!" 
+    OCR conf: 0.74
+    Traduction NLLB: "GRAAAAAAH!!" 
+    Traduction finale: "GRAAAAAAH!!" 
+
+[18] bulle (score=0.84)
+    bbox: [83, 23772, 609, 24150]
+    size: 526x378px
+    OCR text: "I'M SO TIRED!!!!!" 
+    OCR conf: 0.97
+    Traduction NLLB: "Je suis si fatigué!!!!!!" 
+    Traduction finale: "Je suis si fatigué!!!!!!" 
+
+[19] bulle (score=0.90)
+    bbox: [42, 27473, 332, 27741]
+    size: 290x268px
+    OCR text: "NOM HEY, DAD?" 
+    OCR conf: 0.96
+    Traduction NLLB: "NOM HEY, DAD?" 
+    Traduction finale: "NOM HEY, DAD?" 
+
+[20] bulle (score=0.90)
+    bbox: [399, 28045, 655, 28283]
+    size: 256x238px
+    OCR text: "YEAH?" 
+    OCR conf: 0.96
+    Traduction NLLB: "YEAH?" 
+    Traduction finale: "YEAH?" 
+
+[21] bulle (score=0.91)
+    bbox: [168, 29277, 519, 29594]
+    size: 351x317px
+    OCR text: "WHAT WAS MOMLIKE?" 
+    OCR conf: 0.97
+    Traduction NLLB: "Qu'est-ce que momlike ?" 
+    Traduction finale: "Qu'est-ce que momlike ?" 
+
+[22] bulle (score=0.89)
+    bbox: [89, 31074, 411, 31374]
+    size: 322x300px
+    OCR text: "WHY DO YOU ASK..?" 
+    OCR conf: 0.86
+    Traduction NLLB: "Pourquoi me poser cette question...?" 
+    Traduction finale: "Pourquoi me poser cette question...?" 
+
+[23] bulle (score=0.91)
+    bbox: [131, 32459, 557, 32851]
+    size: 426x392px
+    OCR text: "MYFRIENDS GO EVERY WHERE WITH THEIR MOMS..." 
+    OCR conf: 0.97
+    Traduction NLLB: "Mes amis vont partout avec leurs mamans..." 
+    Traduction finale: "Mes amis vont partout avec leurs mamans..." 
+
+[24] bulle (score=0.92)
+    bbox: [169, 33699, 661, 34150]
+    size: 492x451px
+    OCR text: ".BUT I DON'T EVEN HAVE A PICTURE OF MINE...I'M JUST CURIOUS." 
+    OCR conf: 0.91
+    Traduction NLLB: "Mais je n'ai même pas de photo du mien... Je suis juste curieux." 
+    Traduction finale: "Mais je n'ai même pas de photo du mien... Je suis juste curieux." 
+
+[25] bulle (score=0.87)
+    bbox: [122, 34601, 345, 34807]
+    size: 223x206px
+    OCR text: "MM..." 
+    OCR conf: 0.86
+    Traduction NLLB: "MM..." 
+    Traduction finale: "MM..." 
+
+[26] bulle (score=0.91)
+    bbox: [110, 36262, 579, 36698]
+    size: 469x436px
+    OCR text: "YOUR MOM... WAS STRONG, THOUGHTFUL, AND SMART." 
+    OCR conf: 0.88
+    Traduction NLLB: "Ta mère... était forte, réfléchie et intelligente." 
+    Traduction finale: "Ta mère... était forte, réfléchie et intelligente." 
+
+[27] bulle (score=0.86)
+    bbox: [165, 38457, 651, 38885]
+    size: 486x428px
+    OCR text: "SHE LOVED YOu uNTIL HER DYING MOMENTS, ISu." 
+    OCR conf: 0.88
+    Traduction NLLB: "Elle t'a aimé jusqu'à sa dernière seconde, isu." 
+    Traduction finale: "Elle t'a aimé jusqu'à sa dernière seconde, isu." 
+
+[28] bulle (score=0.88)
+    bbox: [59, 38870, 498, 39250]
+    size: 439x380px
+    OCR text: "AND SHE WAS DROP DEAD GORGEOUS." 
+    OCR conf: 0.94
+    Traduction NLLB: "Elle était absolument stupéfiante." 
+    Traduction finale: "Elle était absolument stupéfiante." 
+
+[29] bulle (score=0.89)
+    bbox: [400, 39337, 650, 39574]
+    size: 250x237px
+    OCR text: "AHA..." 
+    OCR conf: 0.93
+    Traduction NLLB: "AHA..." 
+    Traduction finale: "AHA..." 
+
+[30] bulle (score=0.92)
+    bbox: [91, 40754, 598, 41215]
+    size: 507x461px
+    OCR text: "WHY DOES IT FEEL LIKE YOU'RE EMPHASIZING THE FACT THAT SHE WAS GORGEOUS?" 
+    OCR conf: 0.96
+    Traduction NLLB: "Pourquoi insistes-tu sur le fait qu'elle était magnifique ?" 
+    Traduction finale: "Pourquoi insistes-tu sur le fait qu'elle était magnifique ?" 
+
+[31] bulle (score=0.90)
+    bbox: [88, 42540, 415, 42844]
+    size: 327x304px
+    OCR text: "OH, LOOK AT THE TIME!" 
+    OCR conf: 0.92
+    Traduction NLLB: "Oh, regarde l'heure !" 
+    Traduction finale: "Oh, regarde l'heure !" 
+
+[32] bulle (score=0.90)
+    bbox: [335, 44126, 666, 44429]
+    size: 331x303px
+    OCR text: "HUP! BETTER GET GOING." 
+    OCR conf: 0.97
+    Traduction NLLB: "Hup ! Il faut vraiment que je parte." 
+    Traduction finale: "Hup ! Il faut vraiment que je parte." 
+
+[33] bulle (score=0.91)
+    bbox: [143, 44985, 545, 45348]
+    size: 402x363px
+    OCR text: "HUH? DO YOU WORK TODAY?" 
+    OCR conf: 0.91
+    Traduction NLLB: "Huh ? Tu travailles aujourd'hui ?" 
+    Traduction finale: "Huh ? Tu travailles aujourd'hui ?" 
+
+[34] bulle (score=0.93)
+    bbox: [111, 45827, 579, 46253]
+    size: 468x426px
+    OCR text: "OF COURSE! THE WEEKENDS ARE WHEN I GET THE MOST CUSTOMERS." 
+    OCR conf: 0.96
+    Traduction NLLB: "Bien sûr ! C'est pendant les week-ends que j'ai le plus de clients." 
+    Traduction finale: "Bien sûr ! C'est pendant les week-ends que j'ai le plus de clients." 
+
+[35] bulle (score=0.86)
+    bbox: [6, 47266, 541, 47624]
+    size: 535x358px
+    OCR text: "DAD!! I HEARDON TV THAT AI CANDRIVE NOW!!!" 
+    OCR conf: 0.93
+    Traduction NLLB: "Papa!! J'ai entendu à la télé qu'AI peut maintenant conduire!!!" 
+    Traduction finale: "Papa!! J'ai entendu à la télé qu'AI peut maintenant conduire!!!" 
+
+[36] bulle (score=0.85)
+    bbox: [229, 47541, 677, 47832]
+    size: 448x291px
+    OCR text: "BUT YOU'RE A DRIVER!" 
+    OCR conf: 0.94
+    Traduction NLLB: "BUT YOU'RE A DRIVER!" 
+    Traduction finale: "BUT YOU'RE A DRIVER!" 
+
+[37] bulle (score=0.89)
+    bbox: [69, 48313, 615, 48665]
+    size: 546x352px
+    OCR text: "YOU'RE GONNA HAVE TO FINDANOTHER JOB SOON!" 
+    OCR conf: 0.95
+    Traduction NLLB: "Tu vas devoir trouver un autre emploi bientôt !" 
+    Traduction finale: "Tu vas devoir trouver un autre emploi bientôt !" 
+
+[38] bulle (score=0.91)
+    bbox: [94, 50318, 596, 50793]
+    size: 502x475px
+    OCR text: "HOW COULD HE SAY THAT SO CHEERFULLY?" 
+    OCR conf: 0.97
+    Traduction NLLB: "Comment a-t-il pu dire ça avec un tel enthousiasme ?" 
+    Traduction finale: "Comment a-t-il pu dire ça avec un tel enthousiasme ?" 
+
+[39] bulle (score=0.91)
+    bbox: [123, 51883, 567, 52288]
+    size: 444x405px
+    OCR text: "HAVE A GOOD DAYATWORK!" 
+    OCR conf: 0.94
+    Traduction NLLB: "HAVE A GOOD DAYATWORK!" 
+    Traduction finale: "HAVE A GOOD DAYATWORK!" 
+
+[40] bulle (score=0.88)
+    bbox: [36, 53696, 305, 53944]
+    size: 269x248px
+    OCR text: "(none)" 
+    OCR conf: 0.00
+    Traduction NLLB: "(none)" 
+    Traduction finale: "(none)" 
+
+[41] out_text (score=0.75)
+    bbox: [159, 55460, 522, 55650]
+    size: 363x190px
+    OCR text: "HE GETS HIS SMILE FROM YOU, HONEY." 
+    OCR conf: 0.97
+    Traduction NLLB: "Chéri !" 
+    Traduction finale: "Chéri !" 
+
+[42] out_text (score=0.48)
+    bbox: [8, 58121, 658, 58229]
+    size: 650x108px
+    OCR text: "12 YEARS LATER" 
+    OCR conf: 0.99
+    Traduction NLLB: "12 YEARS LATER" 
+    Traduction finale: "12 YEARS LATER" 
+

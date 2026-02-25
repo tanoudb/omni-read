@@ -1,0 +1,6 @@
+class: bulle
+bbox: [176.44999186197919, 55886, 690.0, 56248]
+ocr: PLEASE, JUSTEXPLAIN SOMETHING TO ME FOR ONCE!!
+translation: S'il te plaît, explique-moi une fois ce que c'est !
+style: dialogue
+mask_regions: 1

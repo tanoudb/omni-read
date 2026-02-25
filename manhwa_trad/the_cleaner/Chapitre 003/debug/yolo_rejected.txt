@@ -1,0 +1,251 @@
+YOLO Reject Report for Chapitre 003_merged_part04
+================================================================================
+
+Image shape: 690x43416
+
+[Scale stats]
+- scale 0.60: raw=56 kept=50 reject_conf=6 reject_border=0
+  reject_conf_by_class={'sfx': 5, 'bulle': 1}
+- scale 1.00: raw=70 kept=50 reject_conf=20 reject_border=0
+  reject_conf_by_class={'sfx': 17, 'out_text': 2, 'bulle': 1}
+
+[Raw detections] count=100
+0001. {'class_name': 'bulle', 'score': 0.8629, 'scale': 1.0, 'bbox': [26, 1584, 418, 1947]}
+0002. {'class_name': 'bulle', 'score': 0.8898, 'scale': 1.0, 'bbox': [154, 2415, 535, 2773]}
+0003. {'class_name': 'bulle', 'score': 0.8831, 'scale': 1.0, 'bbox': [24, 1640, 424, 1951]}
+0004. {'class_name': 'sfx', 'score': 0.3364, 'scale': 1.0, 'bbox': [386, 3308, 681, 3433]}
+0005. {'class_name': 'bulle', 'score': 0.836, 'scale': 1.0, 'bbox': [78, 5550, 584, 5878]}
+0006. {'class_name': 'bulle', 'score': 0.8356, 'scale': 1.0, 'bbox': [25, 8329, 573, 8601]}
+0007. {'class_name': 'bulle', 'score': 0.7611, 'scale': 1.0, 'bbox': [75, 7933, 690, 8365]}
+0008. {'class_name': 'sfx', 'score': 0.3342, 'scale': 1.0, 'bbox': [2, 6648, 667, 7335]}
+0009. {'class_name': 'bulle', 'score': 0.8245, 'scale': 1.0, 'bbox': [118, 9763, 568, 10181]}
+0010. {'class_name': 'bulle', 'score': 0.7967, 'scale': 1.0, 'bbox': [27, 8320, 572, 8644]}
+0011. {'class_name': 'bulle', 'score': 0.6938, 'scale': 1.0, 'bbox': [132, 8195, 683, 8372]}
+0012. {'class_name': 'bulle', 'score': 0.8755, 'scale': 1.0, 'bbox': [120, 9834, 568, 10176]}
+0013. {'class_name': 'bulle', 'score': 0.7797, 'scale': 1.0, 'bbox': [69, 11231, 629, 11728]}
+0014. {'class_name': 'bulle', 'score': 0.8422, 'scale': 1.0, 'bbox': [72, 11473, 621, 11740]}
+0015. {'class_name': 'bulle', 'score': 0.515, 'scale': 1.0, 'bbox': [164, 12834, 526, 13060]}
+0016. {'class_name': 'bulle', 'score': 0.8465, 'scale': 1.0, 'bbox': [186, 14350, 628, 14759]}
+0017. {'class_name': 'bulle', 'score': 0.595, 'scale': 1.0, 'bbox': [56, 13620, 453, 13857]}
+0018. {'class_name': 'sfx', 'score': 0.7073, 'scale': 1.0, 'bbox': [9, 15720, 264, 15968]}
+0019. {'class_name': 'bulle', 'score': 0.8798, 'scale': 1.0, 'bbox': [299, 17713, 682, 18033]}
+0020. {'class_name': 'bulle', 'score': 0.8479, 'scale': 1.0, 'bbox': [20, 17076, 497, 17387]}
+0021. {'class_name': 'bulle', 'score': 0.8701, 'scale': 1.0, 'bbox': [157, 18899, 536, 19211]}
+0022. {'class_name': 'sfx', 'score': 0.302, 'scale': 1.0, 'bbox': [48, 18380, 372, 18586]}
+0023. {'class_name': 'bulle', 'score': 0.7599, 'scale': 1.0, 'bbox': [199, 22024, 669, 22334]}
+0024. {'class_name': 'bulle', 'score': 0.888, 'scale': 1.0, 'bbox': [374, 24568, 648, 24746]}
+0025. {'class_name': 'bulle', 'score': 0.8431, 'scale': 1.0, 'bbox': [101, 23400, 575, 23711]}
+0026. {'class_name': 'sfx', 'score': 0.6391, 'scale': 1.0, 'bbox': [212, 24404, 419, 24558]}
+0027. {'class_name': 'bulle', 'score': 0.8889, 'scale': 1.0, 'bbox': [373, 24585, 651, 24742]}
+0028. {'class_name': 'bulle', 'score': 0.8738, 'scale': 1.0, 'bbox': [398, 26459, 672, 26632]}
+0029. {'class_name': 'bulle', 'score': 0.9008, 'scale': 1.0, 'bbox': [397, 26457, 671, 26711]}
+0030. {'class_name': 'bulle', 'score': 0.8669, 'scale': 1.0, 'bbox': [66, 27664, 490, 28052]}
+0031. {'class_name': 'bulle', 'score': 0.8911, 'scale': 1.0, 'bbox': [65, 27863, 492, 28052]}
+0032. {'class_name': 'bulle', 'score': 0.8761, 'scale': 1.0, 'bbox': [243, 28389, 657, 28769]}
+0033. {'class_name': 'bulle', 'score': 0.8748, 'scale': 1.0, 'bbox': [37, 29290, 419, 29635]}
+0034. {'class_name': 'bulle', 'score': 0.879, 'scale': 1.0, 'bbox': [205, 30002, 591, 30364]}
+0035. {'class_name': 'bulle', 'score': 0.8682, 'scale': 1.0, 'bbox': [197, 31095, 622, 31490]}
+0036. {'class_name': 'bulle', 'score': 0.8162, 'scale': 1.0, 'bbox': [27, 29502, 424, 29644]}
+0037. {'class_name': 'sfx', 'score': 0.3165, 'scale': 1.0, 'bbox': [551, 30668, 673, 30719]}
+0038. {'class_name': 'bulle', 'score': 0.9, 'scale': 1.0, 'bbox': [197, 31143, 621, 31490]}
+0039. {'class_name': 'bulle', 'score': 0.8373, 'scale': 1.0, 'bbox': [207, 32158, 661, 32569]}
+0040. {'class_name': 'bulle', 'score': 0.8141, 'scale': 1.0, 'bbox': [31, 31866, 486, 32274]}
+0041. {'class_name': 'bulle', 'score': 0.8666, 'scale': 1.0, 'bbox': [221, 34032, 642, 34412]}
+0042. {'class_name': 'bulle', 'score': 0.8448, 'scale': 1.0, 'bbox': [43, 33750, 459, 34132]}
+0043. {'class_name': 'sfx', 'score': 0.6617, 'scale': 1.0, 'bbox': [62, 33080, 342, 33268]}
+0044. {'class_name': 'bulle', 'score': 0.8235, 'scale': 1.0, 'bbox': [216, 35184, 671, 35517]}
+0045. {'class_name': 'sfx', 'score': 0.5389, 'scale': 1.0, 'bbox': [32, 35790, 502, 36156]}
+0046. {'class_name': 'sfx', 'score': 0.4743, 'scale': 1.0, 'bbox': [330, 35031, 486, 35112]}
+0047. {'class_name': 'sfx', 'score': 0.6147, 'scale': 1.0, 'bbox': [359, 36821, 690, 37363]}
+0048. {'class_name': 'bulle', 'score': 0.8623, 'scale': 1.0, 'bbox': [0, 40119, 405, 40445]}
+0049. {'class_name': 'bulle', 'score': 0.5976, 'scale': 1.0, 'bbox': [252, 41676, 552, 41751]}
+0050. {'class_name': 'sfx', 'score': 0.4292, 'scale': 1.0, 'bbox': [246, 41675, 552, 41753]}
+0051. {'class_name': 'bulle', 'score': 0.9126, 'scale': 0.6, 'bbox': [158, 2414, 530, 2771]}
+0052. {'class_name': 'bulle', 'score': 0.8957, 'scale': 0.6, 'bbox': [20, 1583, 420, 1949]}
+0053. {'class_name': 'sfx', 'score': 0.609, 'scale': 0.6, 'bbox': [336, 3303, 689, 3412]}
+0054. {'class_name': 'sfx', 'score': 0.4023, 'scale': 0.6, 'bbox': [493, 3300, 690, 3410]}
+0055. {'class_name': 'bulle', 'score': 0.8769, 'scale': 0.6, 'bbox': [79, 5548, 585, 5882]}
+0056. {'class_name': 'bulle', 'score': 0.4308, 'scale': 0.6, 'bbox': [171, 2731, 527, 2775]}
+0057. {'class_name': 'sfx', 'score': 0.3174, 'scale': 0.6, 'bbox': [39, 4641, 271, 4782]}
+0058. {'class_name': 'bulle', 'score': 0.8963, 'scale': 0.6, 'bbox': [58, 7940, 690, 8364]}
+0059. {'class_name': 'bulle', 'score': 0.8863, 'scale': 0.6, 'bbox': [80, 5553, 584, 5883]}
+0060. {'class_name': 'bulle', 'score': 0.866, 'scale': 0.6, 'bbox': [20, 8308, 580, 8651]}
+0061. {'class_name': 'sfx', 'score': 0.4317, 'scale': 0.6, 'bbox': [6, 6706, 663, 7373]}
+0062. {'class_name': 'bulle', 'score': 0.9139, 'scale': 0.6, 'bbox': [116, 9759, 573, 10178]}
+0063. {'class_name': 'bulle', 'score': 0.9126, 'scale': 0.6, 'bbox': [63, 11221, 630, 11607]}
+0064. {'class_name': 'bulle', 'score': 0.8475, 'scale': 0.6, 'bbox': [19, 8304, 583, 8652]}
+0065. {'class_name': 'bulle', 'score': 0.7834, 'scale': 0.6, 'bbox': [89, 8195, 690, 8367]}
+0066. {'class_name': 'bulle', 'score': 0.9036, 'scale': 0.6, 'bbox': [61, 11219, 628, 11747]}
+0067. {'class_name': 'bulle', 'score': 0.8476, 'scale': 0.6, 'bbox': [52, 13607, 460, 13865]}
+0068. {'class_name': 'System', 'score': 0.3155, 'scale': 0.6, 'bbox': [163, 12833, 533, 13071]}
+0069. {'class_name': 'bulle', 'score': 0.3099, 'scale': 0.6, 'bbox': [161, 12830, 531, 13069]}
+0070. {'class_name': 'bulle', 'score': 0.9112, 'scale': 0.6, 'bbox': [182, 14344, 636, 14760]}
+0071. {'class_name': 'bulle', 'score': 0.8687, 'scale': 0.6, 'bbox': [43, 13659, 468, 13869]}
+0072. {'class_name': 'bulle', 'score': 0.8847, 'scale': 0.6, 'bbox': [295, 17714, 685, 18024]}
+0073. {'class_name': 'bulle', 'score': 0.8821, 'scale': 0.6, 'bbox': [17, 17074, 503, 17391]}
+0074. {'class_name': 'bulle', 'score': 0.8815, 'scale': 0.6, 'bbox': [148, 18900, 543, 19211]}
+0075. {'class_name': 'bulle', 'score': 0.8261, 'scale': 0.6, 'bbox': [178, 22015, 676, 22341]}
+0076. {'class_name': 'bulle', 'score': 0.6068, 'scale': 0.6, 'bbox': [180, 19121, 559, 19205]}
+0077. {'class_name': 'sfx', 'score': 0.4497, 'scale': 0.6, 'bbox': [19, 21034, 287, 21344]}
+0078. {'class_name': 'bulle', 'score': 0.8729, 'scale': 0.6, 'bbox': [88, 23397, 583, 23716]}
+0079. {'class_name': 'bulle', 'score': 0.8649, 'scale': 0.6, 'bbox': [373, 24564, 647, 24746]}
+0080. {'class_name': 'bulle', 'score': 0.8189, 'scale': 0.6, 'bbox': [180, 22008, 676, 22346]}
+0081. {'class_name': 'sfx', 'score': 0.3187, 'scale': 0.6, 'bbox': [489, 22758, 679, 22853]}
+0082. {'class_name': 'bulle', 'score': 0.9146, 'scale': 0.6, 'bbox': [66, 27663, 493, 27997]}
+0083. {'class_name': 'bulle', 'score': 0.8792, 'scale': 0.6, 'bbox': [370, 24585, 649, 24747]}
+0084. {'class_name': 'bulle', 'score': 0.8531, 'scale': 0.6, 'bbox': [393, 26455, 672, 26714]}
+0085. {'class_name': 'bulle', 'score': 0.9166, 'scale': 0.6, 'bbox': [64, 27661, 494, 28053]}
+0086. {'class_name': 'bulle', 'score': 0.9061, 'scale': 0.6, 'bbox': [239, 28384, 660, 28767]}
+0087. {'class_name': 'bulle', 'score': 0.9039, 'scale': 0.6, 'bbox': [198, 30000, 596, 30363]}
+0088. {'class_name': 'bulle', 'score': 0.8943, 'scale': 0.6, 'bbox': [38, 29287, 421, 29640]}
+0089. {'class_name': 'bulle', 'score': 0.924, 'scale': 0.6, 'bbox': [189, 31091, 626, 31491]}
+0090. {'class_name': 'bulle', 'score': 0.9043, 'scale': 0.6, 'bbox': [197, 30048, 599, 30363]}
+0091. {'class_name': 'bulle', 'score': 0.9026, 'scale': 0.6, 'bbox': [30, 31862, 489, 32250]}
+0092. {'class_name': 'bulle', 'score': 0.8881, 'scale': 0.6, 'bbox': [199, 32181, 669, 32568]}
+0093. {'class_name': 'sfx', 'score': 0.3172, 'scale': 0.6, 'bbox': [56, 33065, 347, 33274]}
+0094. {'class_name': 'bulle', 'score': 0.9099, 'scale': 0.6, 'bbox': [36, 33742, 465, 34106]}
+0095. {'class_name': 'bulle', 'score': 0.8769, 'scale': 0.6, 'bbox': [220, 34048, 649, 34409]}
+0096. {'class_name': 'bulle', 'score': 0.8693, 'scale': 0.6, 'bbox': [218, 35185, 680, 35513]}
+0097. {'class_name': 'sfx', 'score': 0.566, 'scale': 0.6, 'bbox': [24, 35785, 511, 36174]}
+0098. {'class_name': 'sfx', 'score': 0.5985, 'scale': 0.6, 'bbox': [27, 35790, 505, 36129]}
+0099. {'class_name': 'bulle', 'score': 0.8883, 'scale': 0.6, 'bbox': [0, 40111, 409, 40451]}
+0100. {'class_name': 'bulle', 'score': 0.3902, 'scale': 0.6, 'bbox': [84, 41483, 683, 41925]}
+
+[Confidence rejects] count=26
+0001. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.196, 'threshold': 0.3, 'bbox': [47, 4656, 259, 4775]}
+0002. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.188, 'threshold': 0.3, 'bbox': [32, 6709, 531, 7304]}
+0003. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.1508, 'threshold': 0.3, 'bbox': [153, 6675, 677, 7377]}
+0004. {'stage': 'confidence', 'class_name': 'out_text', 'scale': 1.0, 'score': 0.2573, 'threshold': 0.3, 'bbox': [397, 9220, 669, 9364]}
+0005. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2781, 'threshold': 0.3, 'bbox': [45, 10177, 257, 10334]}
+0006. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2749, 'threshold': 0.3, 'bbox': [116, 18379, 371, 18438]}
+0007. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.1767, 'threshold': 0.3, 'bbox': [117, 18380, 484, 18438]}
+0008. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2704, 'threshold': 0.3, 'bbox': [267, 19892, 690, 20343]}
+0009. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2564, 'threshold': 0.3, 'bbox': [17, 21052, 253, 21352]}
+0010. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2448, 'threshold': 0.3, 'bbox': [272, 19929, 589, 20304]}
+0011. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2902, 'threshold': 0.3, 'bbox': [175, 21788, 690, 22364]}
+0012. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2274, 'threshold': 0.3, 'bbox': [12, 21307, 277, 21353]}
+0013. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.1807, 'threshold': 0.3, 'bbox': [502, 22767, 671, 22848]}
+0014. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2969, 'threshold': 0.3, 'bbox': [398, 30566, 523, 30622]}
+0015. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.227, 'threshold': 0.3, 'bbox': [59, 33074, 397, 33189]}
+0016. {'stage': 'confidence', 'class_name': 'bulle', 'scale': 1.0, 'score': 0.2068, 'threshold': 0.3, 'bbox': [41, 33075, 678, 33188]}
+0017. {'stage': 'confidence', 'class_name': 'out_text', 'scale': 1.0, 'score': 0.2533, 'threshold': 0.3, 'bbox': [331, 35030, 486, 35114]}
+0018. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.1817, 'threshold': 0.3, 'bbox': [70, 35198, 217, 35274]}
+0019. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.1752, 'threshold': 0.3, 'bbox': [399, 36871, 638, 37117]}
+0020. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2734, 'threshold': 0.3, 'bbox': [257, 39336, 671, 39542]}
+0021. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 0.6, 'score': 0.1693, 'threshold': 0.3, 'bbox': [19, 6895, 662, 7359]}
+0022. {'stage': 'confidence', 'class_name': 'bulle', 'scale': 0.6, 'score': 0.2918, 'threshold': 0.3, 'bbox': [178, 21870, 679, 22347]}
+0023. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 0.6, 'score': 0.1592, 'threshold': 0.3, 'bbox': [270, 19926, 679, 20276]}
+0024. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 0.6, 'score': 0.1654, 'threshold': 0.3, 'bbox': [392, 30558, 527, 30621]}
+0025. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 0.6, 'score': 0.2993, 'threshold': 0.3, 'bbox': [331, 35025, 492, 35118]}
+0026. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 0.6, 'score': 0.2072, 'threshold': 0.3, 'bbox': [57, 33066, 351, 33272]}
+
+[NMS per class rejects] count=50
+0001. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.841, 'threshold': 0.4, 'kept_score': 0.924, 'removed_score': 0.9, 'removed_bbox': [197, 31143, 621, 31490]}
+0002. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.959, 'threshold': 0.4, 'kept_score': 0.924, 'removed_score': 0.868, 'removed_bbox': [197, 31095, 622, 31490]}
+0003. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.848, 'threshold': 0.4, 'kept_score': 0.917, 'removed_score': 0.915, 'removed_bbox': [66, 27663, 493, 27997]}
+0004. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.479, 'threshold': 0.4, 'kept_score': 0.917, 'removed_score': 0.891, 'removed_bbox': [65, 27863, 492, 28052]}
+0005. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.974, 'threshold': 0.4, 'kept_score': 0.917, 'removed_score': 0.867, 'removed_bbox': [66, 27664, 490, 28052]}
+0006. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.799, 'threshold': 0.4, 'kept_score': 0.914, 'removed_score': 0.875, 'removed_bbox': [120, 9834, 568, 10176]}
+0007. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.969, 'threshold': 0.4, 'kept_score': 0.914, 'removed_score': 0.825, 'removed_bbox': [118, 9763, 568, 10181]}
+0008. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.727, 'threshold': 0.4, 'kept_score': 0.913, 'removed_score': 0.904, 'removed_bbox': [61, 11219, 628, 11747]}
+0009. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.734, 'threshold': 0.4, 'kept_score': 0.913, 'removed_score': 0.78, 'removed_bbox': [69, 11231, 629, 11728]}
+0010. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.97, 'threshold': 0.4, 'kept_score': 0.913, 'removed_score': 0.89, 'removed_bbox': [154, 2415, 535, 2773]}
+0011. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.956, 'threshold': 0.4, 'kept_score': 0.911, 'removed_score': 0.846, 'removed_bbox': [186, 14350, 628, 14759]}
+0012. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.884, 'threshold': 0.4, 'kept_score': 0.91, 'removed_score': 0.845, 'removed_bbox': [43, 33750, 459, 34132]}
+0013. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.968, 'threshold': 0.4, 'kept_score': 0.906, 'removed_score': 0.876, 'removed_bbox': [243, 28389, 657, 28769]}
+0014. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.858, 'threshold': 0.4, 'kept_score': 0.904, 'removed_score': 0.904, 'removed_bbox': [198, 30000, 596, 30363]}
+0015. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.841, 'threshold': 0.4, 'kept_score': 0.904, 'removed_score': 0.879, 'removed_bbox': [205, 30002, 591, 30364]}
+0016. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.925, 'threshold': 0.4, 'kept_score': 0.903, 'removed_score': 0.814, 'removed_bbox': [31, 31866, 486, 32274]}
+0017. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.678, 'threshold': 0.4, 'kept_score': 0.901, 'removed_score': 0.874, 'removed_bbox': [398, 26459, 672, 26632]}
+0018. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.964, 'threshold': 0.4, 'kept_score': 0.901, 'removed_score': 0.853, 'removed_bbox': [393, 26455, 672, 26714]}
+0019. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.957, 'threshold': 0.4, 'kept_score': 0.896, 'removed_score': 0.761, 'removed_bbox': [75, 7933, 690, 8365]}
+0020. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.825, 'threshold': 0.4, 'kept_score': 0.896, 'removed_score': 0.883, 'removed_bbox': [24, 1640, 424, 1951]}
+0021. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.976, 'threshold': 0.4, 'kept_score': 0.896, 'removed_score': 0.863, 'removed_bbox': [26, 1584, 418, 1947]}
+0022. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.972, 'threshold': 0.4, 'kept_score': 0.894, 'removed_score': 0.875, 'removed_bbox': [37, 29290, 419, 29635]}
+0023. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.874, 'threshold': 0.4, 'kept_score': 0.889, 'removed_score': 0.888, 'removed_bbox': [374, 24568, 648, 24746]}
+0024. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.956, 'threshold': 0.4, 'kept_score': 0.889, 'removed_score': 0.879, 'removed_bbox': [370, 24585, 649, 24747]}
+0025. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.852, 'threshold': 0.4, 'kept_score': 0.889, 'removed_score': 0.865, 'removed_bbox': [373, 24564, 647, 24746]}
+0026. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.948, 'threshold': 0.4, 'kept_score': 0.888, 'removed_score': 0.862, 'removed_bbox': [0, 40119, 405, 40445]}
+0027. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.91, 'threshold': 0.4, 'kept_score': 0.888, 'removed_score': 0.837, 'removed_bbox': [207, 32158, 661, 32569]}
+0028. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.977, 'threshold': 0.4, 'kept_score': 0.886, 'removed_score': 0.877, 'removed_bbox': [79, 5548, 585, 5882]}
+0029. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.971, 'threshold': 0.4, 'kept_score': 0.886, 'removed_score': 0.836, 'removed_bbox': [78, 5550, 584, 5878]}
+0030. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.952, 'threshold': 0.4, 'kept_score': 0.885, 'removed_score': 0.88, 'removed_bbox': [299, 17713, 682, 18033]}
+0031. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.96, 'threshold': 0.4, 'kept_score': 0.882, 'removed_score': 0.848, 'removed_bbox': [20, 17076, 497, 17387]}
+0032. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.956, 'threshold': 0.4, 'kept_score': 0.881, 'removed_score': 0.87, 'removed_bbox': [157, 18899, 536, 19211]}
+0033. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.935, 'threshold': 0.4, 'kept_score': 0.877, 'removed_score': 0.867, 'removed_bbox': [221, 34032, 642, 34412]}
+0034. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.93, 'threshold': 0.4, 'kept_score': 0.873, 'removed_score': 0.843, 'removed_bbox': [101, 23400, 575, 23711]}
+0035. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.963, 'threshold': 0.4, 'kept_score': 0.869, 'removed_score': 0.824, 'removed_bbox': [216, 35184, 671, 35517]}
+0036. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.761, 'threshold': 0.4, 'kept_score': 0.869, 'removed_score': 0.848, 'removed_bbox': [52, 13607, 460, 13865]}
+0037. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.751, 'threshold': 0.4, 'kept_score': 0.869, 'removed_score': 0.595, 'removed_bbox': [56, 13620, 453, 13857]}
+0038. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.979, 'threshold': 0.4, 'kept_score': 0.866, 'removed_score': 0.847, 'removed_bbox': [19, 8304, 583, 8652]}
+0039. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.777, 'threshold': 0.4, 'kept_score': 0.866, 'removed_score': 0.836, 'removed_bbox': [25, 8329, 573, 8601]}
+0040. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.922, 'threshold': 0.4, 'kept_score': 0.866, 'removed_score': 0.797, 'removed_bbox': [27, 8320, 572, 8644]}
+0041. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.965, 'threshold': 0.4, 'kept_score': 0.826, 'removed_score': 0.819, 'removed_bbox': [180, 22008, 676, 22346]}
+0042. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.899, 'threshold': 0.4, 'kept_score': 0.826, 'removed_score': 0.76, 'removed_bbox': [199, 22024, 669, 22334]}
+0043. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.892, 'threshold': 0.4, 'kept_score': 0.783, 'removed_score': 0.694, 'removed_bbox': [132, 8195, 683, 8372]}
+0044. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.926, 'threshold': 0.4, 'kept_score': 0.515, 'removed_score': 0.31, 'removed_bbox': [161, 12830, 531, 13069]}
+0045. {'stage': 'nms_per_class', 'class_name': 'sfx', 'iou': 0.87, 'threshold': 0.5, 'kept_score': 0.662, 'removed_score': 0.317, 'removed_bbox': [56, 33065, 347, 33274]}
+0046. {'stage': 'nms_per_class', 'class_name': 'sfx', 'iou': 0.538, 'threshold': 0.5, 'kept_score': 0.609, 'removed_score': 0.402, 'removed_bbox': [493, 3300, 690, 3410]}
+0047. {'stage': 'nms_per_class', 'class_name': 'sfx', 'iou': 0.685, 'threshold': 0.5, 'kept_score': 0.609, 'removed_score': 0.336, 'removed_bbox': [386, 3308, 681, 3433]}
+0048. {'stage': 'nms_per_class', 'class_name': 'sfx', 'iou': 0.853, 'threshold': 0.5, 'kept_score': 0.599, 'removed_score': 0.566, 'removed_bbox': [24, 35785, 511, 36174]}
+0049. {'stage': 'nms_per_class', 'class_name': 'sfx', 'iou': 0.91, 'threshold': 0.5, 'kept_score': 0.599, 'removed_score': 0.539, 'removed_bbox': [32, 35790, 502, 36156]}
+0050. {'stage': 'nms_per_class', 'class_name': 'sfx', 'iou': 0.858, 'threshold': 0.5, 'kept_score': 0.432, 'removed_score': 0.334, 'removed_bbox': [2, 6648, 667, 7335]}
+
+[NMS multi-scale rejects] count=2
+0001. {'stage': 'nms_multi_scale', 'iou': 0.942, 'threshold': 0.6, 'kept_scale': 1.0, 'removed_scale': 1.0, 'kept_score': 0.598, 'removed_score': 0.429, 'removed_bbox': [246, 41675, 552, 41753]}
+0002. {'stage': 'nms_multi_scale', 'iou': 0.927, 'threshold': 0.6, 'kept_scale': 1.0, 'removed_scale': 0.6, 'kept_score': 0.515, 'removed_score': 0.316, 'removed_bbox': [163, 12833, 533, 13071]}
+
+[Containment rejects] count=5
+0001. {'stage': 'containment', 'ratio': 0.915, 'keeper_class': 'bulle', 'keeper_score': 0.913, 'removed_class': 'bulle', 'removed_score': 0.431, 'removed_bbox': [171, 2731, 527, 2775]}
+0002. {'stage': 'containment', 'ratio': 0.986, 'keeper_class': 'bulle', 'keeper_score': 0.896, 'removed_class': 'bulle', 'removed_score': 0.783, 'removed_bbox': [89, 8195, 690, 8367]}
+0003. {'stage': 'containment', 'ratio': 0.933, 'keeper_class': 'bulle', 'keeper_score': 0.894, 'removed_class': 'bulle', 'removed_score': 0.816, 'removed_bbox': [27, 29502, 424, 29644]}
+0004. {'stage': 'containment', 'ratio': 0.956, 'keeper_class': 'bulle', 'keeper_score': 0.881, 'removed_class': 'bulle', 'removed_score': 0.607, 'removed_bbox': [180, 19121, 559, 19205]}
+0005. {'stage': 'containment', 'ratio': 1.0, 'keeper_class': 'bulle', 'keeper_score': 0.39, 'removed_class': 'bulle', 'removed_score': 0.598, 'removed_bbox': [252, 41676, 552, 41751]}
+
+[Geometry rejects] count=0
+
+[Final detections] count=43
+0001. {'class_name': 'bulle', 'score': 0.924, 'scale': 0.6, 'bbox': [189, 31091, 626, 31491]}
+0002. {'class_name': 'bulle', 'score': 0.9166, 'scale': 0.6, 'bbox': [64, 27661, 494, 28053]}
+0003. {'class_name': 'bulle', 'score': 0.9139, 'scale': 0.6, 'bbox': [116, 9759, 573, 10178]}
+0004. {'class_name': 'bulle', 'score': 0.9126, 'scale': 0.6, 'bbox': [63, 11221, 630, 11607]}
+0005. {'class_name': 'bulle', 'score': 0.9126, 'scale': 0.6, 'bbox': [158, 2414, 530, 2771]}
+0006. {'class_name': 'bulle', 'score': 0.9112, 'scale': 0.6, 'bbox': [182, 14344, 636, 14760]}
+0007. {'class_name': 'bulle', 'score': 0.9099, 'scale': 0.6, 'bbox': [36, 33742, 465, 34106]}
+0008. {'class_name': 'bulle', 'score': 0.9061, 'scale': 0.6, 'bbox': [239, 28384, 660, 28767]}
+0009. {'class_name': 'bulle', 'score': 0.9043, 'scale': 0.6, 'bbox': [197, 30048, 599, 30363]}
+0010. {'class_name': 'bulle', 'score': 0.9026, 'scale': 0.6, 'bbox': [30, 31862, 489, 32250]}
+0011. {'class_name': 'bulle', 'score': 0.9008, 'scale': 1.0, 'bbox': [397, 26457, 671, 26711]}
+0012. {'class_name': 'bulle', 'score': 0.8963, 'scale': 0.6, 'bbox': [58, 7940, 690, 8364]}
+0013. {'class_name': 'bulle', 'score': 0.8957, 'scale': 0.6, 'bbox': [20, 1583, 420, 1949]}
+0014. {'class_name': 'bulle', 'score': 0.8943, 'scale': 0.6, 'bbox': [38, 29287, 421, 29640]}
+0015. {'class_name': 'bulle', 'score': 0.8889, 'scale': 1.0, 'bbox': [373, 24585, 651, 24742]}
+0016. {'class_name': 'bulle', 'score': 0.8883, 'scale': 0.6, 'bbox': [0, 40111, 409, 40451]}
+0017. {'class_name': 'bulle', 'score': 0.8881, 'scale': 0.6, 'bbox': [199, 32181, 669, 32568]}
+0018. {'class_name': 'bulle', 'score': 0.8863, 'scale': 0.6, 'bbox': [80, 5553, 584, 5883]}
+0019. {'class_name': 'bulle', 'score': 0.8847, 'scale': 0.6, 'bbox': [295, 17714, 685, 18024]}
+0020. {'class_name': 'bulle', 'score': 0.8821, 'scale': 0.6, 'bbox': [17, 17074, 503, 17391]}
+0021. {'class_name': 'bulle', 'score': 0.8815, 'scale': 0.6, 'bbox': [148, 18900, 543, 19211]}
+0022. {'class_name': 'bulle', 'score': 0.8769, 'scale': 0.6, 'bbox': [220, 34048, 649, 34409]}
+0023. {'class_name': 'bulle', 'score': 0.8729, 'scale': 0.6, 'bbox': [88, 23397, 583, 23716]}
+0024. {'class_name': 'bulle', 'score': 0.8693, 'scale': 0.6, 'bbox': [218, 35185, 680, 35513]}
+0025. {'class_name': 'bulle', 'score': 0.8687, 'scale': 0.6, 'bbox': [43, 13659, 468, 13869]}
+0026. {'class_name': 'bulle', 'score': 0.866, 'scale': 0.6, 'bbox': [20, 8308, 580, 8651]}
+0027. {'class_name': 'bulle', 'score': 0.8422, 'scale': 1.0, 'bbox': [72, 11473, 621, 11740]}
+0028. {'class_name': 'bulle', 'score': 0.8261, 'scale': 0.6, 'bbox': [178, 22015, 676, 22341]}
+0029. {'class_name': 'sfx', 'score': 0.7073, 'scale': 1.0, 'bbox': [9, 15720, 264, 15968]}
+0030. {'class_name': 'sfx', 'score': 0.6617, 'scale': 1.0, 'bbox': [62, 33080, 342, 33268]}
+0031. {'class_name': 'sfx', 'score': 0.6391, 'scale': 1.0, 'bbox': [212, 24404, 419, 24558]}
+0032. {'class_name': 'sfx', 'score': 0.6147, 'scale': 1.0, 'bbox': [359, 36821, 690, 37363]}
+0033. {'class_name': 'sfx', 'score': 0.609, 'scale': 0.6, 'bbox': [336, 3303, 689, 3412]}
+0034. {'class_name': 'sfx', 'score': 0.5985, 'scale': 0.6, 'bbox': [27, 35790, 505, 36129]}
+0035. {'class_name': 'bulle', 'score': 0.515, 'scale': 1.0, 'bbox': [164, 12834, 526, 13060]}
+0036. {'class_name': 'sfx', 'score': 0.4743, 'scale': 1.0, 'bbox': [330, 35031, 486, 35112]}
+0037. {'class_name': 'sfx', 'score': 0.4497, 'scale': 0.6, 'bbox': [19, 21034, 287, 21344]}
+0038. {'class_name': 'sfx', 'score': 0.4317, 'scale': 0.6, 'bbox': [6, 6706, 663, 7373]}
+0039. {'class_name': 'bulle', 'score': 0.3902, 'scale': 0.6, 'bbox': [84, 41483, 683, 41925]}
+0040. {'class_name': 'sfx', 'score': 0.3187, 'scale': 0.6, 'bbox': [489, 22758, 679, 22853]}
+0041. {'class_name': 'sfx', 'score': 0.3174, 'scale': 0.6, 'bbox': [39, 4641, 271, 4782]}
+0042. {'class_name': 'sfx', 'score': 0.3165, 'scale': 1.0, 'bbox': [551, 30668, 673, 30719]}
+0043. {'class_name': 'sfx', 'score': 0.302, 'scale': 1.0, 'bbox': [48, 18380, 372, 18586]}
+

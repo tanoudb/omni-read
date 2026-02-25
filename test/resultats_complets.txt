@@ -1,0 +1,187 @@
+TOTAL_TIME: 466.044s
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 43.520s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 43.520s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 43.520s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 43.520s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 43.520s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 43.520s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 43.520s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 43.520s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.492s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.492s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.492s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.492s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.492s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.492s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.492s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.492s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.592s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.592s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.592s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.592s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.592s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.592s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.592s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 4.592s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.251s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.251s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.251s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.251s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.251s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.251s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.251s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.251s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.836s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.836s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.836s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.836s (fallback)
+
+size: (unknown)
+    OCR text: "(none)"
+    OCR conf: 0.00
+    time: 3.836s (fallback)
+

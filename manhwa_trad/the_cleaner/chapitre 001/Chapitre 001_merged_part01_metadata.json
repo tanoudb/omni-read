@@ -1,0 +1,469 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 001\\Chapitre 001_merged_part01.jpg",
+  "output": "manhwa_trad\\the_cleaner\\Chapitre 001\\Chapitre 001_merged_part01_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 58880
+  },
+  "stats": {
+    "detections": 37,
+    "translated": 35
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        76.8260498046875,
+        320,
+        597.060791015625,
+        728
+      ],
+      "original": "GAAAAH!!",
+      "translated": "GAAAAH!!",
+      "confidence": 0.92101,
+      "detection_confidence": 0.7601733803749084
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        155.43736775716147,
+        2658,
+        533.4126790364584,
+        3030
+      ],
+      "original": "KRGH..KHOFF. ERGH...",
+      "translated": "KRGH..KHOFF. ERGH...",
+      "confidence": 0.9040349999999999,
+      "detection_confidence": 0.9061613082885742
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        31.393648783365887,
+        10796,
+        411.36077880859375,
+        11057
+      ],
+      "original": "WAAAH!! WAAAH!!",
+      "translated": "WAAAH!! WAAAH!!",
+      "confidence": 0.9796400000000001,
+      "detection_confidence": 0.8627822995185852
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        141.58798217773438,
+        11656,
+        552.1331787109375,
+        11947
+      ],
+      "original": "HONEY!!",
+      "translated": "Chérie !!",
+      "confidence": 0.996,
+      "detection_confidence": 0.8735690712928772
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        127.18373616536459,
+        13816,
+        566.1029052734375,
+        14122
+      ],
+      "original": "HONEY, ARE You OKAY?!",
+      "translated": "Chérie, tu vas bien ?!",
+      "confidence": 0.87938,
+      "detection_confidence": 0.8756123781204224
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        89.90758260091147,
+        15568,
+        432.26445515950525,
+        15879
+      ],
+      "original": "WH-WHAT ABOUT OUR SON??",
+      "translated": "E-et notre fils ??",
+      "confidence": 0.9482866666666666,
+      "detection_confidence": 0.9107113480567932
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        317.1742248535156,
+        16661,
+        608.8401794433594,
+        16932
+      ],
+      "original": "HE'S.. OKAY.",
+      "translated": "IL VA... BIEN.",
+      "confidence": 0.9013,
+      "detection_confidence": 0.893132746219635
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        72.04629262288412,
+        17568,
+        435.3232828776042,
+        17902
+      ],
+      "original": "THERE'S SOMETHING.. I WANT TO.. TELL YOU.",
+      "translated": "Il y a quelque chose... que je veux... te dire.",
+      "confidence": 0.9192600000000001,
+      "detection_confidence": 0.9125534296035767
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        41.02455139160156,
+        19433,
+        468.81591796875,
+        19733
+      ],
+      "original": "Y-YOU'RE BLEEDING!!",
+      "translated": "T-Tu saignes !!",
+      "confidence": 0.942125,
+      "detection_confidence": 0.8326370716094971
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        140.8890380859375,
+        19619,
+        686.026611328125,
+        19949
+      ],
+      "original": "HOLD STILL, I'LL PATCH THE WOUNDLP, OKAY?",
+      "translated": "Ne bouge pas, je vais soigner la blessure, d'accord ?",
+      "confidence": 0.928695,
+      "detection_confidence": 0.8470585346221924
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        60.232798258463546,
+        21108,
+        506.2906901041667,
+        21520
+      ],
+      "original": "IT'S TOO LATE. I CAN FEEL MYSELF FADING.",
+      "translated": "C'est trop tard. Je sens que je m'éteins.",
+      "confidence": 0.850155,
+      "detection_confidence": 0.9005626440048218
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        133.4911600748698,
+        22016,
+        557.3230997721355,
+        22407
+      ],
+      "original": "BUT STILL... I HAD MY WEDDING I HAVE NO REGRETS.",
+      "translated": "Mais quand même... J'ai eu mon mariage. Je n'ai aucun regret.",
+      "confidence": 0.9483225000000001,
+      "detection_confidence": 0.8963770270347595
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        244.9987284342448,
+        23523,
+        682.2844950358074,
+        23925
+      ],
+      "original": "WE KNEW THIS WOULD HAPPEN, DIDN'T WE?",
+      "translated": "Nous savions que ça arriverait, n'est-ce pas ?",
+      "confidence": 0.9626533333333334,
+      "detection_confidence": 0.8994637131690979
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        40.17340087890625,
+        24821,
+        345.391357421875,
+        25108
+      ],
+      "original": "SO PLEASE..",
+      "translated": "Alors s'il te plaît...",
+      "confidence": 0.86028,
+      "detection_confidence": 0.8931244611740112
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        201.83069864908856,
+        25721,
+        641.4439392089844,
+        26095
+      ],
+      "original": "THIS IS MY FIRST.... AND LAST REQLEST AS YOUR WIFE.",
+      "translated": "C'est ma première... et dernière requête en tant que ta femme.",
+      "confidence": 0.9099666666666667,
+      "detection_confidence": 0.8949711918830872
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        63.031005859375,
+        26053,
+        508.004150390625,
+        26473
+      ],
+      "original": "PLEASE HELP OUR SON.. SO HE CAN LIVE THE LIFE THAT HE WANTS.",
+      "translated": "S'il te plaît, aide notre fils... pour qu'il puisse vivre la vie qu'il désire.",
+      "confidence": 0.955584,
+      "detection_confidence": 0.9086905121803284
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        145.23701985677084,
+        28371,
+        542.8797403971355,
+        28739
+      ],
+      "original": "AND ALSO, I'M SO HAPPY I GOT TO BE. YOLR WIFE..",
+      "translated": "Et aussi, je suis si heureuse d'avoir été... ta femme.",
+      "confidence": 0.9055974999999999,
+      "detection_confidence": 0.9243254065513611
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        87.19014485677084,
+        31988,
+        620.6358846028646,
+        32369
+      ],
+      "original": "WAAAH! WAAAH!",
+      "translated": "WAAAH! WAAAH!",
+      "confidence": 0.9807049999999999,
+      "detection_confidence": 0.8286506533622742
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        43.027852376302086,
+        33829,
+        489.91770426432294,
+        34238
+      ],
+      "original": "LSING A WEDDING AS A TRAP?",
+      "translated": "Utiliser un mariage comme un piège ?",
+      "confidence": 0.89262,
+      "detection_confidence": 0.9097205996513367
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        203.88712565104169,
+        35233,
+        690.0,
+        35679
+      ],
+      "original": "ONLY BASTARDS LIKE YOU COULD COME LP WITH A DIRTY PLAN LIKE THAT...",
+      "translated": "Seuls des salauds comme toi pourraient inventer un plan aussi ignoble...",
+      "confidence": 0.92905,
+      "detection_confidence": 0.8501079678535461
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        82.90659586588542,
+        35611,
+        585.1186116536459,
+        36068
+      ],
+      "original": "IS THAT HOW BAD YOU WANTED TO TAKE ME DOWN? KHOR",
+      "translated": "C'est à ce point que tu voulais me faire tomber ? KHOR",
+      "confidence": 0.906975,
+      "detection_confidence": 0.8559889793395996
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        33.77599080403646,
+        37637,
+        492.9866027832031,
+        38037
+      ],
+      "original": "BUT YOU KNOW THAT CHEONGDO NEVER FORGETS A TRAITOR.",
+      "translated": "Mais tu sais que Cheongdo n'oublie jamais un traître.",
+      "confidence": 0.9315225,
+      "detection_confidence": 0.9054328203201294
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        160.8257039388021,
+        37996,
+        657.698465983073,
+        38445
+      ],
+      "original": "JUST YOU WAIT. WHEN MY SON TAKES HOLD OF THE GROUP.",
+      "translated": "Attends un peu. Quand mon fils prendra le contrôle du groupe.",
+      "confidence": 0.92979,
+      "detection_confidence": 0.9027007818222046
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        91.95327758789062,
+        38913,
+        599.3577067057292,
+        39391
+      ],
+      "original": "…HE'LL KILL YOUR SON.",
+      "translated": "...Il tuera ton fils.",
+      "confidence": 0.924855,
+      "detection_confidence": 0.8832979202270508
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        47.491099039713546,
+        40484,
+        535.3816223144531,
+        40915
+      ],
+      "original": "ONCE THAT SENILE OLD CHAIRMAN DIES, MY SON WILL TAKE OVER IN HIS PLACE.",
+      "translated": "Une fois que ce vieux président sénile mourra, mon fils prendra sa place.",
+      "confidence": 0.9517675,
+      "detection_confidence": 0.8954822421073914
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        232.61057535807294,
+        40850,
+        644.6993001302084,
+        41224
+      ],
+      "original": "LOOK FORWARD TO IT.",
+      "translated": "Réjouis-toi d'avance.",
+      "confidence": 0.938715,
+      "detection_confidence": 0.8800818920135498
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        34.91008758544922,
+        41961,
+        438.358154296875,
+        42329
+      ],
+      "original": "..AGENT I O 1.",
+      "translated": "...AGENT 101.",
+      "confidence": 0.87591,
+      "detection_confidence": 0.9040424227714539
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        331.47454833984375,
+        42808,
+        631.7821655273438,
+        43094
+      ],
+      "original": "….OKAY.",
+      "translated": "...D'accord.",
+      "confidence": 0.79741,
+      "detection_confidence": 0.8902916312217712
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        138.70691935221356,
+        45115,
+        563.7705993652344,
+        45353
+      ],
+      "original": "I WILL.",
+      "translated": "C'est promis.",
+      "confidence": 0.9211,
+      "detection_confidence": 0.8444619178771973
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        82.03903198242188,
+        51861,
+        619.736073811849,
+        52233
+      ],
+      "original": "iiH 9 nnnn OOLW,I",
+      "translated": "iiH 9 nnnn OOLW,I",
+      "confidence": 0.695855,
+      "detection_confidence": 0.8804472088813782
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        237.65284220377606,
+        53234,
+        609.4580586751302,
+        53576
+      ],
+      "original": "WHAT DO YOU ME AN? WE JUST STARTED.",
+      "translated": "Qu'est-ce que tu racontes ? On vient juste de commencer.",
+      "confidence": 0.9477,
+      "detection_confidence": 0.9053343534469604
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        48.922322591145836,
+        54531,
+        395.1677958170573,
+        54849
+      ],
+      "original": "BUT DAAAD!!!",
+      "translated": "Mais Papa !!!",
+      "confidence": 0.90679,
+      "detection_confidence": 0.8929775357246399
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        204.25028483072919,
+        55211,
+        633.2505289713542,
+        55563
+      ],
+      "original": "I RAN IN THE MORNING AND DID SQUATS AT LUNCHTIME!!",
+      "translated": "J'ai couru le matin et j'ai fait des squats à midi !!",
+      "confidence": 0.937375,
+      "detection_confidence": 0.876406192779541
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        49.454854329427086,
+        55599,
+        567.9783121744792,
+        55961
+      ],
+      "original": "AND I EVEN SWAM! I'M ONLY 8 YEARS OLD! THIS IS CHILD ABUSE!!",
+      "translated": "Et j'ai même nagé ! J'ai seulement 8 ans ! C'est de la maltraitance !!",
+      "confidence": 0.9259333333333334,
+      "detection_confidence": 0.9120497703552246
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        199.47275797526044,
+        57719,
+        656.4469401041667,
+        58130
+      ],
+      "original": "WELL,THAT'S WHAT YOU GET FOR HITTING YOUR CLASSMATES.",
+      "translated": "Eh bien, c'est ce qui arrive quand on frappe ses camarades de classe.",
+      "confidence": 0.9461566666666666,
+      "detection_confidence": 0.9185826778411865
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [208.68911743164062, 32494, 637.4166361490886, 32854]
+ocr: WHY CAN'T WE GO OUT LIKE THIS MOREOFTEN, HUH?
+translation: Pourquoi ne pouvons-nous pas sortir comme ça plus souvent, hein ?
+style: dialogue
+mask_regions: 1

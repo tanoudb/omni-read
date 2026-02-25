@@ -1,0 +1,6 @@
+class: bulle
+bbox: [212.5383504231771, 429, 663.261210123698, 729]
+ocr: BUT I HAD A REASON!!
+translation: Mais j'avais une raison!!
+style: dialogue
+mask_regions: 1

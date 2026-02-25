@@ -1,0 +1,6 @@
+class: bulle
+bbox: [237.65284220377606, 53234, 609.4580586751302, 53576]
+ocr: WHAT DO YOU MEAN? WE JUST STARTED.
+translation: Qu'est-ce que tu veux dire ? On vient juste de commencer.
+style: dialogue
+mask_regions: 1

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [4.018656412760417, 16226, 555.674540201823, 16596]
+ocr: DAESEONG JIN HAS TAKEN OVER AS THE NEW CHAIRMAN OF THE CHEONGDO GROUP.
+translation: Daeseong Jin a pris la tête du nouveau groupe cheongdo.
+style: dialogue
+mask_regions: 1

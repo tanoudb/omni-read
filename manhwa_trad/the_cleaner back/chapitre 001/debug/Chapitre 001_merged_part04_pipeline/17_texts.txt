@@ -1,0 +1,6 @@
+class: bulle
+bbox: [33.840240478515625, 37608, 400.7403869628906, 37919]
+ocr: SO IT'S TRUE.
+translation: C'est bien vrai.
+style: dialogue
+mask_regions: 1

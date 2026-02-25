@@ -1,0 +1,6 @@
+class: bulle
+bbox: [203.88712565104169, 35233, 690.0, 35679]
+ocr: ONLY BASTARDS LIKE YOU COULD COME UP WITH A DIRTY PLAN LIKE THAT...
+translation: Seuls des salauds comme toi pourraient imaginer un plan aussi tordu...
+style: dialogue
+mask_regions: 1

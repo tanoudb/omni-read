@@ -1,0 +1,6 @@
+class: bulle
+bbox: [43.83921305338542, 16503, 486.339111328125, 16881]
+ocr: SINCE CHAIRMAN DAEHO IS FINALLYDEAD,
+translation: Depuis que le président Daeho est enfin mort,
+style: dialogue
+mask_regions: 1

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [94.29728190104167, 50318, 596.1505126953125, 50793]
+ocr: HOW COULD HE SAY THAT SO CHEERFULLY?
+translation: Comment a-t-il pu dire ça avec un tel enthousiasme ?
+style: dialogue
+mask_regions: 3

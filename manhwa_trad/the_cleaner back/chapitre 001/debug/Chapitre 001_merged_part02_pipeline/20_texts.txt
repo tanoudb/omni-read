@@ -1,0 +1,6 @@
+class: bulle
+bbox: [399.98040771484375, 28045, 655.9805297851562, 28283]
+ocr: YEAH?
+translation: YEAH?
+style: dialogue
+mask_regions: 1

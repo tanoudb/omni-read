@@ -1,0 +1,6 @@
+class: bulle
+bbox: [43.506978352864586, 8119, 499.5416259765625, 8503]
+ocr: HMM... YOU'VE GOTTEN A LOT STRONGER, I'LL GIVE YOU THAT.
+translation: Hmm... tu as beaucoup grandi en force, je te l'accorde.
+style: dialogue
+mask_regions: 1

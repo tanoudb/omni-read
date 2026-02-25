@@ -1,0 +1,6 @@
+class: bulle
+bbox: [24.71356201171875, 9895, 402.4248046875, 10160]
+ocr: WHAT?!
+translation: WHAT?!
+style: scream
+mask_regions: 1

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [32.079671223958336, 27558, 503.3635965983073, 27984]
+ocr: TRAINING'S CANCELED.LET'S GO OUTFORDINNER.
+translation: La formation est annulée. On sort dîner.
+style: dialogue
+mask_regions: 1

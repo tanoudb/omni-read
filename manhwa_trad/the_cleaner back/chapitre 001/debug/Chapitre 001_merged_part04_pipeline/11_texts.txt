@@ -1,0 +1,6 @@
+class: bulle
+bbox: [161.28122965494794, 16820, 632.1260579427084, 17237]
+ocr: THE DIRECTORS NEED YOLR HEAD TO PROVE THEIR LOYALTY.
+translation: Les directeurs ont besoin de ta tête pour prouver leur loyauté.
+style: dialogue
+mask_regions: 1

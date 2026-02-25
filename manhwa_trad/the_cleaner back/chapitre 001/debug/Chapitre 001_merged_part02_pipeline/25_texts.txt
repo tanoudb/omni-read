@@ -1,0 +1,6 @@
+class: bulle
+bbox: [122.26812744140625, 34601, 345.1481628417969, 34807]
+ocr: MM...
+translation: MM...
+style: dialogue
+mask_regions: 1

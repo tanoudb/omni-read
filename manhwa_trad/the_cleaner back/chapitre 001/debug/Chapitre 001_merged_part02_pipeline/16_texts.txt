@@ -1,0 +1,6 @@
+class: bulle
+bbox: [74.77615356445312, 21636, 623.4114583333334, 22029]
+ocr: FOUR LAPS LEFT!!
+translation: FOUR LAPS LEFT!!
+style: scream
+mask_regions: 1

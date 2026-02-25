@@ -16,6 +16,13 @@ from pathlib import Path
 from config import config, INPUT_DIR, OUTPUT_DIR, LOGS_DIR
 from utils import init_logger, MemoryManager
 from pipeline import TranslationPipeline
+
+# Mode Série (optionnel)
+try:
+    from utils.series_db import SeriesDB
+except ImportError:
+    SeriesDB = None
+
 import os
 os.environ['FLAGS_allocator_strategy'] = 'auto_growth'
 
@@ -81,6 +88,12 @@ def main():
         action='store_true',
         help='Mode debug: sauvegarde image annotée des détections + crops dans output/debug/'
     )
+
+    parser.add_argument(
+        '--api',
+        action='store_true',
+        help='Traduction via API Gemini (nécessite GEMINI_API_KEY). Rapide, haute qualité.'
+    )
     
     parser.add_argument(
         '--show-config',
@@ -92,6 +105,39 @@ def main():
         '--translation-mode',
         choices=['hybrid', 'hybrid_quality', 'nllb', 'qwen'],
         help='Mode traduction: hybrid (NLLB→Qwen), hybrid_quality (NLLB + correction Qwen), nllb, qwen'
+    )
+
+    # ── Mode Série ──
+    parser.add_argument(
+        '--series',
+        type=str,
+        nargs='?',  # Makes the argument optional
+        const='',   # Default value if no argument is provided
+        help='Slug de la série (ex: tbate, solo-leveling). Active le mode série avec glossaire et contexte.'
+    )
+
+    # Alias français `--serie` pour compatibilité avec les commandes utilisateur
+    parser.add_argument(
+        '--serie',
+        dest='series',
+        nargs='?',
+        const='',
+        help='Alias français pour --series (ex: --serie tbate).'
+    )
+
+    parser.add_argument(
+        '--chapter',
+        type=int,
+        default=None,
+        help='Numéro du chapitre (utilisé avec --series pour le contexte narratif)'
+    )
+
+    parser.add_argument(
+        '--init-series',
+        type=str,
+        default=None,
+        metavar='NOM',
+        help='Initialise une nouvelle série. Ex: --series tbate --init-series "The Beginning After The End"'
     )
     
     args = parser.parse_args()
@@ -139,18 +185,27 @@ def main():
     if args.no_cache:
         config.translation.enable_cache = False
 
-    # Mode par défaut imposé: hybrid + backend local_llm
-    # (permet `python main.py` sans flags avec comportement stable)
-    if args.translation_mode:
+    # Mode traduction
+    if getattr(args, 'api', False):
+        config.translation.translation_mode = "gemini"
+        config.translation.backend = "gemini"
+    elif args.translation_mode:
         config.translation.translation_mode = args.translation_mode
     else:
-        config.translation.translation_mode = "hybrid"
+        config.translation.translation_mode = "qwen"
 
-    if config.translation.translation_mode in {"hybrid", "qwen"}:
+    if config.translation.translation_mode in {"hybrid", "hybrid_quality", "qwen"}:
         config.translation.backend = "local_llm"
     elif config.translation.translation_mode == "nllb":
         config.translation.backend = "nllb"
-    
+
+    # Si --series fourni sans valeur, demander le nom maintenant (avant sélection input)
+    if args.series == '':
+        args.series = input("Nom de la série : ").strip()
+        if not args.series:
+            print("Erreur: Aucun nom de série fourni.")
+            sys.exit(1)
+
     # Initialiser logger
     log_file = LOGS_DIR / "webtoon_v5.log"
     logger = init_logger(log_file=log_file, level=args.log_level)
@@ -165,11 +220,22 @@ def main():
         input_path = args.image
         mode = "single"
     else:
-        if not args.input.exists():
-            logger.error(f"Dossier input introuvable: {args.input}")
-            sys.exit(1)
-        input_path = args.input
-        mode = "batch"
+        # En mode série, input_path = manhwa/<slug>
+        if args.series and SeriesDB is not None:
+            slug = args.series.strip().lower().replace(" ", "_")
+            manhwa_dir = Path("manhwa") / slug
+            if manhwa_dir.exists():
+                input_path = manhwa_dir
+                mode = "batch"
+            else:
+                logger.error(f"Dossier manhwa/{slug} introuvable.")
+                sys.exit(1)
+        else:
+            if not args.input.exists():
+                logger.error(f"Dossier input introuvable: {args.input}")
+                sys.exit(1)
+            input_path = args.input
+            mode = "batch"
     
     # Vérifier modèle YOLO
     if not config.YOLO_MODEL_PATH.exists():
@@ -204,7 +270,59 @@ def main():
     
     # Créer pipeline avec mode debug
     logger.info("")
-    pipeline = TranslationPipeline(logger, debug=args.debug)
+
+    # ── Mode Série ──
+    series_db = None
+
+    if args.series and SeriesDB is not None:
+        series_dir = Path("data/series")
+        series_db = SeriesDB(series_dir, args.series, logger=logger)
+
+        if args.init_series:
+            series_db.init_series(name=args.init_series)
+            logger.info(f"   📚 Série initialisée: {args.init_series}")
+        else:
+            status = series_db.get_status()
+            logger.info(f"   📚 Série: {status['series']}")
+            logger.info(f"   📖 Glossaire: {status['glossary_entries']} entrées")
+            logger.info(f"   👤 Personnages: {status['characters']}")
+
+        # Recherche automatique des chapitres et images
+        slug = args.series.strip().lower().replace(" ", "_")
+        manhwa_dir = Path("manhwa") / slug
+        chapitres = []
+        total_images = 0
+        if manhwa_dir.exists():
+            for ch in manhwa_dir.iterdir():
+                if ch.is_dir():
+                    chapitres.append(ch.name)
+                    images = [f for f in ch.iterdir() if f.is_file() and f.suffix.lower() in {".png", ".jpg", ".jpeg"}]
+                    total_images += len(images)
+            logger.info(f"   📂 Dossier manhwa/{slug} trouvé.")
+            logger.info(f"   📑 Chapitres: {len(chapitres)}")
+            logger.info(f"   🖼️  Images totales: {total_images}")
+            logger.info(f"   Liste chapitres: {chapitres}")
+        else:
+            logger.warning(f"   ⚠️  Dossier manhwa/{slug} introuvable.")
+
+        # Demande confirmation avant traduction
+        confirm = input(f"Lancer la traduction pour {len(chapitres)} chapitres et {total_images} images ? (o/n) : ").strip().lower()
+        if confirm != "o":
+            logger.info("Traduction annulée.")
+            sys.exit(0)
+
+        # Définir le dossier de sortie en mode série
+        args.output = Path("manhwa_trad") / slug
+        args.output.mkdir(parents=True, exist_ok=True)
+
+        if args.chapter is not None:
+            series_db.start_chapter(args.chapter)
+
+        logger.stat("Mode série", f"{args.series}" + (f" ch.{args.chapter}" if args.chapter else ""))
+    elif args.series and SeriesDB is None:
+        logger.warning("⚠️  Mode série demandé mais module series_db non trouvé")
+
+    pipeline = TranslationPipeline(logger, debug=args.debug, series_db=series_db)
     
     # Traiter
     logger.start_timer()
@@ -232,6 +350,15 @@ def main():
     
     finally:
         logger.end_timer()
+
+    # ── Finaliser le chapitre série ──
+    if series_db:
+        series_db.finalize_chapter()
+        warnings = series_db.run_consistency_check()
+        if warnings:
+            logger.warning(f"   ⚠️  Incohérences détectées:")
+            for w in warnings:
+                logger.warning(f"      {w}")
     
     logger.header("✅ TERMINÉ")
     

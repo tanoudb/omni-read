@@ -1,0 +1,6 @@
+class: bulle
+bbox: [70.17166137695312, 19577, 618.2811482747396, 19938]
+ocr: THE CHAIRMAN STATED THAT HE IS COMMITTED TOGUIDING THE GROUPINTO ANEWERA.
+translation: Le président a déclaré qu'il était déterminé à guider le groupe vers une nouvelle ère.
+style: dialogue
+mask_regions: 1

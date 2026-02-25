@@ -1,0 +1,6 @@
+class: bulle
+bbox: [145.23701985677084, 28371, 542.8797403971355, 28739]
+ocr: ...AND ALSO, I'M SO HAPPY I GOT TO BE... YOUR WIFE...
+translation: ...Et aussi, je suis si heureuse d'être devenue ta femme...
+style: dialogue
+mask_regions: 1

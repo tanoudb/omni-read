@@ -1,0 +1,6 @@
+class: bulle
+bbox: [143.59638214111328, 44985, 545.0520833333334, 45348]
+ocr: HUH? DO YOU WORK TODAY?
+translation: Huh ? Tu travailles aujourd'hui ?
+style: dialogue
+mask_regions: 1

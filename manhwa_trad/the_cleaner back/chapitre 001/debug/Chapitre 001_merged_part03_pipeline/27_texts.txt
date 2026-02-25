@@ -1,0 +1,6 @@
+class: bulle
+bbox: [14.180450439453125, 40745, 402.9730224609375, 41073]
+ocr: HUH? WHAT'RE YOU DOING, DAD?
+translation: Huh ? Qu'est-ce que tu fais, papa ?
+style: dialogue
+mask_regions: 1

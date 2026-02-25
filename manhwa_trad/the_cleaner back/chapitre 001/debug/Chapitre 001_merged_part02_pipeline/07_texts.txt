@@ -1,0 +1,6 @@
+class: bulle
+bbox: [204.47357177734375, 5188, 541.860595703125, 5505]
+ocr: WHEN YOU PUT IT THAT WAY..
+translation: Quand tu le formules comme ça...
+style: dialogue
+mask_regions: 1

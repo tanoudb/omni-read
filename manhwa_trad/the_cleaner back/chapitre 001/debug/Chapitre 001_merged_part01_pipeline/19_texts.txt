@@ -1,0 +1,6 @@
+class: bulle
+bbox: [43.027852376302086, 33829, 489.91770426432294, 34238]
+ocr: HEH, HE HE... USING A WEDDING AS A TRAP?
+translation: Hé, hé... utiliser un mariage comme piège ?
+style: dialogue
+mask_regions: 1

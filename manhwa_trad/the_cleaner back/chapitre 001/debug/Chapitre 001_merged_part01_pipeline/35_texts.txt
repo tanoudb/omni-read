@@ -1,0 +1,6 @@
+class: bulle
+bbox: [199.47275797526044, 57719, 656.4469401041667, 58130]
+ocr: WELL, THAT'S WHAT YOU GET FOR HITTING YOUR CLASSMATES.
+translation: Ben voilà ce que tu obtiens pour frapper tes camarades de classe.
+style: dialogue
+mask_regions: 1

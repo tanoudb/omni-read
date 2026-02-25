@@ -1,0 +1,6 @@
+class: bulle
+bbox: [103.40667724609375, 46039, 587.8688557942709, 46488]
+ocr: …..BUT THIS MAKES IT ALL WORTH THE TROUBLE.
+translation: Mais cela en vaut la peine.
+style: dialogue
+mask_regions: 1

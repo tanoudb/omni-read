@@ -1,0 +1,6 @@
+class: bulle
+bbox: [138.70691935221356, 45115, 563.7705993652344, 45353]
+ocr: I WILL.
+translation: I WILL.
+style: dialogue
+mask_regions: 1

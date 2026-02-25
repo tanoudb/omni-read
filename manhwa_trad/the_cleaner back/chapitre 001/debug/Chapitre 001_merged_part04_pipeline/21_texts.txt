@@ -1,0 +1,6 @@
+class: bulle
+bbox: [125.865478515625, 42827, 675.1556396484375, 43339]
+ocr: DAD CUTA GUY IN TWO WITH ONE SWINGOF THAT AXE.!!
+translation: Papa a tranché ce type en deux d'un seul coup de cette hache !!
+style: dialogue
+mask_regions: 4

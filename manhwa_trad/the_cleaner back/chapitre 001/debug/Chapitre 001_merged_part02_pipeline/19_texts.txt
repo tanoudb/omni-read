@@ -1,0 +1,6 @@
+class: bulle
+bbox: [42.6392822265625, 27473, 332.4669189453125, 27741]
+ocr: NOM HEY, DAD?
+translation: NOM HEY, DAD?
+style: dialogue
+mask_regions: 2

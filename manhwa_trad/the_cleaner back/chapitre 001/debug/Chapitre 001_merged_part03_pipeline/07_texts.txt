@@ -1,0 +1,6 @@
+class: bulle
+bbox: [57.65239715576172, 13054, 453.77695719401044, 13420]
+ocr: YOU'LL FIND OUT WHEN THE TIME IS RIGHT, SON.
+translation: Tu le sauras à temps, mon fils.
+style: dialogue
+mask_regions: 1

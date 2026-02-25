@@ -1,0 +1,6 @@
+class: bulle
+bbox: [141.58798217773438, 11656, 552.1331787109375, 11947]
+ocr: HONEY!!
+translation: Chéri !
+style: dialogue
+mask_regions: 1

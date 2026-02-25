@@ -1,0 +1,6 @@
+class: bulle
+bbox: [76.8260498046875, 320, 597.060791015625, 728]
+ocr: GAAAAH!!
+translation: GAAAAH!!
+style: scream
+mask_regions: 1

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [331.47454833984375, 42808, 631.7821655273438, 43094]
+ocr: ...OKAY.
+translation: ...OKAY.
+style: dialogue
+mask_regions: 1

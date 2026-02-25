@@ -1,0 +1,6 @@
+class: bulle
+bbox: [362.41375732421875, 24872, 646.5530395507812, 25138]
+ocr: WHAT NOW?
+translation: WHAT NOW?
+style: dialogue
+mask_regions: 1

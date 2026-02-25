@@ -1,0 +1,6 @@
+class: bulle
+bbox: [91.06307983398438, 40754, 598.406473795573, 41215]
+ocr: WHY DOES IT FEEL LIKE YOU'RE EMPHASIZING THE FACT THAT SHE WAS GORGEOUS?
+translation: Pourquoi insistes-tu sur le fait qu'elle était magnifique ?
+style: dialogue
+mask_regions: 1

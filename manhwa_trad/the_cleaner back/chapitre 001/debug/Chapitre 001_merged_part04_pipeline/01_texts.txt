@@ -1,0 +1,6 @@
+class: bulle
+bbox: [115.4364013671875, 448, 577.5944010416667, 878]
+ocr: EVERY PARENT CARRIES AT LEAST ONE SECRET FROM THEIR CHILDREN.
+translation: Chaque parent cache au moins un secret de ses enfants.
+style: dialogue
+mask_regions: 1

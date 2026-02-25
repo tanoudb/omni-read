@@ -1,0 +1,6 @@
+class: bulle
+bbox: [148.25785319010419, 11892, 672.133280436198, 12221]
+ocr: SERIOUSLY YOUDIDN'T LET ME GO TO COLLEGE OR EVEN GO PRO. WHAT'S THE POINT OF ALL THIS?!
+translation: Sérieusement, tu n'as pas même permis que je fasse des études ou m'y essayer professionnellement. Quelle est l'utilité de tout ça?!
+style: dialogue
+mask_regions: 1

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [89.06549072265625, 31074, 411.04901123046875, 31374]
+ocr: WHY DO YOU ASK..?
+translation: Pourquoi me poser cette question...?
+style: dialogue
+mask_regions: 1

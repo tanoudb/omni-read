@@ -1,0 +1,6 @@
+class: bulle
+bbox: [33.77599080403646, 37637, 492.9866027832031, 38037]
+ocr: BUT YOU KNOW THAT CHEONGDO NEVER FORGETS A TRAITOR.
+translation: Mais tu sais que le groupe Cheongdo n'oublie jamais un traître.
+style: dialogue
+mask_regions: 1

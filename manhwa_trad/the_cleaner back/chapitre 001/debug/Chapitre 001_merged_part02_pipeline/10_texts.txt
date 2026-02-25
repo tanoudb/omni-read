@@ -1,0 +1,6 @@
+class: bulle
+bbox: [102.71255493164062, 10920, 587.4215698242188, 11370]
+ocr: GET PUNCHING. IF YOU DON'T HIT TODAY'S QUOTA, THERE'LL BE NO DINNERFORYOU.
+translation: Frappe ! Si tu ne touches pas ta quota d'aujourd'hui, il n'y aura pas de dîner pour toi.
+style: dialogue
+mask_regions: 1

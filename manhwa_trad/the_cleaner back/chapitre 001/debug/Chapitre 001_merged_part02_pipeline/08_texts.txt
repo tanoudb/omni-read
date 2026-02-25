@@ -1,0 +1,6 @@
+class: bulle
+bbox: [79.31808471679688, 8506, 616.3691711425781, 9005]
+ocr: DIDN'T I ALWAYS TELL YOU NEVERTOUSEVIOLENCE FORPERSONAL REVENGE?
+translation: N'employais-je pas toujours à te le rappeler : ne jamais utiliser la violence pour te venger personnellement ?
+style: dialogue
+mask_regions: 1

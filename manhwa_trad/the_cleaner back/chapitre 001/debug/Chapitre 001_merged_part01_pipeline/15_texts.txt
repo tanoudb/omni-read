@@ -1,0 +1,6 @@
+class: bulle
+bbox: [201.83069864908856, 25721, 641.4439392089844, 26095]
+ocr: THIS IS MY FIRST... AND LAST REQUEST AS YOUR WIFE.
+translation: C'est ma première... et ma dernière requête en tant que ton épouse.
+style: dialogue
+mask_regions: 1

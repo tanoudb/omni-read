@@ -1,0 +1,6 @@
+class: bulle
+bbox: [60.232798258463546, 21108, 506.2906901041667, 21520]
+ocr: IT'S TOO LATE... I CAN FEEL MYSELF FADING.
+translation: C'est trop tard... Je sens mes forces m'abandonner.
+style: dialogue
+mask_regions: 1

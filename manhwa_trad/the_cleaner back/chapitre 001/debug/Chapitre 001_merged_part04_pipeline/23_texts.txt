@@ -1,0 +1,6 @@
+class: bulle
+bbox: [212.00660705566406, 45246, 672.3543294270834, 45667]
+ocr: TO TAKE OUT A SINGLETRAITOR..
+translation: Pour sortir un traître...
+style: dialogue
+mask_regions: 1

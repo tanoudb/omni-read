@@ -1,0 +1,6 @@
+class: bulle
+bbox: [113.33577473958334, 54707, 604.2174275716146, 55176]
+ocr: I'LL SHOW YOU AMATEURS..
+translation: Je vais vous montrer les amateurs...
+style: dialogue
+mask_regions: 1

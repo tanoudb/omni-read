@@ -1,0 +1,6 @@
+class: bulle
+bbox: [204.25028483072919, 55211, 633.2505289713542, 55563]
+ocr: I RAN IN THE MORNING AND DID SQUATS AT LUNCHTIME!!
+translation: J'ai couru ce matin et j'ai fait des squats à midi !!
+style: dialogue
+mask_regions: 1

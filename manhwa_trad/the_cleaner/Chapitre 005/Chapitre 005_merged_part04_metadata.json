@@ -1,0 +1,495 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 005\\Chapitre 005_merged_part04.jpg",
+  "output": "manhwa_trad\\the_cleaner\\Chapitre 005\\Chapitre 005_merged_part04_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 39361
+  },
+  "stats": {
+    "detections": 40,
+    "translated": 37
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        194.6210479736328,
+        0,
+        647.1212768554688,
+        321
+      ],
+      "original": "YOU WON'T BE ABLE TODEFEND YOURSELF AGAINST CHAIRMANJIN.",
+      "translated": "Tu ne pourras pas te défendre contre le Président Jin.",
+      "confidence": 0.9507984519004822,
+      "detection_confidence": 0.9141861796379089
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        36.80014292399089,
+        1746,
+        441.84407552083337,
+        2127
+      ],
+      "original": "AND DON'T WORRY ABOUT YOUR FRIEND THERE.",
+      "translated": "Et ne t'inquiète pas pour ton amie là-bas.",
+      "confidence": 0.946817547082901,
+      "detection_confidence": 0.9130517244338989
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        223.64964803059897,
+        2532,
+        668.4294128417969,
+        2941
+      ],
+      "original": "AN AMBULANCE WILL BE HERE SO ON.",
+      "translated": "Une ambulance sera bientôt là.",
+      "confidence": 0.9443909823894501,
+      "detection_confidence": 0.910362958908081
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        155.31620025634766,
+        3362,
+        532.9128519694011,
+        3707
+      ],
+      "original": "HOW DO I KNOW I CAN TRUST YOU?",
+      "translated": "Comment savoir si je peux vous faire confiance ?",
+      "confidence": 0.9075595736503601,
+      "detection_confidence": 0.9133589267730713
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        39.019737243652344,
+        4857,
+        421.889394124349,
+        5208
+      ],
+      "original": "NOT A VERY TRUSTING GUY, ARE YOU?",
+      "translated": "Pas très confiant, n'est-ce pas ?",
+      "confidence": 0.9234582185745239,
+      "detection_confidence": 0.9104730486869812
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        250.42124430338544,
+        6246,
+        664.7447713216146,
+        6626
+      ],
+      "original": "…WE'RE OLD FRIENDS OF YOUR FATHER.",
+      "translated": "...Nous sommes de vieux amis de ton père.",
+      "confidence": 0.9577125708262125,
+      "detection_confidence": 0.9174433946609497
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        62.6995849609375,
+        7417,
+        627.6380411783855,
+        7936
+      ],
+      "original": "IF YOU'RE SMART ENOUGH TO BE WARYOFUS, I'M SURE YOU'RE SMART ENOUGH TO PICK UP ON THE SITUATION.",
+      "translated": "Si tu es assez intelligent pour te méfier de nous, je suis sûr que tu es assez intelligent pour comprendre la situation.",
+      "confidence": 0.9400939444700877,
+      "detection_confidence": 0.9244608879089355
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        41.63792928059896,
+        8403,
+        514.2150370279949,
+        8835
+      ],
+      "original": "CHOOSE FAST. WE CAN'T AFFORD ARUN-INWITH THE COPS EITHER.",
+      "translated": "Choisis vite. Nous ne pouvons pas non plus nous permettre une confrontation avec les flics.",
+      "confidence": 0.9496359974145889,
+      "detection_confidence": 0.9123635292053223
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        76.26515706380209,
+        10024,
+        443.99505615234375,
+        10360
+      ],
+      "original": "I'LL GO WITH YOU FOR NOW.",
+      "translated": "Je vais avec vous pour l'instant.",
+      "confidence": 0.9502458175023397,
+      "detection_confidence": 0.910005509853363
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        239.5727030436198,
+        10975,
+        638.2793680826824,
+        11341
+      ],
+      "original": "ALL RIGHT, THEN. HELP HIM UP.",
+      "translated": "Très bien, alors. Aidez-le à se relever.",
+      "confidence": 0.9538104832172394,
+      "detection_confidence": 0.9094834923744202
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        135.89792887369794,
+        11815,
+        553.74267578125,
+        12195
+      ],
+      "original": "BUT GIVE ME A SECONDFIRST.",
+      "translated": "Mais donne-moi une seconde d'abord.",
+      "confidence": 0.9112776219844818,
+      "detection_confidence": 0.9048674702644348
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        161.85526529947919,
+        15530,
+        538.8962809244792,
+        15876
+      ],
+      "original": "CHEERS TO THE CHAIRMAN!!",
+      "translated": "À la santé du Président !!",
+      "confidence": 0.9596426784992218,
+      "detection_confidence": 0.9133619070053101
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        6.806894938151042,
+        16796,
+        482.6895650227865,
+        17231
+      ],
+      "original": "CONGRATULATIONS ONYOURAPPOINTMENT, SIR!!",
+      "translated": "Félicitations pour votre nomination, Monsieur !!",
+      "confidence": 0.977818230787913,
+      "detection_confidence": 0.8900275230407715
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        232.1941121419271,
+        17197,
+        690.0,
+        17619
+      ],
+      "original": "YOU'RE THE YOUNGEST CHAIRMAN IN OUR HI STORY!!",
+      "translated": "Vous êtes le plus jeune Président de notre histoire !!",
+      "confidence": 0.950266440709432,
+      "detection_confidence": 0.9035259485244751
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        159.63114420572919,
+        18918,
+        660.5013020833334,
+        19381
+      ],
+      "original": "YEAH, THOUGH I'D HAVE GOTTEN HERE EVEN FASTERIF THAT OLD GEEZERHADKICKED THE CAN SOONER.",
+      "translated": "Oui, même si j'y serais arrivé encore plus vite si ce vieux gâteux était mort plus tôt.",
+      "confidence": 0.9528879622618357,
+      "detection_confidence": 0.9244866371154785
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        103.29233805338542,
+        19973,
+        418.19122314453125,
+        20264
+      ],
+      "original": "ASHAME, ISN'T IT?",
+      "translated": "Dommage, n'est-ce pas ?",
+      "confidence": 0.937225878238678,
+      "detection_confidence": 0.9065953493118286
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        204.08868408203125,
+        20916,
+        486.22320556640625,
+        21178
+      ],
+      "original": "AH, HAHA...",
+      "translated": "Ah, haha...",
+      "confidence": 0.8618594110012054,
+      "detection_confidence": 0.9044296145439148
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        104.43979899088542,
+        22118,
+        586.7710367838542,
+        22563
+      ],
+      "original": "ANY WAY, ENJOYYOURSELVES TONIGHT!!",
+      "translated": "Quoi qu'il en soit, amusez-vous bien ce soir !!",
+      "confidence": 0.9852267106374105,
+      "detection_confidence": 0.9117451906204224
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        17.971331278483074,
+        23894,
+        441.7608133951823,
+        24261
+      ],
+      "original": "OH,SIR! THERE'S AVIDEO MESSAGEFOR YOU...",
+      "translated": "Oh, Monsieur ! Il y a un message vidéo pour vous...",
+      "confidence": 0.9189307987689972,
+      "detection_confidence": 0.8880022168159485
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        250.9642537434896,
+        24160,
+        676.51611328125,
+        24531
+      ],
+      "original": "FROM A FIELDAGENT.",
+      "translated": "D'un agent de terrain.",
+      "confidence": 0.9769312143325806,
+      "detection_confidence": 0.8713671565055847
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        62.95537312825521,
+        25177,
+        452.6427714029948,
+        25538
+      ],
+      "original": "PERFECT. GO AHEAD AND PLAY IT.",
+      "translated": "Parfait. Allez-y et lancez-le.",
+      "confidence": 0.9657717943191528,
+      "detection_confidence": 0.9200097322463989
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        325.75030517578125,
+        25875,
+        663.3889770507812,
+        26180
+      ],
+      "original": "I WANNA SEE HIS FACE--",
+      "translated": "Je veux voir son visage--",
+      "confidence": 0.9166295528411865,
+      "detection_confidence": 0.8895670175552368
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        114.85336303710938,
+        26137,
+        569.5387268066406,
+        26410
+      ],
+      "original": "ARE YOU CHAIRMAN JIN?",
+      "translated": "Êtes-vous le Président Jin ?",
+      "confidence": 0.9281963407993317,
+      "detection_confidence": 0.8675548434257507
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        125.33563232421875,
+        27524,
+        569.389892578125,
+        27818
+      ],
+      "original": "SORRY TO DISAPPOINT YOU.",
+      "translated": "Désolé de vous décevoir.",
+      "confidence": 0.9396401941776276,
+      "detection_confidence": 0.8697464466094971
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        222.66436258951825,
+        28986,
+        682.554931640625,
+        29284
+      ],
+      "original": "THE FACT THAT YOU'RE AFTER MY HEAD...",
+      "translated": "Le fait que vous en ayez après ma tête...",
+      "confidence": 0.9180510520935059,
+      "detection_confidence": 0.8867112994194031
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        14.09051513671875,
+        29961,
+        565.2435913085938,
+        30178
+      ],
+      "original": "THAT YOU'RE THE ONE BEHIND ALL THIS.",
+      "translated": "Que vous soyez celui derrière tout ça.",
+      "confidence": 0.9349537193775177,
+      "detection_confidence": 0.8782982230186462
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        137.85054524739584,
+        30651,
+        667.3162841796875,
+        31004
+      ],
+      "original": "BUT WHILE YOU MAY BE THE HEAD OF SOME BIG BUSINESS.",
+      "translated": "Mais même si vous êtes à la tête d'une grande entreprise.",
+      "confidence": 0.9530731439590454,
+      "detection_confidence": 0.8950768113136292
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        25.24846394856771,
+        31749,
+        601.2535603841146,
+        32123
+      ],
+      "original": "...NO,EVEN IF YOU`RE THE PRESIDENT OF THISCOUNTRY...",
+      "translated": "...non, même si vous êtes le président de ce pays...",
+      "confidence": 0.9041755676269532,
+      "detection_confidence": 0.8691193461418152
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        101.54983520507812,
+        32573,
+        594.4171651204427,
+        32898
+      ],
+      "original": "..YOU WON'T GET RID OF ME THAT EASILY.",
+      "translated": "...vous ne vous débarrasserez pas de moi si facilement.",
+      "confidence": 0.894477923711141,
+      "detection_confidence": 0.8898900151252747
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        212.63885498046875,
+        34017,
+        660.2170817057292,
+        34323
+      ],
+      "original": "SO GET READY.",
+      "translated": "Alors préparez-vous.",
+      "confidence": 0.9673579335212708,
+      "detection_confidence": 0.8861760497093201
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        67.26552327473959,
+        35020,
+        534.0838623046875,
+        35327
+      ],
+      "original": "WATCH ME LIVE THROUGH THIS...",
+      "translated": "Regardez-moi survivre à ça...",
+      "confidence": 0.9596431851387024,
+      "detection_confidence": 0.8873782157897949
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        99.9206034342448,
+        35824,
+        594.0674336751302,
+        36161
+      ],
+      "original": "..AND GET MY REVENGE ON YOU.",
+      "translated": "...et me venger de vous.",
+      "confidence": 0.9236243764559428,
+      "detection_confidence": 0.7698570489883423
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        108.92877197265625,
+        37233,
+        575.073486328125,
+        37544
+      ],
+      "original": "YOu CAN BET TONIT.",
+      "translated": "Vous pouvez en être sûr.",
+      "confidence": 0.9074246088663737,
+      "detection_confidence": 0.8475582599639893
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        546.4515177408855,
+        38935,
+        686.1736043294271,
+        38989
+      ],
+      "original": "PRODUCER Amber",
+      "translated": "PRODUCTEUR Amber",
+      "confidence": 0.9941579103469849,
+      "detection_confidence": 0.3634154200553894
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        570.4422505696615,
+        39037,
+        687.2465515136719,
+        39079
+      ],
+      "original": "STAFF TEAM ART",
+      "translated": "ÉQUIPE ARTISTIQUE",
+      "confidence": 0.9908184806505839,
+      "detection_confidence": 0.35709601640701294
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        572.8570556640625,
+        39053,
+        690.0,
+        39100
+      ],
+      "original": "TEAM ART VINA",
+      "translated": "ÉQUIPE ARTISTIQUE VINA",
+      "confidence": 0.9913313190142313,
+      "detection_confidence": 0.31528759002685547
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        580.4638671875,
+        38967,
+        690.0,
+        39024
+      ],
+      "original": "Amber YunhaJung",
+      "translated": "Amber YunhaJung",
+      "confidence": 0.9925351738929749,
+      "detection_confidence": 0.3383183479309082
+    }
+  ]
+}

@@ -1,0 +1,299 @@
+OCR Results for Chapitre 001_merged_part03
+============================================================
+
+[1] bulle (score=0.92)
+    bbox: [155, 5797, 532, 6145]
+    size: 377x348px
+    OCR text: "OOPS... ITBURST." 
+    OCR conf: 0.97
+    Traduction NLLB: "Oups... Je me suis éclaté." 
+    Traduction finale: "Oups... Je me suis éclaté." 
+
+[2] bulle (score=0.91)
+    bbox: [43, 8119, 499, 8503]
+    size: 456x384px
+    OCR text: "HMM... YOU'VE GOTTEN A LOT STRONGER, I'LL GIVE YOU THAT." 
+    OCR conf: 0.94
+    Traduction NLLB: "Hmm... tu as beaucoup grandi en force, je te l'accorde." 
+    Traduction finale: "Hmm... tu as beaucoup grandi en force, je te l'accorde." 
+
+[3] bulle (score=0.64)
+    bbox: [258, 8413, 646, 8477]
+    size: 388x64px
+    OCR text: "(none)" 
+    OCR conf: 0.00
+    Traduction NLLB: "(none)" 
+    Traduction finale: "(none)" 
+
+[4] bulle (score=0.90)
+    bbox: [220, 8434, 687, 8841]
+    size: 467x407px
+    OCR text: "GET SOME REST BEFORE YOUR EVENING WEIGHT TRAINING." 
+    OCR conf: 0.97
+    Traduction NLLB: "Prends ta réplique avant ton entraînement de poids cet evening." 
+    Traduction finale: "Prends ta réplique avant ton entraînement de poids cet evening." 
+
+[5] bulle (score=0.88)
+    bbox: [24, 9895, 402, 10160]
+    size: 378x265px
+    OCR text: "WHAT?!" 
+    OCR conf: 0.95
+    Traduction NLLB: "WHAT?!" 
+    Traduction finale: "WHAT?!" 
+
+[6] bulle (score=0.90)
+    bbox: [23, 11470, 500, 11753]
+    size: 477x283px
+    OCR text: "IFYOU'RE GOING TO WORK ME SO HARD,CAN'T YOU ATLEASTTELLME" 
+    OCR conf: 0.95
+    Traduction NLLB: "Si tu me travailles si dur, ne pouvais-tu au moins me le dire?" 
+    Traduction finale: "Si tu me travailles si dur, ne pouvais-tu au moins me le dire?" 
+
+[7] bulle (score=0.91)
+    bbox: [148, 11892, 672, 12221]
+    size: 524x329px
+    OCR text: "SERIOUSLY YOUDIDN'T LET ME GO TO COLLEGE OR EVEN GO PRO. WHAT'S THE POINT OF ALL THIS?!" 
+    OCR conf: 0.93
+    Traduction NLLB: "Sérieusement, tu n'as pas même permis que je fasse des études ou m'y essayer professionnellement. Quelle est l'utilité de tout ça?!" 
+    Traduction finale: "Sérieusement, tu n'as pas même permis que je fasse des études ou m'y essayer professionnellement. Quelle est l'utilité de tout ça?!" 
+
+[8] bulle (score=0.91)
+    bbox: [57, 13054, 453, 13420]
+    size: 396x366px
+    OCR text: "YOU'LL FIND OUT WHEN THE TIME IS RIGHT, SON." 
+    OCR conf: 0.96
+    Traduction NLLB: "Tu le sauras à temps, mon fils." 
+    Traduction finale: "Tu le sauras à temps, mon fils." 
+
+[9] bulle (score=0.88)
+    bbox: [31, 13926, 627, 14284]
+    size: 596x358px
+    OCR text: "I'M GONNA END UP AN OLD UNMARRIEDMAN AT THIS RATE!" 
+    OCR conf: 0.95
+    Traduction NLLB: "Je vais finir par être un vieux garçon à ce rythme !" 
+    Traduction finale: "Je vais finir par être un vieux garçon à ce rythme !" 
+
+[10] bulle (score=0.86)
+    bbox: [230, 15455, 662, 15746]
+    size: 432x291px
+    OCR text: "THIS IS CSY NEWS. TODAY'S TOP STORY..." 
+    OCR conf: 0.94
+    Traduction NLLB: "C'est l'actualité csy. Aujourd'hui, la nouvelle en tête..." 
+    Traduction finale: "C'est l'actualité csy. Aujourd'hui, la nouvelle en tête..." 
+
+[11] bulle (score=0.86)
+    bbox: [4, 16226, 555, 16596]
+    size: 551x370px
+    OCR text: "DAESEONG JIN HAS TAKEN OVER AS THE NEW CHAIRMAN OF THE CHEONGDO GROUP." 
+    OCR conf: 0.96
+    Traduction NLLB: "Daeseong Jin a pris la tête du nouveau groupe cheongdo." 
+    Traduction finale: "Daeseong Jin a pris la tête du nouveau groupe cheongdo." 
+
+[12] bulle (score=0.88)
+    bbox: [162, 17714, 646, 18034]
+    size: 484x320px
+    OCR text: "CHAIRMAN DAESEONG JINIS THE GRANDSON..." 
+    OCR conf: 0.96
+    Traduction NLLB: "Le président Daeseong jinis est le petit-fils..." 
+    Traduction finale: "Le président Daeseong jinis est le petit-fils..." 
+
+[13] bulle (score=0.86)
+    bbox: [44, 18785, 500, 19092]
+    size: 456x307px
+    OCR text: "….OF THE LATE DAEHO JIN AND HEIRTO CHEONGDO." 
+    OCR conf: 0.94
+    Traduction NLLB: "...Du daeho jin décédé et de son héritier cheongdo." 
+    Traduction finale: "...Du daeho jin décédé et de son héritier cheongdo." 
+
+[14] bulle (score=0.89)
+    bbox: [70, 19577, 618, 19938]
+    size: 548x361px
+    OCR text: "THE CHAIRMAN STATED THAT HE IS COMMITTED TOGUIDING THE GROUPINTO ANEWERA." 
+    OCR conf: 0.96
+    Traduction NLLB: "Le président a déclaré qu'il était déterminé à guider le groupe vers une nouvelle ère." 
+    Traduction finale: "Le président a déclaré qu'il était déterminé à guider le groupe vers une nouvelle ère." 
+
+[15] bulle (score=0.75)
+    bbox: [14, 22831, 690, 23019]
+    size: 676x188px
+    OCR text: "The plan's gone awry. They're going to do it tonight." 
+    OCR conf: 0.94
+    Traduction NLLB: "Le plan a mal tourné. Ils vont le faire ce soir." 
+    Traduction finale: "Le plan a mal tourné. Ils vont le faire ce soir." 
+
+[16] bulle (score=0.71)
+    bbox: [30, 23027, 680, 23142]
+    size: 650x115px
+    OCR text: "You need to move." 
+    OCR conf: 0.99
+    Traduction NLLB: "Vous devez bouger." 
+    Traduction finale: "Vous devez bouger." 
+
+[17] bulle (score=0.90)
+    bbox: [108, 23695, 361, 23928]
+    size: 253x233px
+    OCR text: "SON..." 
+    OCR conf: 0.91
+    Traduction NLLB: "SON..." 
+    Traduction finale: "SON..." 
+
+[18] bulle (score=0.90)
+    bbox: [362, 24872, 646, 25138]
+    size: 284x266px
+    OCR text: "WHAT NOW?" 
+    OCR conf: 0.94
+    Traduction NLLB: "WHAT NOW?" 
+    Traduction finale: "WHAT NOW?" 
+
+[19] bulle (score=0.91)
+    bbox: [39, 25624, 451, 25999]
+    size: 412x375px
+    OCR text: "GO SHOWER AND GETDRESSED." 
+    OCR conf: 0.96
+    Traduction NLLB: "Prends ta douche et habille-toi." 
+    Traduction finale: "Prends ta douche et habille-toi." 
+
+[20] bulle (score=0.90)
+    bbox: [406, 26893, 650, 27121]
+    size: 244x228px
+    OCR text: "HUH?" 
+    OCR conf: 0.95
+    Traduction NLLB: "HUH?" 
+    Traduction finale: "HUH?" 
+
+[21] bulle (score=0.91)
+    bbox: [32, 27558, 503, 27984]
+    size: 471x426px
+    OCR text: "TRAINING'S CANCELED.LET'S GO OUTFORDINNER." 
+    OCR conf: 0.96
+    Traduction NLLB: "La formation est annulée. On sort dîner." 
+    Traduction finale: "La formation est annulée. On sort dîner." 
+
+[22] bulle (score=0.89)
+    bbox: [216, 30247, 662, 30596]
+    size: 446x349px
+    OCR text: "HA,ICAN'T EVEN REMEMBER THE LAST TIME WE WENT OUT LIKE THIS!" 
+    OCR conf: 0.94
+    Traduction NLLB: "Hé, je ne me souviens même plus de la dernière fois où nous sommes sortis comme ça !" 
+    Traduction finale: "Hé, je ne me souviens même plus de la dernière fois où nous sommes sortis comme ça !" 
+
+[23] bulle (score=0.90)
+    bbox: [13, 30548, 477, 30939]
+    size: 464x391px
+    OCR text: "AGUY'S GOTTATAKEA BREAKSOMETIMES, YOu KNOW?" 
+    OCR conf: 0.90
+    Traduction NLLB: "Aguy's gotta take a breakparfois, tu le sais ?" 
+    Traduction finale: "Aguy's gotta take a breakparfois, tu le sais ?" 
+
+[24] bulle (score=0.90)
+    bbox: [208, 32494, 637, 32854]
+    size: 429x360px
+    OCR text: "WHY CAN'T WE GO OUT LIKE THIS MOREOFTEN, HUH?" 
+    OCR conf: 0.95
+    Traduction NLLB: "Pourquoi ne pouvons-nous pas sortir comme ça plus souvent, hein ?" 
+    Traduction finale: "Pourquoi ne pouvons-nous pas sortir comme ça plus souvent, hein ?" 
+
+[25] bulle (score=0.91)
+    bbox: [56, 32814, 481, 33197]
+    size: 425x383px
+    OCR text: "LET'S DO THIS AGAIN NEXT WEEK!" 
+    OCR conf: 0.94
+    Traduction NLLB: "On se revoit la semaine prochaine !" 
+    Traduction finale: "On se revoit la semaine prochaine !" 
+
+[26] bulle (score=0.90)
+    bbox: [83, 34406, 352, 34655]
+    size: 269x249px
+    OCR text: "SURE..." 
+    OCR conf: 0.92
+    Traduction NLLB: "SURE..." 
+    Traduction finale: "SURE..." 
+
+[27] bulle (score=0.91)
+    bbox: [104, 36159, 585, 36606]
+    size: 481x447px
+    OCR text: "...IF WE'RE STILL HERE BY THEN." 
+    OCR conf: 0.93
+    Traduction NLLB: "...Si nous sommes encore ici à ce moment-là." 
+    Traduction finale: "...Si nous sommes encore ici à ce moment-là." 
+
+[28] bulle (score=0.90)
+    bbox: [14, 40745, 402, 41073]
+    size: 388x328px
+    OCR text: "HUH? WHAT'RE YOU DOING, DAD?" 
+    OCR conf: 0.93
+    Traduction NLLB: "Huh ? Qu'est-ce que tu fais, papa ?" 
+    Traduction finale: "Huh ? Qu'est-ce que tu fais, papa ?" 
+
+[29] bulle (score=0.88)
+    bbox: [204, 41009, 577, 41343]
+    size: 373x334px
+    OCR text: "THIS ISN'T THE WAY TO THE RESTAURANT!" 
+    OCR conf: 0.95
+    Traduction NLLB: "Ce n'est pas la voie menant au restaurant !" 
+    Traduction finale: "Ce n'est pas la voie menant au restaurant !" 
+
+[30] bulle (score=0.92)
+    bbox: [269, 42265, 637, 42605]
+    size: 368x340px
+    OCR text: "WHY AREN'T YOU SAYING ANYTHING--" 
+    OCR conf: 0.94
+    Traduction NLLB: "Pourquoi tu ne dis rien--" 
+    Traduction finale: "Pourquoi tu ne dis rien--" 
+
+[31] bulle (score=0.90)
+    bbox: [65, 43181, 306, 43401]
+    size: 241x220px
+    OCR text: "HUH?" 
+    OCR conf: 0.94
+    Traduction NLLB: "HUH?" 
+    Traduction finale: "HUH?" 
+
+[32] bulle (score=0.93)
+    bbox: [100, 43725, 588, 44174]
+    size: 488x449px
+    OCR text: "WHAT THE... WHY ARE THERE A WHOLE BUNCH OFBLACK CARS FOLLOWING US..?" 
+    OCR conf: 0.94
+    Traduction NLLB: "Qu'est-ce que... pourquoi on est suivis par une dizaine de voitures noires..?" 
+    Traduction finale: "Qu'est-ce que... pourquoi on est suivis par une dizaine de voitures noires..?" 
+
+[33] bulle (score=0.86)
+    bbox: [206, 53797, 606, 54036]
+    size: 400x239px
+    OCR text: "DAD!!" 
+    OCR conf: 0.93
+    Traduction NLLB: "DAD!!" 
+    Traduction finale: "DAD!!" 
+
+[34] out_text (score=0.30)
+    bbox: [429, 54172, 641, 54274]
+    size: 212x102px
+    OCR text: "CLUNK" 
+    OCR conf: 0.99
+    Traduction NLLB: "CLUNK" 
+    Traduction finale: "CLUNK" 
+
+[35] bulle (score=0.86)
+    bbox: [4, 55605, 558, 55938]
+    size: 554x333px
+    OCR text: "SERIOUSLY, WHAT'S GOING ON?!" 
+    OCR conf: 0.95
+    Traduction NLLB: "Sérieusement, qu'est-ce qui se passe?!" 
+    Traduction finale: "Sérieusement, qu'est-ce qui se passe?!" 
+
+[36] bulle (score=0.87)
+    bbox: [176, 55886, 690, 56248]
+    size: 514x362px
+    OCR text: "PLEASE, JUSTEXPLAIN SOMETHING TO ME FOR ONCE!!" 
+    OCR conf: 0.97
+    Traduction NLLB: "S'il te plaît, explique-moi une fois ce que c'est !" 
+    Traduction finale: "S'il te plaît, explique-moi une fois ce que c'est !" 
+
+[37] bulle (score=0.89)
+    bbox: [78, 57750, 317, 57982]
+    size: 239x232px
+    OCR text: "ISu..." 
+    OCR conf: 0.83
+    Traduction NLLB: "ISu..." 
+    Traduction finale: "ISu..." 
+

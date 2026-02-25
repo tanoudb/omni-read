@@ -1,0 +1,430 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 004\\Chapitre 004_merged_part04.jpg",
+  "output": "manhwa_trad\\the_cleaner\\Chapitre 004\\Chapitre 004_merged_part04_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 42226
+  },
+  "stats": {
+    "detections": 32,
+    "translated": 32
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        200.02543131510419,
+        426,
+        686.3455200195312,
+        754
+      ],
+      "original": "WEAPONS AND idn SONVH",
+      "translated": "Armes en main",
+      "confidence": 0.88391,
+      "detection_confidence": 0.9127323627471924
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        31.157175699869793,
+        699,
+        493.43048095703125,
+        1011
+      ],
+      "original": "DO AS I",
+      "translated": "Fais ce que je dis.",
+      "confidence": 0.86371,
+      "detection_confidence": 0.9150700569152832
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        122.85115559895834,
+        2517,
+        567.7280680338542,
+        2824
+      ],
+      "original": "IF YOUDON'T--",
+      "translated": "Si tu ne le fais pas--",
+      "confidence": 0.90372,
+      "detection_confidence": 0.8879066109657288
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        46.89935302734375,
+        3960,
+        375.3378601074219,
+        4194
+      ],
+      "original": "AGH!!!",
+      "translated": "AGH!!!",
+      "confidence": 0.97645,
+      "detection_confidence": 0.8547132611274719
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        309.92999267578125,
+        5078,
+        643.8319091796875,
+        5312
+      ],
+      "original": "SOYEON!!!",
+      "translated": "SOYEON !!!",
+      "confidence": 0.94912,
+      "detection_confidence": 0.8928794860839844
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        36.66844685872396,
+        5675,
+        476.86238606770837,
+        6052
+      ],
+      "original": "YOU SEEM TO THINK WE DON'T HAVE GUNS..",
+      "translated": "Tu sembles penser que nous n'avons pas d'armes à feu...",
+      "confidence": 0.9137700000000001,
+      "detection_confidence": 0.8973479866981506
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        144.566650390625,
+        5971,
+        667.3958333333334,
+        6427
+      ],
+      "original": "BUT WE'D HAVE BROUGHT THEM OUT SOONER IF WE WERE JUST HERE TO KILL YOU.",
+      "translated": "Mais nous les aurions sorties plus tôt si nous étions juste là pour te tuer.",
+      "confidence": 0.936768,
+      "detection_confidence": 0.8990574479103088
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        114.96439615885417,
+        7726,
+        577.538553873698,
+        8162
+      ],
+      "original": "DON'T WORRY. WE'RE NOT GOING TO KILL YOU... YET.",
+      "translated": "Ne t'inquiète pas. Nous n'allons pas te tuer... pas encore.",
+      "confidence": 0.9308775,
+      "detection_confidence": 0.905520498752594
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        14.223429361979168,
+        8692,
+        493.5338338216146,
+        9137
+      ],
+      "original": "PLUS, WE DON'T HAVE ANY LNSETTLED BUSINESS WITH THE COPS.",
+      "translated": "De plus, nous n'avons aucun compte à régler avec les flics.",
+      "confidence": 0.950535,
+      "detection_confidence": 0.9042951464653015
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        148.11087290445965,
+        9442,
+        542.7894083658855,
+        9804
+      ],
+      "original": "THIS GUY'S THE ONE WE'RE HERE FOR.",
+      "translated": "C'est ce type que nous sommes venus chercher.",
+      "confidence": 0.9317466666666667,
+      "detection_confidence": 0.9103481769561768
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        60.108001708984375,
+        11531,
+        390.9444885253906,
+        11838
+      ],
+      "original": "WHY ARE YOU DOING THIS?",
+      "translated": "Pourquoi fais-tu ça ?",
+      "confidence": 0.9527733333333334,
+      "detection_confidence": 0.899651050567627
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        387.5555419921875,
+        12720,
+        655.421875,
+        12967
+      ],
+      "original": "WHY?",
+      "translated": "Pourquoi ?",
+      "confidence": 0.95597,
+      "detection_confidence": 0.9032831192016602
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        226.5301005045573,
+        15221,
+        689.648183186849,
+        15643
+      ],
+      "original": "YOL WERE FROM THE MOMENT YOU WERE BORN, IS ALL.",
+      "translated": "Tu l'étais dès ta naissance, c'est tout.",
+      "confidence": 0.9339924999999999,
+      "detection_confidence": 0.9218236207962036
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        20.746734619140625,
+        16061,
+        358.5790100097656,
+        16295
+      ],
+      "original": "A-AGH...",
+      "translated": "A-AGH...",
+      "confidence": 0.83213,
+      "detection_confidence": 0.8836395740509033
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        251.4886220296224,
+        16655,
+        665.3948974609375,
+        16999
+      ],
+      "original": "I'M SLREYOU'RE CONFUSED,",
+      "translated": "Je suis sûr que tu es confus,",
+      "confidence": 0.9003650000000001,
+      "detection_confidence": 0.8781914114952087
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        49.43878173828125,
+        16949,
+        531.1264038085938,
+        17383
+      ],
+      "original": "BUT JUST THINK OF YOURSELF AS A PLAY THING FOR THE HIGHER-LPS.",
+      "translated": "Mais considère-toi juste comme un jouet pour les supérieurs.",
+      "confidence": 0.9261375,
+      "detection_confidence": 0.9075300693511963
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        83.09600830078125,
+        18439,
+        624.838623046875,
+        18811
+      ],
+      "original": "BLAME YOLR PARENTS FOR THIS!!",
+      "translated": "Blâme tes parents pour ça !!",
+      "confidence": 0.9707266666666667,
+      "detection_confidence": 0.8348938822746277
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        3.697998046875,
+        22083,
+        668.0904541015625,
+        22217
+      ],
+      "original": "I DON'T UNDER STAND ANY OF THIS.",
+      "translated": "Je ne comprends rien à tout ça.",
+      "confidence": 0.97037,
+      "detection_confidence": 0.5706474184989929
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.0,
+        23319,
+        690.0,
+        24005
+      ],
+      "original": "WAS EVERYTHING DAD DID FOR ME",
+      "translated": "Tout ce que papa a fait pour moi",
+      "confidence": 0.961295,
+      "detection_confidence": 0.41536760330200195
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        91.90283203125,
+        24815,
+        667.4849243164062,
+        24908
+      ],
+      "original": "FOR ESIHL",
+      "translated": "Était-ce pour ça ?",
+      "confidence": 0.80245,
+      "detection_confidence": 0.6443967819213867
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.0,
+        26050,
+        690.0,
+        26463
+      ],
+      "original": "TO DUMP IT ALL ON ME?",
+      "translated": "Pour tout me refiler ?",
+      "confidence": 0.88917,
+      "detection_confidence": 0.37875792384147644
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        151.109250386556,
+        27364,
+        528.4215799967449,
+        27502
+      ],
+      "original": "I'M SO CONFUSED.",
+      "translated": "Je suis tellement confus.",
+      "confidence": 0.9623349999999999,
+      "detection_confidence": 0.706957995891571
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        0.0,
+        28708,
+        688.5243530273438,
+        28962
+      ],
+      "original": "..BUT THERE'S ONE THING I KNOW FOR CERTAIN.",
+      "translated": "...Mais il y a une chose que je sais avec certitude.",
+      "confidence": 0.928705,
+      "detection_confidence": 0.4269883632659912
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        121.2719217936198,
+        30901,
+        549.6728515625,
+        31149
+      ],
+      "original": "ICAN'T DIE NOW.",
+      "translated": "Je ne peux pas mourir maintenant.",
+      "confidence": 0.961165,
+      "detection_confidence": 0.33701494336128235
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        15.29827880859375,
+        32242,
+        645.7666625976562,
+        32333
+      ],
+      "original": "I CAN'T H HELP THINKING.",
+      "translated": "Je ne peux pas m'empêcher de penser.",
+      "confidence": 0.9734225,
+      "detection_confidence": 0.5410685539245605
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        28.176167805989586,
+        33675,
+        664.5653279622396,
+        33886
+      ],
+      "original": "WHAT IF I'D S STAYED AND FOUGHT LIKE THIS BACK THEN?",
+      "translated": "Et si j'étais resté et que je m'étais battu comme ça à l'époque ?",
+      "confidence": 0.951918,
+      "detection_confidence": 0.5673597455024719
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        17.59246826171875,
+        34973,
+        662.2310384114584,
+        35097
+      ],
+      "original": "IFI'D F PULLED I MYSELF TOGETHER AND FOUGHT.",
+      "translated": "Si je m'étais ressaisi et que je m'étais battu.",
+      "confidence": 0.9355199999999999,
+      "detection_confidence": 0.6387842297554016
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        64.0594482421875,
+        40772,
+        648.8340454101562,
+        40905
+      ],
+      "original": ".WOULD DAD STILL BE E ALIVE. 2",
+      "translated": "...Papa serait-il encore en vie ?",
+      "confidence": 0.9745716666666665,
+      "detection_confidence": 0.6212947964668274
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        507.47802734375,
+        41784,
+        687.8245035807292,
+        41905
+      ],
+      "original": "PRODUCER Amber Yunha Jung",
+      "translated": "PRODUCER Amber Yunha Jung",
+      "confidence": 0.9930633333333333,
+      "detection_confidence": 0.387766033411026
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        584.7098388671875,
+        41862,
+        690.0,
+        41982
+      ],
+      "original": "unha Jung STAFF TEAMART VINA",
+      "translated": "unha Jung STAFF TEAM ART VINA",
+      "confidence": 0.9896325,
+      "detection_confidence": 0.3503970503807068
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        651.6006469726562,
+        41811,
+        690.0,
+        42034
+      ],
+      "original": "ER er ng FF RT VA",
+      "translated": "ER er ng FF RT VA",
+      "confidence": 0.9547116666666667,
+      "detection_confidence": 0.3018780052661896
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        423.4275207519531,
+        42030,
+        681.5986328125,
+        42061
+      ],
+      "original": "PLANNING/PRODUCTION",
+      "translated": "PLANIFICATION/PRODUCTION",
+      "confidence": 0.99571,
+      "detection_confidence": 0.5264699459075928
+    }
+  ]
+}

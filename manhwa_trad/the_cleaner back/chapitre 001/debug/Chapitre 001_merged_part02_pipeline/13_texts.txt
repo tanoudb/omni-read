@@ -1,0 +1,6 @@
+class: bulle
+bbox: [127.92093912760417, 15901, 604.9655151367188, 16234]
+ocr: I NEED DINNER!!!
+translation: I NEED DINNER!!!
+style: scream
+mask_regions: 1

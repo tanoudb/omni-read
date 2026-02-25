@@ -1,0 +1,6 @@
+class: bulle
+bbox: [22.55980173746745, 53353, 437.4387613932292, 53734]
+ocr: AND YOU THOUGHT THIS WOLLD BE ENOUGH?
+translation: Et tu pensais que ça serait suffisant ?
+style: dialogue
+mask_regions: 1

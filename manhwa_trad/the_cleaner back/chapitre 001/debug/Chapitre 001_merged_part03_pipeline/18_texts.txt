@@ -1,0 +1,6 @@
+class: bulle
+bbox: [39.86333211263021, 25624, 451.50156656901044, 25999]
+ocr: GO SHOWER AND GETDRESSED.
+translation: Prends ta douche et habille-toi.
+style: dialogue
+mask_regions: 1

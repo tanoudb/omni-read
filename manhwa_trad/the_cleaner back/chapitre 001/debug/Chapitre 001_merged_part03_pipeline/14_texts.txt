@@ -1,0 +1,6 @@
+class: bulle
+bbox: [14.51934814453125, 22831, 690.0, 23019]
+ocr: The plan's gone awry. They're going to do it tonight.
+translation: Le plan a mal tourné. Ils vont le faire ce soir.
+style: dialogue
+mask_regions: 2

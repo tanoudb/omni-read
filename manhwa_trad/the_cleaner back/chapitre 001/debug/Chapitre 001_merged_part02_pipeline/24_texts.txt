@@ -1,0 +1,6 @@
+class: bulle
+bbox: [169.8155466715495, 33699, 661.7845662434896, 34150]
+ocr: .BUT I DON'T EVEN HAVE A PICTURE OF MINE...I'M JUST CURIOUS.
+translation: Mais je n'ai même pas de photo du mien... Je suis juste curieux.
+style: dialogue
+mask_regions: 1

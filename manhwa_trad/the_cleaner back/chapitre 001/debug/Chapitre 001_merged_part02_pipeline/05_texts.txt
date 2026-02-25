@@ -1,0 +1,6 @@
+class: bulle
+bbox: [106.42379760742188, 3329, 583.3978271484375, 3768]
+ocr: SINCE THEY WERE BULLIES, IT'S ALL RIGHT TO BE AT THEM UP!!
+translation: C'est tout à fait normal de les taquiner, étant donné qu'ils sont des bullies!!
+style: dialogue
+mask_regions: 1

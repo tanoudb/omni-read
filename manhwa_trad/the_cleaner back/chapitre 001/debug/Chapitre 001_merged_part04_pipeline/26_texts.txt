@@ -1,0 +1,6 @@
+class: bulle
+bbox: [96.41225179036459, 49722, 597.1885681152344, 50186]
+ocr: SO YOU'RE AFTER MY HEAD, ARE YOU?
+translation: Tu veux ma tête, c'est ça ?
+style: dialogue
+mask_regions: 1

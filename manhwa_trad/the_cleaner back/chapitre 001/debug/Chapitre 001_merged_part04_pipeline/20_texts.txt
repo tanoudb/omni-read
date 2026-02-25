@@ -1,0 +1,6 @@
+class: bulle
+bbox: [87.15108235677084, 41596, 604.356180826823, 42079]
+ocr: WHAT THE HELL ISHAPPENINGRIGHT iiMON
+translation: Qu'est-ce que diable se passe-t-il ici, putain?!
+style: dialogue
+mask_regions: 3

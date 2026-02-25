@@ -1,178 +1,575 @@
-from __future__ import annotations
+"""
+═══════════════════════════════════════════════════════════════════════════════
+TRANSLATOR v3 - NLLB avec nettoyage texte OCR + GPU FIX
+═══════════════════════════════════════════════════════════════════════════════
 
-from typing import Dict, List, Optional, Tuple
+FIX MAJEUR: Nettoyage du texte OCR AVANT traduction.
+Les OCR manga produisent souvent des artefacts :
+  - Mots collés : "IWANTED" → "I WANTED"
+  - Ponctuation collée : "STRENGTHI" → "STRENGTH!"  
+  - Underscores : "HIM_" → "HIM."
+
+GPU FIX: Force explicitement le modèle sur CUDA avec vérification
+
+Config: model_name dans settings.py
+  - "facebook/nllb-200-distilled-600M"  (rapide, ~1.5GB VRAM)
+  - "facebook/nllb-200-distilled-1.3B"  (meilleur, ~3GB VRAM)
+"""
+
 import re
 import json
-import time
-
+import os
 import torch
+from typing import List, Optional, Tuple
+from pathlib import Path
+
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import config
-
-from ..translator import NLLBTranslator as LegacyTranslator
-from ..translator import clean_ocr_text
+from utils import CacheManager, ImageUtils
 from utils.prompts import (
-    PAGE_QWEN_SYSTEM,
-    PAGE_HYBRID_QUALITY_SYSTEM,
-    POLISH_DEFAULT_SYSTEM,
-    format_json_payload,
-    format_polish_user_payload,
+    LOCAL_LLM_PAGE_SYSTEM,
+    LOCAL_LLM_SINGLE_SYSTEM,
+    build_single_text_prompt,
+    # Mode Série
+    build_series_page_system,
+    build_series_single_system,
+    build_series_page_user_prompt,
 )
-from .translator_nllb import NLLBCT2Translator
+
+# Import optionnel (mode série pas toujours actif)
+try:
+    from utils.series_db import SeriesDB
+except ImportError:
+    SeriesDB = None
+
+try:
+    import torch
+except ImportError:
+    raise RuntimeError("PyTorch requis: pip install torch")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# NETTOYAGE TEXTE OCR
+# ═════════════════════════════════════════════════════════════════════════════
+def should_skip_translation(self, text: str) -> bool:
+    if not text:
+        return True
+    
+    # Skip si coréen (pas de lettres latines)
+    if not any(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' for c in text):
+        return True
+    
+    # ... reste du code
+def clean_ocr_text(text: str) -> str:
+    """
+    Nettoie le texte brut OCR avant traduction.
+    Corrige les artefacts typiques sur du texte manga.
+    """
+    if not text:
+        return text
+
+    # Normaliser les guillemets typographiques
+    text = text.replace('“', '"').replace('”', '"').replace('‘', "'").replace('’', "'")
+
+    # Retirer des guillemets externes parasites (cas OCR: ''TEXT'' ou "TEXT")
+    for _ in range(3):
+        stripped = text.strip()
+        if len(stripped) >= 2 and (
+            (stripped[0] == stripped[-1] and stripped[0] in {'"', "'"})
+            or (stripped.startswith("''") and stripped.endswith("''"))
+            or (stripped.startswith('""') and stripped.endswith('""'))
+        ):
+            text = stripped[1:-1]
+            continue
+        break
+    
+    # Retirer underscores (OCR lit _ au lieu de . ou espace)
+    text = re.sub(r'_+$', '.', text)
+    text = re.sub(r'_+', ' ', text)
+    
+    # Fix mots collés avec I majuscule en début
+    # "IWANTED" → "I WANTED", "ICOULD" → "I COULD"
+    text = re.sub(r'\bI([A-Z]{2,})', r'I \1', text)
+    
+    # Fix I parasite en fin de mot majuscule
+    # "STRENGTHI" → "STRENGTH!", "SURVIVEI" → "SURVIVE!"  
+    text = re.sub(r'([A-Z]{3,})I\b', r'\1!', text)
+    
+    # Fix ; → , (OCR confond souvent)
+    text = text.replace(';', ',')
+    
+    # Fix : en fin de phrase → .
+    text = re.sub(r':\s*$', '.', text)
+
+    # Fix fréquent PP-OCR: "1." reconnu à la place de "I."
+    # ex: "YOU'RE TELLING ME THAT 1. THE BEST..." -> "... I. THE BEST..."
+    text = re.sub(r'\b1\.(?=\s+[A-Z])', 'I.', text)
+
+    # OCR ponctuation: "I. THE" est souvent "I, THE"
+    text = re.sub(r'\bI\.(?=\s+THE\b)', 'I,', text)
+
+    # Un "1" isolé entre mots majuscules est souvent un "I"
+    text = re.sub(r'(?<=[A-Z])\s+1\s+(?=[A-Z])', ' I ', text)
+
+    # Corrections OCR ciblées (webtoon)
+    text = re.sub(r'\bDALIGHTER\b', 'DAUGHTER', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bDAIGTHER\b', 'DAUGHTER', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bWHERE\s+WE\s+ARE\?', 'WHERE ARE WE?', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bABOUT\s+SON\b', 'ABOUT OUR SON', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bABOUT\s+DAUGHTER\b', 'ABOUT OUR DAUGHTER', text, flags=re.IGNORECASE)
+    
+    # Nettoyer espaces multiples
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+
+
+class TranslationGroup:
+    def __init__(self, detections: list):
+        self.detections = detections
+        self.combined_text: Optional[str] = None
+        self.translation: Optional[str] = None
+    
+    def get_center(self) -> Tuple[float, float]:
+        if not self.detections:
+            return (0, 0)
+        centers = [((d.x1 + d.x2) / 2, (d.y1 + d.y2) / 2) for d in self.detections]
+        return (
+            sum(c[0] for c in centers) / len(centers),
+            sum(c[1] for c in centers) / len(centers)
+        )
 
 
 class NLLBTranslator:
-    """
-    Façade compatible pipeline:
-    - qwen  : comportement legacy local LLM
-    - nllb  : NLLB CT2 seul
-    - hybrid: NLLB CT2 -> polish Qwen
-    """
+    """Traducteur NLLB/LLM local avec nettoyage OCR et GPU fix"""
 
-    _SFX_TOKENS = {
+    SINGLE_WORD_NON_NAME_STOPLIST = {
+        "perhaps", "later", "hello", "look", "wait", "please", "help",
+        "where", "what", "when", "why", "how", "there", "here",
+        "yes", "no", "stop", "start", "wake", "time", "moment"
+    }
+
+    MULTI_WORD_NON_NAME_STOPLIST = {
+        "oh", "there", "here", "please", "help", "wait", "look",
+        "yes", "no", "what", "when", "where", "why", "how",
+        "stop", "start", "go", "come", "now", "again"
+    }
+
+    SFX_TOKENS = {
         "AH", "AAH", "WAAH", "WAAAH", "UGH", "URGH", "ARGH", "ERGH", "KRGH", "KHOFF",
         "HUFF", "PANT", "GASP", "SOB", "SNIFF", "HMPH", "GRR", "BAM", "BOOM", "CRASH",
-        "BANG", "THUD", "SNAP", "TAP", "CLAP", "WHAM", "WHOOSH",
+        "BANG", "THUD", "SNAP", "TAP", "CLAP", "WHAM", "WHOOSH"
     }
 
-    _TOKENIZATION_LEXICON = {
-        "I", "A", "AN", "THE", "THIS", "THAT", "THERE", "HERE", "YOU", "YOUR", "YOURS", "ME", "MY",
-        "MINE", "WE", "OUR", "OURS", "HE", "HIS", "SHE", "HER", "HERS", "IT", "ITS", "THEY", "THEM",
-        "THEIR", "THEIRS", "IS", "ARE", "WAS", "WERE", "BE", "BEEN", "BEING", "DO", "DID", "DONE", "DOES",
-        "HAVE", "HAS", "HAD", "WILL", "WOULD", "CAN", "COULD", "SHALL", "SHOULD", "MAY", "MIGHT", "MUST",
-        "NOT", "NO", "YES", "TO", "OF", "IN", "ON", "AT", "FOR", "FROM", "WITH", "WITHOUT", "BY", "AS",
-        "AND", "OR", "BUT", "SO", "IF", "THEN", "WHEN", "WHERE", "WHY", "HOW", "WHAT", "WHO", "WHOM",
-        "WHICH", "FIRST", "SECOND", "THIRD", "LOOK", "WAIT", "HELP", "PLEASE", "SORRY", "THANK", "THANKS",
-        "NOW", "LATER", "AGAIN", "NEVER", "ALWAYS", "SOMETHING", "NOTHING", "EVERYTHING", "SOMEONE", "ANYONE",
-        "EVERYONE", "WANT", "WANTED", "NEED", "NEEDED", "KNOW", "KNEW", "THINK", "THOUGHT", "GO", "GOING",
-        "COME", "CAME", "TAKE", "TOOK", "GIVE", "GAVE", "MAKE", "MADE", "GET", "GOT", "FIND", "FOUND",
-        "LIKE", "LOVE", "HATE", "GOOD", "BAD", "BEST", "WORST", "TIME", "DAY", "NIGHT", "MAN", "WOMAN",
-        "BOY", "GIRL", "SON", "DAUGHTER", "FATHER", "MOTHER", "BROTHER", "SISTER", "FRIEND", "ENEMY",
+    LANGUAGE_STOPWORDS = {
+        "en": {"the", "and", "you", "are", "what", "there", "here", "oh", "this", "that"},
+        "fr": {"le", "la", "les", "et", "vous", "que", "est", "pas", "une", "des"},
+        "es": {"el", "la", "los", "las", "y", "que", "una", "por", "para", "está"},
+        "de": {"der", "die", "das", "und", "ist", "nicht", "ein", "eine", "mit", "ich"},
+        "it": {"il", "lo", "la", "gli", "le", "e", "che", "non", "una", "con"},
+        "pt": {"o", "a", "os", "as", "e", "que", "não", "uma", "com", "para"},
     }
-
-    def __init__(self, device: str = "cuda"):
+    
+    def __init__(self, device: str = 'cuda', series_db=None):
         self.device = device
         self.cfg = config.translation
-        self.mode = str(getattr(self.cfg, "translation_mode", "hybrid") or "hybrid").strip().lower()
-        if self.mode not in {"hybrid", "nllb", "qwen", "hybrid_quality"}:
-            self.mode = "hybrid"
-
+        self.backend = getattr(self.cfg, 'backend', 'nllb')
+        self.series_db = series_db  # Mode Série
+        self.tokenizer = None
+        self.model = None
+        self.llm_backend = "transformers"
+        self.gguf_model_path: Optional[Path] = None
+        self.generation_seconds_total: float = 0.0
         self.last_page_system_prompt: str = ""
         self.last_page_user_prompt: str = ""
-        self.last_nllb_inputs: List[str] = []
-        self.last_nllb_outputs: List[str] = []
-        self._generation_seconds_total: float = 0.0
-        self._glossaire: list[str] = []
+        self.last_page_payload_lines: List[str] = []
+        self.cache = None
+        self.name_memory_file = config.TRANSLATION_CACHE_DIR / "name_memory_v1.json"
+        self.name_memory = self._load_name_memory()
+        
+        if self.cfg.enable_cache:
+            cache_file = config.TRANSLATION_CACHE_DIR / self.cfg.cache_file
+            self.cache = CacheManager(cache_file, max_size_mb=config.performance.cache_max_size_mb)
+        
+        self._load_model()
 
-        self.qwen: Optional[LegacyTranslator] = None
-        self.nllb: Optional[NLLBCT2Translator] = None
-        self.nllb_ready = False
+    def _load_name_memory(self) -> dict:
+        try:
+            if self.name_memory_file.exists():
+                with open(self.name_memory_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    return data if isinstance(data, dict) else {}
+        except Exception:
+            pass
+        return {}
 
-        if self.mode in {"hybrid", "qwen", "hybrid_quality"}:
-            self.qwen = self._init_qwen_translator()
-
-        if self.mode in {"hybrid", "nllb", "hybrid_quality"}:
-            self.nllb = NLLBCT2Translator(device=device)
-            try:
-                self.nllb.load_model()
-                self.nllb_ready = True
-                print(f"✅ NLLB CT2 prêt ({self.cfg.nllb_ct2_model_dir})")
-            except Exception as exc:
-                self.nllb_ready = False
-                print(f"⚠️  NLLB CT2 indisponible: {exc}")
-
-        if self.mode == "nllb" and not self.nllb_ready:
-            print("⚠️  Mode nllb demandé mais CT2 indisponible. Fallback qwen.")
-            self.mode = "qwen"
-            if self.qwen is None:
-                self.qwen = self._init_qwen_translator()
-
-        if self.mode in {"hybrid", "hybrid_quality"} and (not self.nllb_ready):
-            print("⚠️  Mode hybrid: NLLB indisponible, fallback qwen uniquement.")
+    def _save_name_memory(self):
+        try:
+            self.name_memory_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.name_memory_file, 'w', encoding='utf-8') as f:
+                json.dump(self.name_memory, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
 
     @staticmethod
-    def _contains_cjk(text: str) -> bool:
+    def _normalize_text_key(text: str) -> str:
+        normalized = re.sub(r"\s+", " ", text.strip().upper())
+        return normalized
+
+    @staticmethod
+    def _post_process_french(text: str) -> str:
         if not text:
-            return False
-        return bool(re.search(r"[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7AF]", text))
+            return text
+        text = re.sub(r"\bJe y\b", "J'y", text)
+        text = re.sub(r"\bje y\b", "j'y", text)
+        text = re.sub(r"\bde déchets\b", "d'ordure", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        return text
 
     @staticmethod
-    def _normalize_for_compare(text: str) -> str:
-        base = re.sub(r"\s+", " ", str(text or "")).strip().lower()
-        return re.sub(r"[\W_]+", "", base)
+    def _is_mostly_uppercase(text: str) -> bool:
+        letters = [ch for ch in text if ch.isalpha()]
+        if len(letters) < 2:
+            return False
+        upper_count = sum(1 for ch in letters if ch.isupper())
+        return (upper_count / max(1, len(letters))) >= 0.75
+
+    @staticmethod
+    def _normalize_case_for_translation(text: str) -> str:
+        """Normalise les textes OCR en MAJUSCULES pour améliorer la traduction."""
+        if not text:
+            return text
+
+        if not NLLBTranslator._is_mostly_uppercase(text):
+            return text
+
+        normalized = text.lower()
+        normalized = re.sub(r"\bi\b", "I", normalized)
+
+        # Majuscule sur le premier caractère alphabétique
+        chars = list(normalized)
+        for idx, ch in enumerate(chars):
+            if ch.isalpha():
+                chars[idx] = ch.upper()
+                break
+        normalized = ''.join(chars)
+        return normalized
+
+    @staticmethod
+    def _name_key(text: str) -> Optional[str]:
+        if not text:
+            return None
+        cleaned = re.sub(r"[^A-Za-z'\-\s]", " ", text.upper())
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        if not cleaned:
+            return None
+        words = cleaned.split()
+        if 2 <= len(words) <= 4 and all(len(w) >= 2 for w in words):
+            if all(re.fullmatch(r"[A-Z][A-Z'\-]*", w) for w in words):
+                return " ".join(words)
+        return None
 
     @classmethod
-    def _looks_joined_ocr_block(cls, text: str) -> bool:
-        value = str(text or "").strip()
-        if not value or " " in value:
+    def _looks_like_uppercase_name_sequence(cls, text: str) -> bool:
+        tokens = re.findall(r"[A-Z][A-Z'\-]+", text.upper())
+        if not (2 <= len(tokens) <= 4):
             return False
-        if len(value) < 10:
+
+        # Si le groupe contient des mots usuels de dialogue, ce n'est pas un nom.
+        if any(tok.lower() in cls.MULTI_WORD_NON_NAME_STOPLIST for tok in tokens):
             return False
-        if not re.fullmatch(r"[A-Za-z']+", value):
+
+        # Évite de classer des segments trop courts comme des noms.
+        # Ex: "OH THERE" -> rejeté, "GHISLAIN PERDIUM" -> accepté.
+        if any(len(tok) < 3 for tok in tokens):
             return False
-        if cls._is_likely_sfx(value):
+
+        return True
+
+    def _detect_source_language(self, text: str) -> str:
+        return self._detect_source_language_with_confidence(text)[0]
+
+    def _detect_source_language_with_confidence(self, text: str) -> Tuple[str, float]:
+        fallback = self.cfg.fallback_source_lang if self.cfg.fallback_source_lang in self.cfg.lang_codes else self.cfg.source_lang
+
+        if not self.cfg.auto_detect_source_lang:
+            return self.cfg.source_lang, 1.0
+
+        if not text:
+            return fallback, 0.4
+
+        # Scripts non-latins (detection robuste)
+        if re.search(r"[\uAC00-\uD7AF]", text):
+            return "ko", 0.99
+        if re.search(r"[\u3040-\u30FF]", text):
+            return "ja", 0.99
+        if re.search(r"[\u4E00-\u9FFF]", text):
+            return "zh", 0.99
+        if re.search(r"[\u0400-\u04FF]", text):
+            return "ru", 0.99
+
+        # Latin: heuristique légère par stopwords
+        words = re.findall(r"[A-Za-zÀ-ÿ']+", text.lower())
+        if not words:
+            return fallback, 0.4
+
+        scores = {}
+        for lang, stopwords in self.LANGUAGE_STOPWORDS.items():
+            scores[lang] = sum(1 for w in words if w in stopwords)
+
+        best_lang = max(scores, key=scores.get)
+        sorted_scores = sorted(scores.values(), reverse=True)
+        best_score = sorted_scores[0] if sorted_scores else 0
+        second_score = sorted_scores[1] if len(sorted_scores) > 1 else 0
+        if best_score >= 1:
+            margin = max(0, best_score - second_score)
+            confidence = min(0.95, 0.60 + 0.15 * best_score + 0.08 * margin)
+            return best_lang, float(confidence)
+
+        # Si latin sans signal fort, on garde l'anglais (cas OCR webtoon le plus fréquent)
+        return ("en" if "en" in self.cfg.lang_codes else fallback), 0.5
+
+    def detect_source_language(self, text: str) -> str:
+        """API publique pour debug/inspection de la langue source détectée."""
+        return self._detect_source_language_with_confidence(text)[0]
+
+    def detect_source_language_with_confidence(self, text: str) -> Tuple[str, float]:
+        """Retourne (langue, confiance) pour le texte OCR."""
+        return self._detect_source_language_with_confidence(text)
+
+    @staticmethod
+    def _is_single_proper_name(text: str) -> bool:
+        stripped = text.strip()
+        if not re.fullmatch(r"[A-Z][a-z]{2,20}[.!?]?", stripped):
             return False
-        letters = [c for c in value if c.isalpha()]
-        if not letters:
+        token = re.sub(r"[.!?]$", "", stripped).lower()
+        if token in NLLBTranslator.SINGLE_WORD_NON_NAME_STOPLIST:
             return False
-        upper_ratio = sum(1 for c in letters if c.isupper()) / float(len(letters))
-        return upper_ratio >= 0.8
+        return True
+    
+    def _load_model(self):
+        if self.backend == 'local_llm':
+            self._load_local_llm_model()
+            return
 
-    @classmethod
-    def _split_joined_upper_token(cls, token: str) -> str:
-        raw = str(token or "").strip()
-        if not raw:
-            return raw
+        try:
+            from transformers import NllbTokenizer, AutoModelForSeq2SeqLM
+            
+            model_name = self.cfg.model_name
+            print(f"⏳ Chargement NLLB: {model_name}...")
+            
+            self.tokenizer = NllbTokenizer.from_pretrained(
+                model_name,
+                cache_dir=str(config.TRANSLATION_CACHE_DIR),
+                trust_remote_code=True
+            )
+            
+            # ✅ FIX GPU: Forcer dtype correctement
+            dtype = torch.float16 if self.device == 'cuda' and self.cfg.use_fp16 else torch.float32
+            quantization_config = None
 
-        upper = raw.upper()
-        n = len(upper)
-        max_len = 16
-        dp: List[Optional[Tuple[int, List[str]]]] = [None] * (n + 1)
-        dp[0] = (0, [])
+            if self.device == 'cuda' and self.cfg.use_bitsandbytes:
+                try:
+                    from transformers import BitsAndBytesConfig
+                    if self.cfg.bnb_4bit:
+                        quantization_config = BitsAndBytesConfig(
+                            load_in_4bit=True,
+                            bnb_4bit_compute_dtype=dtype,
+                            bnb_4bit_quant_type='nf4',
+                            bnb_4bit_use_double_quant=True,
+                        )
+                        print("   Quantization: bitsandbytes 4-bit (nf4)")
+                    elif self.cfg.bnb_8bit:
+                        quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+                        print("   Quantization: bitsandbytes 8-bit")
+                    else:
+                        print("   Quantization: bitsandbytes activé mais aucun mode sélectionné")
+                except Exception as quant_error:
+                    print(f"⚠️  BitsAndBytes indisponible ({quant_error}) -> fallback FP16/FP32")
+                    quantization_config = None
+            
+            print(f"   Dtype: {dtype}")
+            print(f"   Device: {self.device}")
 
-        for i in range(n):
-            state = dp[i]
-            if state is None:
-                continue
-            base_penalty, base_parts = state
-            for j in range(min(n, i + max_len), i, -1):
-                seg = upper[i:j]
-                if seg in cls._TOKENIZATION_LEXICON:
-                    score = base_penalty + max(0, 4 - len(seg))
-                elif len(seg) <= 2:
-                    continue
-                elif re.fullmatch(r"[A-Z]{3,}", seg):
-                    score = base_penalty + 8 + len(seg)
-                else:
-                    continue
+            base_model_kwargs = {
+                'cache_dir': str(config.TRANSLATION_CACHE_DIR),
+                'trust_remote_code': True,
+                'use_safetensors': False,
+                'low_cpu_mem_usage': False,
+            }
 
-                next_state = dp[j]
-                if next_state is None or score < next_state[0]:
-                    dp[j] = (score, base_parts + [seg])
+            if quantization_config is not None:
+                base_model_kwargs['quantization_config'] = quantization_config
+            else:
+                base_model_kwargs['torch_dtype'] = dtype
 
-        end_state = dp[n]
-        if end_state is None:
-            return raw
+            def _find_local_bin_snapshot() -> Optional[Path]:
+                model_cache = config.TRANSLATION_CACHE_DIR / f"models--{model_name.replace('/', '--')}" / "snapshots"
+                if not model_cache.exists():
+                    return None
+                for snapshot in sorted(model_cache.iterdir(), reverse=True):
+                    if not snapshot.is_dir():
+                        continue
+                    if (snapshot / 'config.json').exists() and (snapshot / 'pytorch_model.bin').exists():
+                        return snapshot
+                return None
 
-        parts = end_state[1]
-        if len(parts) < 2:
-            return raw
+            load_sources = [
+                (model_name, {**base_model_kwargs, 'local_files_only': True}),
+            ]
 
-        joined = " ".join(parts).strip()
-        if len(joined.replace(" ", "")) != len(upper):
-            return raw
-        return joined
+            local_snapshot = _find_local_bin_snapshot()
+            if local_snapshot is not None:
+                load_sources.append((str(local_snapshot), {**base_model_kwargs, 'local_files_only': True}))
 
-    @classmethod
-    def _pre_tokenize_ocr_text(cls, text: str) -> str:
-        value = str(text or "").strip()
-        if not cls._looks_joined_ocr_block(value):
-            return value
-        split = cls._split_joined_upper_token(value)
-        return split if split else value
+            load_sources.append((model_name, {**base_model_kwargs, 'local_files_only': False}))
+
+            last_error = None
+            for source, kwargs in load_sources:
+                try:
+                    self.model = AutoModelForSeq2SeqLM.from_pretrained(source, **kwargs)
+                    print(f"   Chargement NLLB OK depuis: {source}")
+                    break
+                except Exception as load_error:
+                    last_error = load_error
+                    print(f"⚠️  Échec chargement depuis {source}: {load_error}")
+
+            if self.model is None and last_error is not None:
+                raise last_error
+
+            if self.device == 'cuda' and torch.cuda.is_available() and quantization_config is None:
+                self.model = self.model.to('cuda')
+            else:
+                self.model = self.model.to('cpu')
+                self.device = 'cpu'
+
+            model_device = next(self.model.parameters()).device
+            print(f"   Model device: {model_device}")
+            
+            self.model.eval()
+            print(f"✅ NLLB chargé ! ({model_name})")
+            print(f"✅ Model running on: {next(self.model.parameters()).device}\n")
+            
+        except Exception as e:
+            raise RuntimeError(f"Erreur chargement NLLB: {e}")
+
+    def _load_local_llm_model(self):
+        model_name = self._select_llm_model_name()
+        gguf_path = self._resolve_gguf_model_path(model_name)
+        if gguf_path is not None:
+            self._load_local_gguf_model(gguf_path)
+            return
+
+        try:
+            from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+
+            self.llm_backend = "transformers"
+            force_low_vram_mode = model_name.endswith("2.5-3B-Instruct")
+            print(f"⏳ Chargement LLM local: {model_name}...")
+
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model_name,
+                cache_dir=str(config.TRANSLATION_CACHE_DIR),
+                trust_remote_code=True,
+            )
+
+            dtype = torch.float16 if self.device == 'cuda' and self.cfg.use_fp16 else torch.float32
+            quantization_config = None
+
+            require_cuda = bool(getattr(self.cfg, 'llm_require_cuda', True))
+            if self.device == 'cuda' and not torch.cuda.is_available():
+                message = "CUDA demandé pour le LLM mais torch ne voit pas de GPU (build CPU ou drivers absents)."
+                if require_cuda:
+                    raise RuntimeError(message)
+                print(f"⚠️  {message} Fallback CPU activé.")
+                self.device = 'cpu'
+
+            if self.device == 'cuda' and (self.cfg.use_bitsandbytes or force_low_vram_mode):
+                try:
+                    use_4bit = self.cfg.bnb_4bit or force_low_vram_mode
+                    if use_4bit:
+                        quantization_config = BitsAndBytesConfig(
+                            load_in_4bit=True,
+                            bnb_4bit_compute_dtype=dtype,
+                            bnb_4bit_quant_type='nf4',
+                            bnb_4bit_use_double_quant=True,
+                        )
+                        print("   Quantization LLM: bitsandbytes 4-bit (nf4)")
+                    elif self.cfg.bnb_8bit:
+                        quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+                        print("   Quantization LLM: bitsandbytes 8-bit")
+                except Exception as quant_error:
+                    print(f"⚠️  BitsAndBytes indisponible ({quant_error}) -> fallback FP16/FP32")
+                    quantization_config = None
+
+            model_kwargs = {
+                'cache_dir': str(config.TRANSLATION_CACHE_DIR),
+                'trust_remote_code': True,
+                'low_cpu_mem_usage': True,
+            }
+
+            if quantization_config is not None:
+                model_kwargs['quantization_config'] = quantization_config
+                model_kwargs['device_map'] = 'auto'
+            else:
+                model_kwargs['torch_dtype'] = dtype
+
+            self.model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
+
+            if self.device == 'cuda' and quantization_config is None and torch.cuda.is_available():
+                self.model = self.model.to('cuda')
+
+            self.model.eval()
+            print(f"✅ LLM local chargé ! ({model_name})")
+            print(f"✅ Model running on: {next(self.model.parameters()).device}\n")
+
+        except Exception as e:
+            raise RuntimeError(f"Erreur chargement LLM local: {e}")
+
+    def _resolve_gguf_model_path(self, model_name: str) -> Optional[Path]:
+        candidate = Path(str(model_name).strip())
+        if candidate.suffix.lower() == ".gguf":
+            if candidate.exists() and candidate.is_file():
+                return candidate
+            relative = Path(__file__).resolve().parents[1] / candidate
+            if relative.exists() and relative.is_file():
+                return relative
+        return None
+
+    def _load_local_gguf_model(self, model_path: Path):
+        try:
+            from llama_cpp import Llama
+        except Exception as exc:
+            raise RuntimeError(f"llama-cpp-python indisponible pour GGUF: {exc}")
+
+        self.llm_backend = "gguf"
+        self.gguf_model_path = model_path
+
+        n_ctx = int(max(2048, int(getattr(self.cfg, 'max_length', 640)) * 2))
+        cpu_count = os.cpu_count() or 8
+        n_threads = int(os.environ.get("WEBTOON_GGUF_THREADS", str(max(1, cpu_count - 1))))
+        n_threads = max(1, min(cpu_count, n_threads))
+        n_batch = int(os.environ.get("WEBTOON_GGUF_N_BATCH", "512"))
+        n_batch = max(64, min(2048, n_batch))
+        n_gpu_layers = int(os.environ.get("WEBTOON_GGUF_N_GPU_LAYERS", "-1")) if (self.device == 'cuda' and torch.cuda.is_available()) else 0
+
+        print(f"⏳ Chargement LLM GGUF: {model_path}...")
+        self.model = Llama(
+            model_path=str(model_path),
+            n_ctx=n_ctx,
+            n_threads=n_threads,
+            n_batch=n_batch,
+            n_gpu_layers=n_gpu_layers,
+            verbose=False,
+        )
+        self.tokenizer = None
+        print(f"✅ LLM GGUF chargé ! ({model_path.name})")
+        print(f"✅ GGUF runtime: n_ctx={n_ctx}, n_threads={n_threads}, n_batch={n_batch}, n_gpu_layers={n_gpu_layers}\n")
 
     def _adaptive_page_max_tokens(self, texts: List[str], fallback: int = 512) -> int:
-        hard_cap = int(getattr(self.cfg, "llm_max_new_tokens", fallback))
+        hard_cap = int(getattr(self.cfg, 'llm_max_new_tokens', fallback))
         count = max(1, len(texts))
         total_chars = sum(len(str(t or "")) for t in texts)
         estimate = int(total_chars * 0.95)
@@ -180,375 +577,215 @@ class NLLBTranslator:
         dynamic_cap = min(hard_cap, max(floor, estimate, count * 12))
         return int(dynamic_cap)
 
-    def _aggressive_french_retry(self, source_text: str, fallback_text: str) -> str:
-        src = str(source_text or "").strip()
-        if not src:
-            return fallback_text
+    @staticmethod
+    def _gguf_extract_content(response: dict) -> str:
+        if not isinstance(response, dict):
+            return ""
+        choices = response.get("choices")
+        if not isinstance(choices, list) or not choices:
+            return ""
+        first = choices[0] if isinstance(choices[0], dict) else {}
+        message = first.get("message") if isinstance(first.get("message"), dict) else {}
+        content = message.get("content")
+        if isinstance(content, str):
+            return content.strip()
+        text = first.get("text")
+        return str(text).strip() if text is not None else ""
 
-        if self.qwen is not None:
-            system_prompt = (
-                "Tu traduis UNIQUEMENT en français naturel. "
-                "Interdiction absolue de recopier l'anglais source sauf onomatopées (SFX) ou URLs. "
-                "Conserve le sens et réponds uniquement avec la traduction finale."
+    def _select_llm_model_name(self) -> str:
+        forced_model = os.environ.get("WEBTOON_LLM_MODEL", "").strip()
+        if forced_model:
+            return forced_model
+        cfg_model = str(getattr(self.cfg, 'llm_model_name', '') or '').strip()
+        if cfg_model:
+            return cfg_model
+        if self.device != 'cuda' or not torch.cuda.is_available():
+            return "Qwen/Qwen2.5-3B-Instruct"
+        try:
+            free_bytes, _ = torch.cuda.mem_get_info()
+            free_gb = free_bytes / (1024 ** 3)
+            if free_gb > 4.0:
+                return "Qwen/Qwen2.5-7B-Instruct"
+        except Exception:
+            pass
+        return "Qwen/Qwen2.5-3B-Instruct"
+
+    def _build_llm_prompt(self, text: str, source_lang_code: str) -> str:
+        source_lang = source_lang_code or self.cfg.source_lang
+        target_lang = self.cfg.target_lang
+        template = getattr(self.cfg, 'llm_prompt_template', None)
+        if template:
+            return template.format(source_lang=source_lang, target_lang=target_lang, text=text)
+        return build_single_text_prompt(source_lang, target_lang, text)
+
+    @staticmethod
+    def _extract_llm_translation(raw_output: str, prompt: str) -> str:
+        if not raw_output:
+            return ""
+        content = raw_output[len(prompt):] if raw_output.startswith(prompt) else raw_output
+        content = content.strip()
+
+        if "TRANSLATION:" in content:
+            content = content.split("TRANSLATION:", 1)[1].strip()
+
+        marker_match = re.split(r"\n\s*(Human|User|Assistant|System)\s*:\s*", content, maxsplit=1)
+        if marker_match:
+            content = marker_match[0].strip()
+
+        lines = [line.strip() for line in content.splitlines() if line.strip()]
+        if not lines:
+            return ""
+
+        meta_re = re.compile(
+            r"^(hello\b|hi\b|sure\b|here\s+is\b|here's\b|i\s*(am|'m)\b|as\s+an\b|translation\s*:)",
+            flags=re.IGNORECASE,
+        )
+        while lines and meta_re.match(lines[0]):
+            lines.pop(0)
+        if not lines:
+            return ""
+
+        first_line = lines[0]
+        if first_line.startswith(('"', "'")) and first_line.endswith(('"', "'")) and len(first_line) >= 2:
+            first_line = first_line[1:-1].strip()
+
+        return first_line
+
+    def _translate_with_local_llm(self, source_text: str, source_lang_code: str) -> str:
+        prompt = self._build_llm_prompt(source_text, source_lang_code)
+
+        if self.llm_backend == "gguf":
+            import time
+
+            temperature = float(getattr(self.cfg, 'llm_temperature', 0.0))
+            top_p = float(getattr(self.cfg, 'llm_top_p', 1.0))
+            max_tokens = int(getattr(self.cfg, 'llm_max_new_tokens', 220))
+            repeat_penalty = float(getattr(self.cfg, 'llm_repetition_penalty', 1.05))
+
+            messages = [
+                {'role': 'system', 'content': LOCAL_LLM_SINGLE_SYSTEM},
+                {'role': 'user', 'content': prompt},
+            ]
+
+            t0 = time.perf_counter()
+            response = self.model.create_chat_completion(
+                messages=messages,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_tokens,
+                repeat_penalty=repeat_penalty,
             )
-            user_prompt = format_json_payload({"0": src})
-            mapped = self._qwen_generate_json_map(system_prompt, user_prompt, [src])
-            candidate = str(mapped.get("0", "") or "").strip()
-            if candidate and self._normalize_for_compare(candidate) != self._normalize_for_compare(src):
-                return candidate
+            self.generation_seconds_total += max(0.0, time.perf_counter() - t0)
 
-        if self.nllb_ready and self.nllb is not None:
-            try:
-                out = self.nllb.translate_batch([src], src_lang="eng_Latn", tgt_lang="fra_Latn")
-                candidate = str(out[0] if out else "").strip()
-                if candidate and self._normalize_for_compare(candidate) != self._normalize_for_compare(src):
-                    return candidate
-            except Exception:
-                pass
+            raw = self._gguf_extract_content(response)
+            translation = self._extract_llm_translation(raw, prompt)
+            return translation or source_text
 
-        return fallback_text
+        if hasattr(self.tokenizer, 'apply_chat_template'):
+            messages = [
+                {'role': 'system', 'content': LOCAL_LLM_SINGLE_SYSTEM},
+                {'role': 'user', 'content': prompt},
+            ]
+            inputs = self.tokenizer.apply_chat_template(
+                messages,
+                add_generation_prompt=True,
+                return_tensors='pt',
+            )
+            if isinstance(inputs, torch.Tensor):
+                input_ids = inputs
+                attention_mask = torch.ones_like(input_ids)
+                inputs = {'input_ids': input_ids, 'attention_mask': attention_mask}
+        else:
+            inputs = self.tokenizer(prompt, return_tensors='pt', truncation=True, max_length=self.cfg.max_length)
 
-    @classmethod
-    def _is_likely_sfx(cls, text: str) -> bool:
-        if not text:
-            return False
-        tokens = re.findall(r"[A-Za-z]+", text.upper())
-        if not tokens:
-            return False
-        return all(tok in cls._SFX_TOKENS or re.search(r"(.)\1{2,}", tok) for tok in tokens)
+        if self.device == 'cuda' and torch.cuda.is_available():
+            inputs = {k: v.to('cuda') for k, v in inputs.items()}
 
-    @classmethod
-    def _rule_based_override(cls, source_text: str) -> Optional[str]:
-        src = (source_text or "").strip()
-        if not src:
-            return src
-        upper = src.upper()
-
-        if cls._is_likely_sfx(src):
-            return src
-
-        if re.fullmatch(r"\(NONE\)", upper):
-            return "(none)"
-
-        if re.fullmatch(r"HONEY[!?\.\s]*", upper):
-            return "Chéri !"
-
-        if re.fullmatch(r"BUT\s+DA+A+D[!?\.\s]*", upper):
-            return "Mais papa !!!"
-
-        if re.fullmatch(r"\.*\s*AGENT\s+101[!?\.\s]*", upper):
-            return "…Agent 101."
-
-        return None
-
-    @classmethod
-    def _should_repair_with_single_pass(cls, source_text: str, translated_text: str) -> bool:
-        src = (source_text or "").strip()
-        out = (translated_text or "").strip()
-        if not src:
-            return False
-        if cls._is_likely_sfx(src):
-            return False
-        if cls._contains_cjk(out):
-            return True
-        if not out:
-            return True
-
-        src_norm = re.sub(r"\s+", " ", src).strip().lower()
-        out_norm = re.sub(r"\s+", " ", out).strip().lower()
-        src_words = re.findall(r"[A-Za-z']+", src)
-
-        # Si la sortie recopie l'anglais source sur une phrase non triviale,
-        # on tente une traduction unitaire plus fiable.
-        if out_norm == src_norm and len(src_words) >= 3:
-            return True
-        return False
-
-    def _repair_single_translation(self, source_text: str, current_text: str) -> str:
-        if self.qwen is None:
-            return current_text
-        try:
-            src_norm = re.sub(r"\s+", " ", (source_text or "").strip()).lower()
-            attempts = 2
-            best = str(current_text or "").strip()
-
-            for _ in range(attempts):
-                repaired = str(self.qwen.translate(source_text) or "").strip()
-                if not repaired:
-                    continue
-                if self.cfg.target_lang == "fr" and self._contains_cjk(repaired):
-                    continue
-                rep_norm = re.sub(r"\s+", " ", repaired).lower()
-                src_words = re.findall(r"[A-Za-z']+", source_text or "")
-                if rep_norm == src_norm and len(src_words) >= 3:
-                    best = repaired
-                    continue
-                return repaired
-
-            return best if best else current_text
-        except Exception:
-            return current_text
-
-    def _qwen_generate_json_map(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        fallback_texts: List[str],
-    ) -> Dict[str, str]:
-        expected = len(fallback_texts)
-        fallback = {str(i): fallback_texts[i] for i in range(expected)}
-
-        if self.qwen is None:
-            return fallback
-
-        model = getattr(self.qwen, "model", None)
-        tokenizer = getattr(self.qwen, "tokenizer", None)
-        if model is None:
-            return fallback
-
-        self.last_page_system_prompt = system_prompt
-        self.last_page_user_prompt = user_prompt
-
-        raw = ""
-        page_max_tokens = self._adaptive_page_max_tokens(fallback_texts, fallback=512)
-
-        try:
-            if getattr(self.qwen, "llm_backend", "transformers") == "gguf":
-                t0 = time.perf_counter()
-                response = model.create_chat_completion(
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    temperature=float(getattr(self.cfg, "llm_temperature", 0.0)),
-                    top_p=float(getattr(self.cfg, "llm_top_p", 1.0)),
-                    max_tokens=page_max_tokens,
-                    repeat_penalty=float(getattr(self.cfg, "llm_repetition_penalty", 1.05)),
-                )
-                self._generation_seconds_total += max(0.0, time.perf_counter() - t0)
-                raw = self.qwen._gguf_extract_content(response).strip()
-            else:
-                if tokenizer is None:
-                    return fallback
-
-                if hasattr(tokenizer, "apply_chat_template"):
-                    messages = [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ]
-                    inputs = tokenizer.apply_chat_template(
-                        messages,
-                        add_generation_prompt=True,
-                        return_tensors="pt",
-                    )
-                    if isinstance(inputs, torch.Tensor):
-                        input_ids = inputs
-                        attention_mask = torch.ones_like(input_ids)
-                        inputs = {"input_ids": input_ids, "attention_mask": attention_mask}
-                else:
-                    prompt = f"{system_prompt}\n\n{user_prompt}"
-                    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=self.cfg.max_length)
-
-                if self.device == "cuda" and torch.cuda.is_available():
-                    inputs = {k: v.to("cuda") for k, v in inputs.items()}
-
-                generate_kwargs = {
-                    "max_new_tokens": page_max_tokens,
-                    "repetition_penalty": float(getattr(self.cfg, "llm_repetition_penalty", 1.05)),
-                    "pad_token_id": tokenizer.eos_token_id,
-                    "eos_token_id": tokenizer.eos_token_id,
-                    "do_sample": False,
-                }
-
-                t0 = time.perf_counter()
-                with torch.no_grad():
-                    generated = model.generate(**inputs, **generate_kwargs)
-                self._generation_seconds_total += max(0.0, time.perf_counter() - t0)
-
-                input_token_count = int(inputs["input_ids"].shape[-1])
-                raw = tokenizer.decode(generated[0][input_token_count:], skip_special_tokens=True).strip()
-        except Exception:
-            return fallback
-
-        try:
-            extract_json = getattr(self.qwen, "_extract_json_candidate", None)
-            json_candidate = extract_json(raw) if callable(extract_json) else (raw or "").strip()
-            parsed = json.loads(json_candidate)
-            if not isinstance(parsed, dict):
-                return fallback
-
-            clean_value = getattr(self.qwen, "_clean_llm_value", None)
-            result: Dict[str, str] = {}
-            for i in range(expected):
-                key = str(i)
-                value = parsed.get(key, fallback.get(key, ""))
-                if isinstance(value, dict):
-                    value = value.get("fr") or value.get("text") or value.get("translation") or ""
-                if callable(clean_value):
-                    txt = clean_value(value)
-                else:
-                    txt = str(value or "").strip()
-                if not txt:
-                    txt = fallback.get(key, "")
-                if self.cfg.target_lang == "fr" and self._contains_cjk(txt):
-                    txt = fallback.get(key, "")
-                result[key] = txt
-            return result
-        except Exception:
-            return fallback
-
-    def translate_page_qwen(self, texts: List[str]) -> Dict[str, str]:
-        if not texts:
-            return {}
-        clean_inputs = [clean_ocr_text((text or "").strip()) for text in texts]
-        payload = {str(i): clean_inputs[i] for i in range(len(clean_inputs))}
-
-        system_prompt = PAGE_QWEN_SYSTEM
-        user_prompt = format_json_payload(payload)
-
-        mapped = self._qwen_generate_json_map(system_prompt, user_prompt, clean_inputs)
-        final: Dict[str, str] = {}
-        for i, src in enumerate(clean_inputs):
-            key = str(i)
-            forced = self._rule_based_override(src)
-            candidate = forced if forced is not None else mapped.get(key, src)
-            if forced is None and self._should_repair_with_single_pass(src, candidate):
-                candidate = self._repair_single_translation(src, candidate)
-            final[key] = candidate
-        return final
-
-    def translate_page_hybrid_quality(self, texts: List[str]) -> Dict[str, str]:
-        if not texts:
-            return {}
-
-        clean_inputs = [clean_ocr_text((text or "").strip()) for text in texts]
-        nllb_map = self._translate_with_nllb_map(clean_inputs)
-        nllb_results = [nllb_map.get(str(i), clean_inputs[i]) for i in range(len(clean_inputs))]
-        for i, src in enumerate(clean_inputs):
-            forced = self._rule_based_override(src)
-            if forced is not None:
-                nllb_results[i] = forced
-
-        if self.qwen is None:
-            return {str(i): nllb_results[i] for i in range(len(nllb_results))}
-
-        payload = {
-            str(i): {
-                "en": clean_inputs[i],
-                "fr": nllb_results[i],
-            }
-            for i in range(len(clean_inputs))
+        generate_kwargs = {
+            'max_new_tokens': int(getattr(self.cfg, 'llm_max_new_tokens', 220)),
+            'repetition_penalty': float(getattr(self.cfg, 'llm_repetition_penalty', 1.05)),
+            'pad_token_id': self.tokenizer.eos_token_id,
+            'eos_token_id': self.tokenizer.eos_token_id,
         }
 
-        system_prompt = PAGE_HYBRID_QUALITY_SYSTEM
-        user_prompt = format_json_payload(payload)
+        temperature = float(getattr(self.cfg, 'llm_temperature', 0.0))
+        top_p = float(getattr(self.cfg, 'llm_top_p', 1.0))
+        if temperature > 0:
+            generate_kwargs['do_sample'] = True
+            generate_kwargs['temperature'] = temperature
+            generate_kwargs['top_p'] = top_p
+        else:
+            generate_kwargs['do_sample'] = False
 
-        corrected = self._qwen_generate_json_map(system_prompt, user_prompt, nllb_results)
-        final: Dict[str, str] = {}
-        for i, src in enumerate(clean_inputs):
-            key = str(i)
-            forced = self._rule_based_override(src)
-            if forced is not None:
-                final[key] = forced
-            else:
-                final[key] = corrected.get(key, nllb_results[i])
-        return final
+        gen_t0 = torch.cuda.Event(enable_timing=True) if (self.device == 'cuda' and torch.cuda.is_available()) else None
+        gen_t1 = torch.cuda.Event(enable_timing=True) if (self.device == 'cuda' and torch.cuda.is_available()) else None
+        wall_t0 = torch.cuda.Event(enable_timing=False) if False else None
 
-    def _init_qwen_translator(self) -> LegacyTranslator:
-        original_backend = self.cfg.backend
-        try:
-            self.cfg.backend = "local_llm"
-            translator = LegacyTranslator(device=self.device)
-            return translator
-        finally:
-            self.cfg.backend = original_backend
+        if gen_t0 is not None and gen_t1 is not None:
+            gen_t0.record()
+        else:
+            import time
+            _wall_start = time.perf_counter()
 
-    def _heuristic_detect_lang(self, text: str) -> Tuple[str, float]:
-        if not text:
-            return self.cfg.source_lang, 0.4
-        if re.search(r"[\uAC00-\uD7AF]", text):
-            return "ko", 0.99
-        if re.search(r"[\u3040-\u30FF]", text):
-            return "ja", 0.99
-        if re.search(r"[\u4E00-\u9FFF]", text):
-            return "zh", 0.99
-        return "en", 0.6
+        with torch.no_grad():
+            generated = self.model.generate(**inputs, **generate_kwargs)
 
-    def detect_source_language_with_confidence(self, text: str) -> Tuple[str, float]:
-        if self.qwen is not None:
-            return self.qwen.detect_source_language_with_confidence(text)
-        return self._heuristic_detect_lang(text)
+        if gen_t0 is not None and gen_t1 is not None:
+            gen_t1.record()
+            torch.cuda.synchronize()
+            self.generation_seconds_total += max(0.0, float(gen_t0.elapsed_time(gen_t1)) / 1000.0)
+        else:
+            import time
+            self.generation_seconds_total += max(0.0, time.perf_counter() - _wall_start)
 
-    def detect_source_language(self, text: str) -> str:
-        return self.detect_source_language_with_confidence(text)[0]
+        input_token_count = int(inputs['input_ids'].shape[-1])
+        new_tokens = generated[0][input_token_count:]
+        raw = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
+        translation = self._extract_llm_translation(raw, prompt)
+        return translation or source_text
 
-    def _translate_with_nllb_map(self, texts: List[str]) -> Dict[str, str]:
-        if not texts:
-            return {}
+    def _translate_page_with_local_llm(self, texts: List[str]) -> dict:
+        # ── Construire le prompt (avec ou sans contexte série) ──
+        if self.series_db:
+            series_context = self.series_db.build_context_prompt(texts)
+            system_prompt = build_series_page_system(series_context)
+            annotations = self.series_db.build_bubble_annotations(texts)
+            user_prompt = build_series_page_user_prompt(texts, annotations)
+        else:
+            system_prompt = LOCAL_LLM_PAGE_SYSTEM
+            numbered_lines = [f"{idx}. {txt}" for idx, txt in enumerate(texts)]
+            user_prompt = "\n".join(numbered_lines)
 
-        if not self.nllb_ready or self.nllb is None:
-            if self.qwen is not None:
-                return self.qwen.translate_page_json(texts)
-            return {str(i): txt for i, txt in enumerate(texts)}
-
-        src_lang = self.cfg.lang_codes.get(self.cfg.source_lang, "eng_Latn")
-        tgt_lang = self.cfg.lang_codes.get(self.cfg.target_lang, "fra_Latn")
-
-        translated = self.nllb.translate_batch(texts, src_lang=src_lang, tgt_lang=tgt_lang)
-        self.last_nllb_inputs = list(texts)
-        self.last_nllb_outputs = list(translated)
-        return {str(i): translated[i] if i < len(translated) else texts[i] for i in range(len(texts))}
-
-    def set_glossaire(self, termes: list[str]):
-        self._glossaire = [t.strip() for t in termes if t.strip()]
-
-    def _masquer_termes(self, texte: str) -> tuple[str, dict]:
-        """Remplace les termes du glossaire par des tokens neutres.
-        Retourne le texte modifié et le dictionnaire de restauration.
-        Trie les termes par longueur décroissante pour éviter les remplacements partiels."""
-        tokens = {}
-        termes_tries = sorted(self._glossaire, key=len, reverse=True)
-        for i, terme in enumerate(termes_tries):
-            token = f"__GTERM{i}__"
-            pattern = re.compile(re.escape(terme), re.IGNORECASE)
-            if pattern.search(texte):
-                tokens[token] = terme
-                texte = pattern.sub(token, texte)
-        return texte, tokens
-
-    def _restaurer_termes(self, texte: str, tokens: dict) -> str:
-        """Restaure les tokens en termes originaux."""
-        for token, terme in tokens.items():
-            texte = texte.replace(token, terme)
-        return texte
-
-    def _polish_with_qwen(self, nllb_texts: List[str]) -> Dict[str, str]:
-        if not nllb_texts:
-            return {}
-        if self.qwen is None:
-            return {str(i): txt for i, txt in enumerate(nllb_texts)}
-
-        tokenizer = self.qwen.tokenizer
-        model = self.qwen.model
-        if tokenizer is None or model is None:
-            return {str(i): txt for i, txt in enumerate(nllb_texts)}
-
-        system_prompt = getattr(self.cfg, "llm_polish_system_prompt", POLISH_DEFAULT_SYSTEM)
-        if self._glossaire:
-            termes_str = ", ".join(self._glossaire)
-            system_prompt = (f"Termes à NE PAS modifier (noms propres, titres, attaques) : {termes_str}\n\n" + system_prompt)
-        payload_obj = {str(idx): txt for idx, txt in enumerate(nllb_texts)}
-        user_prompt = format_polish_user_payload(payload_obj)
-
+        self.last_page_payload_lines = user_prompt.splitlines()
         self.last_page_system_prompt = system_prompt
         self.last_page_user_prompt = user_prompt
+        page_max_tokens = self._adaptive_page_max_tokens(texts, fallback=512)
 
-        if hasattr(tokenizer, 'apply_chat_template'):
+        if self.llm_backend == "gguf":
+            import time
+
+            t0 = time.perf_counter()
+            response = self.model.create_chat_completion(
+                messages=[
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': user_prompt},
+                ],
+                temperature=float(getattr(self.cfg, 'llm_temperature', 0.0)),
+                top_p=float(getattr(self.cfg, 'llm_top_p', 1.0)),
+                max_tokens=page_max_tokens,
+                repeat_penalty=float(getattr(self.cfg, 'llm_repetition_penalty', 1.05)),
+                stop=["\nHuman:", "\nUser:", "\nSystem:"],
+            )
+            self.generation_seconds_total += max(0.0, time.perf_counter() - t0)
+            raw = self._gguf_extract_content(response).strip()
+            return self._parse_page_translation_output(raw, texts)
+
+        if hasattr(self.tokenizer, 'apply_chat_template'):
             messages = [
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_prompt},
             ]
-            inputs = tokenizer.apply_chat_template(
+            inputs = self.tokenizer.apply_chat_template(
                 messages,
                 add_generation_prompt=True,
                 return_tensors='pt',
@@ -559,205 +796,453 @@ class NLLBTranslator:
                 inputs = {'input_ids': input_ids, 'attention_mask': attention_mask}
         else:
             prompt = f"{system_prompt}\n\n{user_prompt}"
-            inputs = tokenizer(prompt, return_tensors='pt', truncation=True, max_length=self.cfg.max_length)
+            inputs = self.tokenizer(prompt, return_tensors='pt', truncation=True, max_length=self.cfg.max_length)
 
         if self.device == 'cuda' and torch.cuda.is_available():
             inputs = {k: v.to('cuda') for k, v in inputs.items()}
 
         generate_kwargs = {
-            'max_new_tokens': int(getattr(self.cfg, 'llm_max_new_tokens', 512)),
+            'max_new_tokens': page_max_tokens,
             'repetition_penalty': float(getattr(self.cfg, 'llm_repetition_penalty', 1.05)),
-            'pad_token_id': tokenizer.eos_token_id,
-            'eos_token_id': tokenizer.eos_token_id,
+            'pad_token_id': self.tokenizer.eos_token_id,
+            'eos_token_id': self.tokenizer.eos_token_id,
             'do_sample': False,
+            'temperature': float(getattr(self.cfg, 'llm_temperature', 0.0)),
         }
 
-        t0 = time.perf_counter()
-        with torch.no_grad():
-            generated = model.generate(**inputs, **generate_kwargs)
-        self._generation_seconds_total += max(0.0, time.perf_counter() - t0)
+        if self.device == 'cuda' and torch.cuda.is_available():
+            gen_t0 = torch.cuda.Event(enable_timing=True)
+            gen_t1 = torch.cuda.Event(enable_timing=True)
+            gen_t0.record()
+            with torch.no_grad():
+                generated = self.model.generate(**inputs, **generate_kwargs)
+            gen_t1.record()
+            torch.cuda.synchronize()
+            self.generation_seconds_total += max(0.0, float(gen_t0.elapsed_time(gen_t1)) / 1000.0)
+        else:
+            import time
+            t0 = time.perf_counter()
+            with torch.no_grad():
+                generated = self.model.generate(**inputs, **generate_kwargs)
+            self.generation_seconds_total += max(0.0, time.perf_counter() - t0)
 
         input_token_count = int(inputs['input_ids'].shape[-1])
-        raw = tokenizer.decode(generated[0][input_token_count:], skip_special_tokens=True).strip()
-
-        mapped = self.qwen._parse_page_translation_output(raw, nllb_texts)
-
-        def _is_suspicious_polish(base: str, polished: str) -> bool:
-            txt = (polished or "").strip()
-            if not txt:
-                return True
-
-            low = txt.lower()
-            if low in {"version polie", "version polie.", "texte final", "texte"}:
-                return True
-
-            if re.search(r"(^|\n)\s*\d+\s*[\.:\-\)]\s+", txt):
-                return True
-
-            if "{" in txt or "}" in txt or '"0"' in txt:
-                return True
-
-            base_len = max(1, len((base or "").strip()))
-            txt_len = len(txt)
-            if txt_len > max(260, int(base_len * 2.2)):
-                return True
-
-            if txt_len < max(2, int(base_len * 0.25)) and base_len >= 20:
-                return True
-
-            return False
-
-        final = {}
-        for i, base in enumerate(nllb_texts):
-            polished = str(mapped.get(str(i), "") or "").strip()
-            if _is_suspicious_polish(base, polished):
-                print(f"[HYBRID] polish rejeté idx={i}, fallback NLLB")
-                final[str(i)] = base
-            else:
-                final[str(i)] = polished
-
-            preview_base = (base or "").replace("\n", " ").strip()
-            preview_polish = (final[str(i)] or "").replace("\n", " ").strip()
-            if len(preview_base) > 120:
-                preview_base = preview_base[:120] + "..."
-            if len(preview_polish) > 120:
-                preview_polish = preview_polish[:120] + "..."
-            print(f"[HYBRID] NLLB[{i}] {preview_base}")
-            print(f"[HYBRID] QWEN[{i}] {preview_polish}")
-        return final
+        raw = self.tokenizer.decode(generated[0][input_token_count:], skip_special_tokens=True).strip()
+        return self._parse_page_translation_output(raw, texts)
 
     def get_last_page_payload_debug(self) -> dict:
-        if self.mode == "qwen" and self.qwen is not None:
-            return self.qwen.get_last_page_payload_debug()
-
         return {
-            'system_prompt': self.last_page_system_prompt,
-            'user_prompt': self.last_page_user_prompt,
-            'nllb_inputs': list(self.last_nllb_inputs),
-            'nllb_outputs': list(self.last_nllb_outputs),
-            'mode': self.mode,
+            'system_prompt': self.last_page_system_prompt or '',
+            'user_prompt': self.last_page_user_prompt or '',
+            'payload_lines': list(self.last_page_payload_lines or []),
         }
+
+    @staticmethod
+    def _clean_llm_value(value: str) -> str:
+        if value is None:
+            return ""
+        text = str(value).strip()
+        text = text.replace('“', '"').replace('”', '"').replace('‘', "'").replace('’', "'")
+        text = text.strip(" \t\r\n,;")
+        for _ in range(4):
+            if len(text) >= 2 and (
+                (text[0] == text[-1] and text[0] in {'"', "'"})
+                or (text.startswith("''") and text.endswith("''"))
+                or (text.startswith('""') and text.endswith('""'))
+            ):
+                text = text[1:-1].strip()
+                continue
+            break
+        text = re.sub(r'^index\s*[:=]\s*', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'^\d+\s*[\.:\-\)]\s*', '', text)
+        return text.strip()
+
+    @staticmethod
+    def _extract_json_candidate(raw: str) -> str:
+        content = (raw or "").strip()
+        if content.startswith("```"):
+            content = re.sub(r'^```(?:json)?\s*', '', content, flags=re.IGNORECASE)
+            content = re.sub(r'\s*```$', '', content).strip()
+
+        start = content.find('{')
+        end = content.rfind('}')
+        if start != -1 and end != -1 and end > start:
+            return content[start:end + 1]
+        return content
+
+    def _parse_page_translation_output(self, raw: str, source_texts: List[str]) -> dict:
+        expected = len(source_texts)
+        mapped: dict = {}
+
+        json_candidate = self._extract_json_candidate(raw)
+        parsed = None
+        try:
+            parsed = json.loads(json_candidate)
+        except Exception:
+            parsed = None
+
+        if isinstance(parsed, dict):
+            for key, value in parsed.items():
+                key_str = str(key).strip().lower()
+                value_str = self._clean_llm_value(value)
+
+                key_num = re.fullmatch(r'\d+', str(key).strip())
+                if key_num:
+                    mapped[str(int(key_num.group(0)))] = value_str
+                    continue
+
+                # Cas: {"index": "0. ..."}
+                if key_str == 'index':
+                    m = re.match(r'\s*(\d+)\s*[\.:\-\)]\s*(.+)$', str(value).strip())
+                    if m:
+                        mapped[str(int(m.group(1)))] = self._clean_llm_value(m.group(2))
+                    elif expected == 1:
+                        mapped['0'] = value_str
+                    continue
+
+                # Cas fragments: value contient "2. texte" ou '"index": "2. texte"'
+                m = re.search(r'"?index"?\s*:\s*"?\s*(\d+)\s*[\.:\-\)]\s*(.+?)"?\s*$', str(value), flags=re.IGNORECASE)
+                if m:
+                    mapped[str(int(m.group(1)))] = self._clean_llm_value(m.group(2))
+                    continue
+
+                m = re.match(r'\s*(\d+)\s*[\.:\-\)]\s*(.+)$', str(value).strip())
+                if m:
+                    mapped[str(int(m.group(1)))] = self._clean_llm_value(m.group(2))
+
+        # Fallback texte brut ligne par ligne (si JSON incomplet/malformé)
+        if len(mapped) < expected:
+            lines = [ln.strip() for ln in (raw or '').splitlines() if ln.strip()]
+            for ln in lines:
+                candidate = self._clean_llm_value(ln)
+                m = re.match(r'^(\d+)\s*[\.:\-\)]\s*(.+)$', candidate)
+                if m:
+                    mapped[str(int(m.group(1)))] = self._clean_llm_value(m.group(2))
+                else:
+                    m = re.search(r'^"(\d+)"\s*:\s*"(.+)"$', candidate)
+                    if m:
+                        mapped[str(int(m.group(1)))] = self._clean_llm_value(m.group(2))
+
+        # Remplir les index manquants — retry si LLM recopie l'anglais
+        final_map = {}
+        for i, src in enumerate(source_texts):
+            tr = self._clean_llm_value(mapped.get(str(i), ''))
+
+            # Cas 1 : traduction valide et différente de la source
+            if tr and tr.upper().strip().rstrip('.!?,') != src.upper().strip().rstrip('.!?,'):
+                final_map[str(i)] = tr
+                continue
+
+            # Cas 2 : LLM a recopié la source EN ou pas de traduction
+            # → retry en traduction unitaire (plus fiable pour les phrases courtes)
+            if self.backend == 'local_llm' and src.strip():
+                try:
+                    single_tr = self._translate_with_local_llm(src, 'en')
+                    if (single_tr
+                            and single_tr.upper().strip().rstrip('.!?,') != src.upper().strip().rstrip('.!?,')):
+                        final_map[str(i)] = single_tr
+                        continue
+                except Exception:
+                    pass
+
+            # Cas 3 : fallback — garder ce qu'on a
+            final_map[str(i)] = tr if tr else src
+        return final_map
 
     def translate_page_json(self, texts: List[str]) -> dict:
         if not texts:
             return {}
 
         clean_inputs = [clean_ocr_text((text or '').strip()) for text in texts]
-        clean_inputs = [self._pre_tokenize_ocr_text(text) for text in clean_inputs]
 
-        if self.mode == "qwen":
-            return self.translate_page_qwen(clean_inputs)
+        # ── Mode Série : glossaire forcé + phrases récurrentes ──
+        forced_indices = {}
+        if self.series_db:
+            annotations = self.series_db.build_bubble_annotations(clean_inputs)
+            for idx, ann in annotations.items():
+                forced = ann.get("forced_translation")
+                if forced:
+                    forced_indices[idx] = forced
+                repeated = ann.get("repeated_phrase")
+                if repeated and idx not in forced_indices:
+                    forced_indices[idx] = repeated
 
-        if self.mode == "hybrid_quality":
-            return self.translate_page_hybrid_quality(clean_inputs)
+        if self.backend == 'local_llm':
+            result = self._translate_page_with_local_llm(clean_inputs)
+        else:
+            # fallback NLLB: traduction unitaire
+            result = {}
+            for i, text in enumerate(clean_inputs):
+                result[str(i)] = self.translate(text)
 
-        # Masquer les termes du glossaire
-        tous_tokens = {}
-        textes_masques = []
-        for texte in clean_inputs:
-            texte_masque, tokens = self._masquer_termes(texte)
-            textes_masques.append(texte_masque)
-            tous_tokens.update(tokens)
-        clean_inputs = textes_masques
+        # ── Appliquer glossaire forcé (glossaire > LLM) ──
+        for idx, forced_text in forced_indices.items():
+            result[str(idx)] = forced_text
 
-        if self.mode == "nllb":
-            nllb_map = self._translate_with_nllb_map(clean_inputs)
-            return {
-                str(i): self._restaurer_termes(nllb_map.get(str(i), clean_inputs[i]), tous_tokens)
-                for i in range(len(clean_inputs))
-            }
+        # ── Enregistrer dans series_db ──
+        if self.series_db:
+            for i, text in enumerate(clean_inputs):
+                fr = result.get(str(i), text)
+                self.series_db.record_translation(str(i), text, fr)
 
-        nllb_map = self._translate_with_nllb_map(clean_inputs)
-        nllb_texts = [nllb_map.get(str(i), clean_inputs[i]) for i in range(len(clean_inputs))]
-
-        # Restaurer les termes dans les sorties NLLB
-        nllb_texts = [self._restaurer_termes(t, tous_tokens) for t in nllb_texts]
-
-        try:
-            polished_map = self._polish_with_qwen(nllb_texts)
-        except Exception as exc:
-            print(f"⚠️  Polish Qwen échoué, fallback NLLB: {exc}")
-            polished_map = {str(i): nllb_texts[i] for i in range(len(nllb_texts))}
-
-        merged = {}
-        for i, original in enumerate(clean_inputs):
-            base = nllb_texts[i] if i < len(nllb_texts) else self._restaurer_termes(nllb_map.get(str(i), original), tous_tokens)
-            polish = str(polished_map.get(str(i), "") or "").strip()
-            merged[str(i)] = polish if polish else base
-
-        if str(getattr(self.cfg, "target_lang", "fr")).lower() == "fr":
-            for i, src in enumerate(clean_inputs):
-                key = str(i)
-                out = str(merged.get(key, src) or "").strip()
-                if self._is_likely_sfx(src):
-                    continue
-                if self._normalize_for_compare(src) and self._normalize_for_compare(src) == self._normalize_for_compare(out):
-                    print(f"[FR_RETRY_ALERT] bloc={i} sortie identique à la source, seconde passe agressive")
-                    merged[key] = self._aggressive_french_retry(src, out)
-        return merged
-
-    def translate(self, text: str) -> str:
-        if not text:
-            return text
-        mapped = self.translate_page_json([text])
-        return mapped.get("0", text)
-
-    def translate_batch(self, texts: List[str]) -> List[str]:
-        mapped = self.translate_page_json(texts)
-        return [mapped.get(str(i), texts[i]) for i in range(len(texts))]
+        return result
 
     def get_generation_seconds_total(self) -> float:
-        total = self._generation_seconds_total
-        if self.qwen is not None:
-            total += float(getattr(self.qwen, 'get_generation_seconds_total', lambda: 0.0)())
-        return float(total)
+        return float(self.generation_seconds_total)
+    
+    def group_detections_by_context(self, detections: list) -> List[TranslationGroup]:
+        if not self.cfg.enable_context_grouping or not detections:
+            return [TranslationGroup([d]) for d in detections]
+        
+        sorted_dets = sorted(detections, key=lambda d: d.y1)
+        groups = []
+        current_group = [sorted_dets[0]]
+        
+        for det in sorted_dets[1:]:
+            last_det = current_group[-1]
+            distance = ImageUtils.distance_between_boxes(last_det.bbox, det.bbox)
+            
+            if (distance < self.cfg.context_distance_threshold and 
+                len(current_group) < self.cfg.max_group_size):
+                current_group.append(det)
+            else:
+                groups.append(TranslationGroup(current_group))
+                current_group = [det]
+        
+        if current_group:
+            groups.append(TranslationGroup(current_group))
+        
+        return groups
+    
+    def should_skip_translation(self, text: str) -> bool:
+        if not text:
+            return True
+        text = text.strip()
 
+        # SFX purs (WAAAH, BOOM, KRGH) → pas de traduction
+        alpha_tokens = re.findall(r"[A-Za-z]+", text.upper())
+        if alpha_tokens:
+            looks_like_sfx_token = all(
+                tok in self.SFX_TOKENS or re.search(r"(.)\1{2,}", tok) for tok in alpha_tokens
+            )
+            has_dialogue_words = any(
+                tok in {"I", "YOU", "WE", "HE", "SHE", "THE", "A", "AN", "AND", "BUT",
+                        "MY", "YOUR", "OUR", "HIS", "HER", "WILL", "OKAY", "OK",
+                        "PLEASE", "SO", "LOOK", "FORWARD", "AGENT", "ABOUT", "IS",
+                        "IT", "TO", "NOT", "DO", "THAT", "THIS", "ARE", "WAS",
+                        "TELL", "KNOW", "WANT", "NEED", "FEEL", "THINK", "MEAN",
+                        "STILL", "HOLD", "WHAT", "HOW", "WHY", "WHO", "WELL",
+                        "JUST", "ONLY", "NEVER", "ALWAYS", "HERE", "THERE"}
+                for tok in alpha_tokens
+            )
+            if looks_like_sfx_token and not has_dialogue_words:
+                return True
+
+        # Pas de lettres du tout → skip
+        if not any(c.isalpha() for c in text):
+            return True
+
+        return False
+    
+    def translate(self, text: str) -> str:
+        if not text or self.should_skip_translation(text):
+            return text
+        
+        # ★ NETTOYAGE OCR ★
+        source_text = clean_ocr_text(text.strip())
+
+        # Translation Memory des noms
+        name_key = self._name_key(source_text)
+        if name_key and name_key in self.name_memory:
+            return self.name_memory[name_key]
+
+        # Glossaire forcé
+        forced_map = getattr(self.cfg, 'forced_translations', {}) or {}
+        forced_key = self._normalize_text_key(source_text)
+        forced_translation = forced_map.get(forced_key)
+        if forced_translation:
+            return forced_translation
+
+        # Noms propres simples (ex: "Miso.") : conserver tel quel
+        if self._is_single_proper_name(source_text):
+            return source_text
+
+        translation_input = self._normalize_case_for_translation(source_text)
+        source_lang_code = self._detect_source_language(source_text)
+
+        if source_lang_code == self.cfg.target_lang:
+            return source_text
+
+        # Heuristique: noms propres/entités courtes en MAJUSCULES -> conserver
+        # ex: "GHISLAIN PERDIUM."
+        source_words = re.findall(r"[A-Z][A-Z'\-]+", source_text.upper())
+        word_count = len(source_text.split())
+        if source_words and len(source_words) <= 3 and 2 <= word_count <= 4:
+            alpha_ratio = sum(c.isalpha() for c in source_text) / max(1, len(source_text))
+            if (
+                alpha_ratio > 0.65
+                and source_text.upper() == source_text
+                and self._looks_like_uppercase_name_sequence(source_text)
+            ):
+                if name_key:
+                    self.name_memory[name_key] = source_text
+                    self._save_name_memory()
+                return source_text
+        
+        # Cache (sur texte nettoyé)
+        if self.cache:
+            cached = self.cache.get(source_text, source_lang_code, self.cfg.target_lang)
+            if cached:
+                # Ne pas garder un cache "identique à la source" pour une vraie traduction.
+                # Permet de corriger les anciennes mauvaises sorties (ex: "OH THERE" -> "OH THERE").
+                if (
+                    source_lang_code != self.cfg.target_lang
+                    and cached.strip().lower() == source_text.strip().lower()
+                    and any(c.isalpha() for c in source_text)
+                ):
+                    cached = None
+                else:
+                    return cached
+        
+        try:
+            if self.backend == 'local_llm':
+                translation = self._translate_with_local_llm(translation_input, source_lang_code)
+            else:
+                src_lang = self.cfg.lang_codes.get(source_lang_code, 'eng_Latn')
+                tgt_lang = self.cfg.lang_codes.get(self.cfg.target_lang, 'fra_Latn')
+
+                self.tokenizer.src_lang = src_lang
+                inputs = self.tokenizer(
+                    translation_input, return_tensors="pt", padding=True,
+                    truncation=True, max_length=self.cfg.max_length
+                )
+
+                # ✅ FIX GPU: Mettre inputs sur le même device que le modèle
+                if self.device == 'cuda' and torch.cuda.is_available():
+                    inputs = {k: v.to('cuda') for k, v in inputs.items()}
+
+                forced_bos_token_id = self.tokenizer.convert_tokens_to_ids(tgt_lang)
+
+                with torch.no_grad():
+                    generated = self.model.generate(
+                        **inputs,
+                        max_length=self.cfg.max_length,
+                        num_beams=self.cfg.num_beams,
+                        early_stopping=self.cfg.early_stopping,
+                        forced_bos_token_id=forced_bos_token_id
+                    )
+
+                translation = self.tokenizer.batch_decode(generated, skip_special_tokens=True)[0]
+
+            # Règle de reformulation (out_text rhétorique)
+            # "YOU'RE TELLING ME THAT I, THE ..." -> "Vous me dites que moi, ..."
+            m = re.match(r"^YOU'?RE\s+TELLING\s+ME\s+THAT\s+I[,\.]\s+(.+)$", source_text.upper())
+            if m and self.cfg.target_lang == 'fr':
+                tail = m.group(1).strip()
+                tail_translation = self.translate(tail)
+                tail_translation = tail_translation[0].lower() + tail_translation[1:] if tail_translation else tail_translation
+                if tail_translation:
+                    punct = '.' if source_text.strip().endswith('.') else ''
+                    translation = f"Vous me dites que moi, {tail_translation.rstrip('.!?')}{punct}"
+
+            # Garde-fou: éviter une traduction anormalement courte
+            # (souvent une hallucination/résumé sur phrases OCR longues)
+            src_len = len(source_text)
+            tr_len = len(translation)
+            if src_len >= 24 and tr_len < max(12, int(src_len * 0.40)):
+                return source_text
+            
+            # ✅ NOUVEAU: Post-traitement pour corriger traductions bizarres
+            # "Miso." → "C'est le Miso." est faux, remettre en "Miso."
+            if source_text.lower().strip() == "miso." and translation.lower().startswith("c'est le"):
+                translation = "Miso."
+
+            if self.cfg.target_lang == 'fr':
+                translation = self._post_process_french(translation)
+            
+            if self.cache:
+                self.cache.set(source_text, translation, source_lang_code, self.cfg.target_lang)
+
+            if name_key:
+                self.name_memory[name_key] = translation
+                self._save_name_memory()
+            
+            return translation
+            
+        except Exception as e:
+            print(f"⚠️ Erreur traduction: {e}")
+            return text
+    
+    def translate_group(self, group: TranslationGroup) -> str:
+        texts = [d.text_original for d in group.detections if d.text_original]
+        if not texts:
+            return ""
+        
+        if len(texts) == 1:
+            translation = self.translate(texts[0])
+            for det in group.detections:
+                if det.text_original:
+                    det.text_translated = translation
+            group.translation = translation
+            return translation
+        
+        combined = self.cfg.group_separator.join(texts)
+        group.combined_text = combined
+        translation = self.translate(combined)
+        group.translation = translation
+        
+        translated_parts = translation.split(self.cfg.group_separator)
+        if len(translated_parts) != len(texts):
+            translated_parts = [self.translate(t) for t in texts]
+        
+        dets_with_text = [d for d in group.detections if d.text_original]
+        for det, trans in zip(dets_with_text, translated_parts):
+            det.text_translated = trans.strip()
+        
+        return translation
+    
+    
+    def translate_batch(self, texts: List[str]) -> List[str]:
+        """
+        ✅ SIMPLIFIÉ: Traduction INDIVIDUELLE robuste
+        
+        La traduction par batch crée trop de problèmes :
+        - Séparation échoue souvent
+        - Force des traductions bizarres (ex: "Miso" → "C'est le Miso")
+        - Plus lent que traduction individuelle
+        
+        On traduit simplement bulle par bulle.
+        Le cache réutilise les traductions = pas de perte de contexte.
+        
+        Args:
+            texts: Liste des textes à traduire
+            
+        Returns:
+            Liste des traductions
+        """
+        if not texts:
+            return []
+        
+        results = []
+        for i, text in enumerate(texts):
+            trans = self.translate(text)
+            results.append(trans)
+            print(f"      [{i+1}/{len(texts)}] \"{text[:40]}...\" → \"{trans[:40]}...\"")
+        
+        return results
+    
     def get_cache_stats(self) -> dict:
-        data = {}
-        if self.qwen is not None:
-            data['qwen'] = self.qwen.get_cache_stats()
-        if self.nllb is not None:
-            data['nllb'] = self.nllb.get_cache_stats()
-
-        # Compat pipeline legacy: attend {'entries': ..., 'hit_rate': ...}
-        def _to_int(value, default=0):
-            try:
-                return int(value)
-            except Exception:
-                return default
-
-        def _to_percent(value) -> float:
-            if value is None:
-                return 0.0
-            if isinstance(value, (int, float)):
-                return float(value)
-            txt = str(value).strip().replace('%', '')
-            try:
-                return float(txt)
-            except Exception:
-                return 0.0
-
-        qwen_stats = data.get('qwen', {}) if isinstance(data.get('qwen', {}), dict) else {}
-        nllb_stats = data.get('nllb', {}) if isinstance(data.get('nllb', {}), dict) else {}
-
-        entries = _to_int(qwen_stats.get('entries', 0), 0) + _to_int(nllb_stats.get('entries', 0), 0)
-        hit_rate = max(_to_percent(qwen_stats.get('hit_rate', 0.0)), _to_percent(nllb_stats.get('hit_rate', 0.0)))
-
-        return {
-            'entries': entries,
-            'hit_rate': f"{hit_rate:.1f}%",
-            'qwen': qwen_stats,
-            'nllb': nllb_stats,
-        }
-
+        if self.cache:
+            return self.cache.get_stats()
+        return {}
+    
     def __del__(self):
-        try:
-            if self.qwen is not None:
-                del self.qwen
-        except Exception:
-            pass
-        try:
-            if self.nllb is not None:
-                del self.nllb
-        except Exception:
-            pass
+        if self.cache:
+            self.cache._save()
+        self._save_name_memory()
+        if self.model is not None:
+            del self.model
+            self.model = None
+        if self.tokenizer is not None:
+            del self.tokenizer
+            self.tokenizer = None

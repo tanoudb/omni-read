@@ -1,0 +1,6 @@
+class: bulle
+bbox: [70.92721557617188, 4947, 407.2157897949219, 5197]
+ocr: OH, I SEE...
+translation: Oh, je vois...
+style: dialogue
+mask_regions: 1

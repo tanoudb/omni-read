@@ -1,0 +1,6 @@
+class: bulle
+bbox: [56.228841145833336, 32814, 481.22690836588544, 33197]
+ocr: LET'S DO THIS AGAIN NEXT WEEK!
+translation: On se revoit la semaine prochaine !
+style: dialogue
+mask_regions: 1

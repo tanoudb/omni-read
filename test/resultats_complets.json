@@ -1,0 +1,3526 @@
+[
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_00_bulle_0.76.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 521,
+            "height": 408,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "Gㄷㄴㄴㄴㄴ",
+                    "block_bbox": [
+                        136,
+                        184,
+                        396,
+                        245
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            136.0,
+                            184.0
+                        ],
+                        [
+                            396.0,
+                            184.0
+                        ],
+                        [
+                            396.0,
+                            245.0
+                        ],
+                        [
+                            136.0,
+                            245.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.5757662653923035,
+                        "coordinate": [
+                            136,
+                            184,
+                            396,
+                            245
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                136.0,
+                                184.0
+                            ],
+                            [
+                                396.0,
+                                184.0
+                            ],
+                            [
+                                396.0,
+                                245.0
+                            ],
+                            [
+                                136.0,
+                                245.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_01_System_0.83.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 400,
+            "height": 256,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "image",
+                    "block_content": "",
+                    "block_bbox": [
+                        0,
+                        0,
+                        399,
+                        256
+                    ],
+                    "block_id": 0,
+                    "block_order": null,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            -1.0,
+                            0.0
+                        ],
+                        [
+                            399.0,
+                            0.0
+                        ],
+                        [
+                            399.0,
+                            256.0
+                        ],
+                        [
+                            -1.0,
+                            256.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 14,
+                        "label": "image",
+                        "score": 0.9033800363540649,
+                        "coordinate": [
+                            0,
+                            0,
+                            399,
+                            256
+                        ],
+                        "order": null,
+                        "polygon_points": [
+                            [
+                                -1.0,
+                                0.0
+                            ],
+                            [
+                                399.0,
+                                0.0
+                            ],
+                            [
+                                399.0,
+                                256.0
+                            ],
+                            [
+                                -1.0,
+                                256.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_02_bulle_0.91.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 378,
+            "height": 372,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "KRGH... KHOFF...\nERGH...",
+                    "block_bbox": [
+                        44,
+                        149,
+                        334,
+                        228
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            44.0,
+                            149.0
+                        ],
+                        [
+                            334.0,
+                            149.0
+                        ],
+                        [
+                            334.0,
+                            228.0
+                        ],
+                        [
+                            44.0,
+                            228.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.7908681631088257,
+                        "coordinate": [
+                            44,
+                            149,
+                            334,
+                            228
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                44.0,
+                                149.0
+                            ],
+                            [
+                                334.0,
+                                149.0
+                            ],
+                            [
+                                334.0,
+                                228.0
+                            ],
+                            [
+                                44.0,
+                                228.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_03_bulle_0.86.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 380,
+            "height": 261,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "ＷＡＡＡＨ!!\nＷＡＡＡＨ!!",
+                    "block_bbox": [
+                        124,
+                        92,
+                        277,
+                        169
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            124.0,
+                            92.0
+                        ],
+                        [
+                            277.0,
+                            92.0
+                        ],
+                        [
+                            277.0,
+                            169.0
+                        ],
+                        [
+                            124.0,
+                            169.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8173908591270447,
+                        "coordinate": [
+                            124,
+                            92,
+                            277,
+                            169
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                124.0,
+                                92.0
+                            ],
+                            [
+                                277.0,
+                                92.0
+                            ],
+                            [
+                                277.0,
+                                169.0
+                            ],
+                            [
+                                124.0,
+                                169.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_04_bulle_0.87.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 411,
+            "height": 291,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "HONEY!!",
+                    "block_bbox": [
+                        112,
+                        121,
+                        314,
+                        175
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            112.0,
+                            121.0
+                        ],
+                        [
+                            314.0,
+                            121.0
+                        ],
+                        [
+                            314.0,
+                            175.0
+                        ],
+                        [
+                            112.0,
+                            175.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.5625478029251099,
+                        "coordinate": [
+                            112,
+                            121,
+                            314,
+                            175
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                112.0,
+                                121.0
+                            ],
+                            [
+                                314.0,
+                                121.0
+                            ],
+                            [
+                                314.0,
+                                175.0
+                            ],
+                            [
+                                112.0,
+                                175.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_05_bulle_0.88.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 439,
+            "height": 306,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "HONEY, ARE YOU OKAY?!",
+                    "block_bbox": [
+                        142,
+                        89,
+                        319,
+                        216
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            142.0,
+                            89.0
+                        ],
+                        [
+                            319.0,
+                            89.0
+                        ],
+                        [
+                            319.0,
+                            216.0
+                        ],
+                        [
+                            142.0,
+                            216.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8364312052726746,
+                        "coordinate": [
+                            142,
+                            89,
+                            319,
+                            216
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                142.0,
+                                89.0
+                            ],
+                            [
+                                319.0,
+                                89.0
+                            ],
+                            [
+                                319.0,
+                                216.0
+                            ],
+                            [
+                                142.0,
+                                216.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_06_bulle_0.91.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 343,
+            "height": 311,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "paragraph_title",
+                    "block_content": "WH-WHAT ABOUT OUR SON??",
+                    "block_bbox": [
+                        71,
+                        103,
+                        278,
+                        217
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            73.49967193603516,
+                            103.03431701660156
+                        ],
+                        [
+                            277.0291442871094,
+                            105.02970886230469
+                        ],
+                        [
+                            275.9505310058594,
+                            215.0485382080078
+                        ],
+                        [
+                            72.42105865478516,
+                            213.0531463623047
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 17,
+                        "label": "paragraph_title",
+                        "score": 0.5063451528549194,
+                        "coordinate": [
+                            71,
+                            103,
+                            278,
+                            217
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                73.49967193603516,
+                                103.03431701660156
+                            ],
+                            [
+                                277.0291442871094,
+                                105.02970886230469
+                            ],
+                            [
+                                275.9505310058594,
+                                215.0485382080078
+                            ],
+                            [
+                                72.42105865478516,
+                                213.0531463623047
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_07_bulle_0.89.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 291,
+            "height": 271,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "HE'S...\nOKAY.",
+                    "block_bbox": [
+                        94,
+                        97,
+                        205,
+                        177
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            94.0,
+                            97.0
+                        ],
+                        [
+                            205.0,
+                            97.0
+                        ],
+                        [
+                            205.0,
+                            177.0
+                        ],
+                        [
+                            94.0,
+                            177.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.5685374736785889,
+                        "coordinate": [
+                            94,
+                            97,
+                            205,
+                            177
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                94.0,
+                                97.0
+                            ],
+                            [
+                                205.0,
+                                97.0
+                            ],
+                            [
+                                205.0,
+                                177.0
+                            ],
+                            [
+                                94.0,
+                                177.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_08_bulle_0.91.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 363,
+            "height": 334,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "THERE'S SOMETHING... I WANT TO... TELL YOU.",
+                    "block_bbox": [
+                        64,
+                        94,
+                        296,
+                        248
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            64.0,
+                            94.0
+                        ],
+                        [
+                            296.0,
+                            94.0
+                        ],
+                        [
+                            296.0,
+                            248.0
+                        ],
+                        [
+                            64.0,
+                            248.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.7468140125274658,
+                        "coordinate": [
+                            64,
+                            94,
+                            296,
+                            248
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                64.0,
+                                94.0
+                            ],
+                            [
+                                296.0,
+                                94.0
+                            ],
+                            [
+                                296.0,
+                                248.0
+                            ],
+                            [
+                                64.0,
+                                248.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_09_bulle_0.83.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 427,
+            "height": 300,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "Y-YOU'RE BLEEDING....!!",
+                    "block_bbox": [
+                        102,
+                        116,
+                        343,
+                        199
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            102.0,
+                            116.0
+                        ],
+                        [
+                            343.0,
+                            116.0
+                        ],
+                        [
+                            343.0,
+                            199.0
+                        ],
+                        [
+                            102.0,
+                            199.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.6435046195983887,
+                        "coordinate": [
+                            102,
+                            116,
+                            343,
+                            199
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                102.0,
+                                116.0
+                            ],
+                            [
+                                343.0,
+                                116.0
+                            ],
+                            [
+                                343.0,
+                                199.0
+                            ],
+                            [
+                                102.0,
+                                199.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_10_bulle_0.85.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 546,
+            "height": 330,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "HOLD STILL,\nI'LL PATCH THE\nWOUND UP,\nOKAY?",
+                    "block_bbox": [
+                        141,
+                        107,
+                        419,
+                        262
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            141.0,
+                            107.0
+                        ],
+                        [
+                            419.0,
+                            107.0
+                        ],
+                        [
+                            419.0,
+                            262.0
+                        ],
+                        [
+                            141.0,
+                            262.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.870155930519104,
+                        "coordinate": [
+                            141,
+                            107,
+                            419,
+                            262
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                141.0,
+                                107.0
+                            ],
+                            [
+                                419.0,
+                                107.0
+                            ],
+                            [
+                                419.0,
+                                262.0
+                            ],
+                            [
+                                141.0,
+                                262.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_11_bulle_0.90.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 446,
+            "height": 412,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "IT'S TOO LATE...\nI CAN FEEL MYSELF\nFADING.",
+                    "block_bbox": [
+                        48,
+                        154,
+                        396,
+                        272
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            48.0,
+                            154.0
+                        ],
+                        [
+                            396.0,
+                            154.0
+                        ],
+                        [
+                            396.0,
+                            272.0
+                        ],
+                        [
+                            48.0,
+                            272.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8016420602798462,
+                        "coordinate": [
+                            48,
+                            154,
+                            396,
+                            272
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                48.0,
+                                154.0
+                            ],
+                            [
+                                396.0,
+                                154.0
+                            ],
+                            [
+                                396.0,
+                                272.0
+                            ],
+                            [
+                                48.0,
+                                272.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_12_bulle_0.90.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 424,
+            "height": 391,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "BUT STILL...\nI HAD MY WEDDING.\nI HAVE NO\nREGRETS.",
+                    "block_bbox": [
+                        41,
+                        129,
+                        383,
+                        281
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            41.0,
+                            129.0
+                        ],
+                        [
+                            383.0,
+                            129.0
+                        ],
+                        [
+                            383.0,
+                            281.0
+                        ],
+                        [
+                            41.0,
+                            281.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.5714104175567627,
+                        "coordinate": [
+                            41,
+                            129,
+                            383,
+                            281
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                41.0,
+                                129.0
+                            ],
+                            [
+                                383.0,
+                                129.0
+                            ],
+                            [
+                                383.0,
+                                281.0
+                            ],
+                            [
+                                41.0,
+                                281.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_13_bulle_0.90.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 438,
+            "height": 402,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "WE KNEW\nTHIS WOULD HAPPEN,\nDIDN'T WE?",
+                    "block_bbox": [
+                        35,
+                        144,
+                        406,
+                        261
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            35.0,
+                            144.0
+                        ],
+                        [
+                            406.0,
+                            144.0
+                        ],
+                        [
+                            406.0,
+                            261.0
+                        ],
+                        [
+                            35.0,
+                            261.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.7747116088867188,
+                        "coordinate": [
+                            35,
+                            144,
+                            406,
+                            261
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                35.0,
+                                144.0
+                            ],
+                            [
+                                406.0,
+                                144.0
+                            ],
+                            [
+                                406.0,
+                                261.0
+                            ],
+                            [
+                                35.0,
+                                261.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_14_bulle_0.89.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 305,
+            "height": 287,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "SO PLEASE...",
+                    "block_bbox": [
+                        35,
+                        128,
+                        267,
+                        165
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            35.0,
+                            128.0
+                        ],
+                        [
+                            264.9999694824219,
+                            128.0
+                        ],
+                        [
+                            264.9999694824219,
+                            163.0
+                        ],
+                        [
+                            35.0,
+                            163.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.6514326333999634,
+                        "coordinate": [
+                            35,
+                            128,
+                            267,
+                            165
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                35.0,
+                                128.0
+                            ],
+                            [
+                                264.9999694824219,
+                                128.0
+                            ],
+                            [
+                                264.9999694824219,
+                                163.0
+                            ],
+                            [
+                                35.0,
+                                163.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_15_bulle_0.89.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 440,
+            "height": 374,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "THIS IS MY FIRST...\nAND LAST REQUEST\nAS YOUR WIFE.",
+                    "block_bbox": [
+                        48,
+                        152,
+                        394,
+                        267
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            48.0,
+                            152.0
+                        ],
+                        [
+                            394.0,
+                            152.0
+                        ],
+                        [
+                            394.0,
+                            267.0
+                        ],
+                        [
+                            48.0,
+                            267.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.6613685488700867,
+                        "coordinate": [
+                            48,
+                            152,
+                            394,
+                            267
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                48.0,
+                                152.0
+                            ],
+                            [
+                                394.0,
+                                152.0
+                            ],
+                            [
+                                394.0,
+                                267.0
+                            ],
+                            [
+                                48.0,
+                                267.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_16_bulle_0.91.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 445,
+            "height": 420,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "PLEASE\nHELP OUR SON...\nSO HE CAN LIVE\nTHE LIFE THAT\nHE WANTS.",
+                    "block_bbox": [
+                        77,
+                        124,
+                        367,
+                        317
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            77.0,
+                            124.0
+                        ],
+                        [
+                            367.0,
+                            124.0
+                        ],
+                        [
+                            367.0,
+                            317.0
+                        ],
+                        [
+                            77.0,
+                            317.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8591248989105225,
+                        "coordinate": [
+                            77,
+                            124,
+                            367,
+                            317
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                77.0,
+                                124.0
+                            ],
+                            [
+                                367.0,
+                                124.0
+                            ],
+                            [
+                                367.0,
+                                317.0
+                            ],
+                            [
+                                77.0,
+                                317.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_17_bulle_0.92.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 397,
+            "height": 368,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "...AND ALSO,\nI'M SO HAPPY\nI GOT TO BE...\nYOUR WIFE...",
+                    "block_bbox": [
+                        75,
+                        113,
+                        325,
+                        268
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            75.0,
+                            113.0
+                        ],
+                        [
+                            325.0,
+                            113.0
+                        ],
+                        [
+                            325.0,
+                            268.0
+                        ],
+                        [
+                            75.0,
+                            268.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.7068173885345459,
+                        "coordinate": [
+                            75,
+                            113,
+                            325,
+                            268
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                75.0,
+                                113.0
+                            ],
+                            [
+                                325.0,
+                                113.0
+                            ],
+                            [
+                                325.0,
+                                268.0
+                            ],
+                            [
+                                75.0,
+                                268.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_18_bulle_0.83.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 533,
+            "height": 381,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "WㄍㄍㄍH!\nWㄍㄍㄍH!",
+                    "block_bbox": [
+                        187,
+                        144,
+                        373,
+                        247
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            187.0,
+                            144.0
+                        ],
+                        [
+                            373.0,
+                            144.0
+                        ],
+                        [
+                            373.0,
+                            247.0
+                        ],
+                        [
+                            187.0,
+                            247.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.7073959112167358,
+                        "coordinate": [
+                            187,
+                            144,
+                            373,
+                            247
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                187.0,
+                                144.0
+                            ],
+                            [
+                                373.0,
+                                144.0
+                            ],
+                            [
+                                373.0,
+                                247.0
+                            ],
+                            [
+                                187.0,
+                                247.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_19_bulle_0.91.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 446,
+            "height": 409,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "HEH, HEHE...\nUSING A WEDDING\nAS A TRAP?",
+                    "block_bbox": [
+                        66,
+                        149,
+                        380,
+                        263
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            66.0,
+                            149.0
+                        ],
+                        [
+                            380.0,
+                            149.0
+                        ],
+                        [
+                            380.0,
+                            263.0
+                        ],
+                        [
+                            66.0,
+                            263.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8594590425491333,
+                        "coordinate": [
+                            66,
+                            149,
+                            380,
+                            263
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                66.0,
+                                149.0
+                            ],
+                            [
+                                380.0,
+                                149.0
+                            ],
+                            [
+                                380.0,
+                                263.0
+                            ],
+                            [
+                                66.0,
+                                263.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_20_bulle_0.85.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 487,
+            "height": 446,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "ONLY BASTARDS\nLIKE YOU COULD COME\nUP WITH A DIRTY PLAN\nLIKE THAT...",
+                    "block_bbox": [
+                        42,
+                        156,
+                        446,
+                        312
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            42.0,
+                            156.0
+                        ],
+                        [
+                            446.0,
+                            156.0
+                        ],
+                        [
+                            446.0,
+                            312.0
+                        ],
+                        [
+                            42.0,
+                            312.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.7313050627708435,
+                        "coordinate": [
+                            42,
+                            156,
+                            446,
+                            312
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                42.0,
+                                156.0
+                            ],
+                            [
+                                446.0,
+                                156.0
+                            ],
+                            [
+                                446.0,
+                                312.0
+                            ],
+                            [
+                                42.0,
+                                312.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_21_bulle_0.86.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 503,
+            "height": 457,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "IS THAT HOW\nBAD YOU WANTED TO\nTAKE ME DOWN?",
+                    "block_bbox": [
+                        65,
+                        176,
+                        434,
+                        293
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            65.0,
+                            176.0
+                        ],
+                        [
+                            434.0,
+                            176.0
+                        ],
+                        [
+                            434.0,
+                            293.0
+                        ],
+                        [
+                            65.0,
+                            293.0
+                        ]
+                    ]
+                },
+                {
+                    "block_label": "text",
+                    "block_content": "KHOF",
+                    "block_bbox": [
+                        366,
+                        328,
+                        503,
+                        446
+                    ],
+                    "block_id": 1,
+                    "block_order": 2,
+                    "group_id": 1,
+                    "block_polygon_points": [
+                        [
+                            362.5782775878906,
+                            332.3597412109375
+                        ],
+                        [
+                            501.0000305175781,
+                            328.0
+                        ],
+                        [
+                            504.5555725097656,
+                            440.88800048828125
+                        ],
+                        [
+                            366.1338195800781,
+                            445.24774169921875
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8153480291366577,
+                        "coordinate": [
+                            65,
+                            176,
+                            434,
+                            293
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                65.0,
+                                176.0
+                            ],
+                            [
+                                434.0,
+                                176.0
+                            ],
+                            [
+                                434.0,
+                                293.0
+                            ],
+                            [
+                                65.0,
+                                293.0
+                            ]
+                        ]
+                    },
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.6083803772926331,
+                        "coordinate": [
+                            366,
+                            328,
+                            503,
+                            446
+                        ],
+                        "order": 2,
+                        "polygon_points": [
+                            [
+                                362.5782775878906,
+                                332.3597412109375
+                            ],
+                            [
+                                501.0000305175781,
+                                328.0
+                            ],
+                            [
+                                504.5555725097656,
+                                440.88800048828125
+                            ],
+                            [
+                                366.1338195800781,
+                                445.24774169921875
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_22_bulle_0.91.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 459,
+            "height": 400,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "BUT YOU KNOW THAT CHEONGDO NEVER FORGETS A TRAITOR.",
+                    "block_bbox": [
+                        76,
+                        142,
+                        381,
+                        297
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            76.0,
+                            142.0
+                        ],
+                        [
+                            381.0,
+                            142.0
+                        ],
+                        [
+                            381.0,
+                            297.0
+                        ],
+                        [
+                            76.0,
+                            297.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8003648519515991,
+                        "coordinate": [
+                            76,
+                            142,
+                            381,
+                            297
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                76.0,
+                                142.0
+                            ],
+                            [
+                                381.0,
+                                142.0
+                            ],
+                            [
+                                381.0,
+                                297.0
+                            ],
+                            [
+                                76.0,
+                                297.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_23_bulle_0.90.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 497,
+            "height": 449,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "JUST YOU WAIT.\nWHEN MY SON\nTAKES HOLD OF\nTHE GROUP...",
+                    "block_bbox": [
+                        100,
+                        153,
+                        396,
+                        308
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            100.0,
+                            153.0
+                        ],
+                        [
+                            396.0,
+                            153.0
+                        ],
+                        [
+                            396.0,
+                            308.0
+                        ],
+                        [
+                            100.0,
+                            308.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.877248227596283,
+                        "coordinate": [
+                            100,
+                            153,
+                            396,
+                            308
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                100.0,
+                                153.0
+                            ],
+                            [
+                                396.0,
+                                153.0
+                            ],
+                            [
+                                396.0,
+                                308.0
+                            ],
+                            [
+                                100.0,
+                                308.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_24_bulle_0.88.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 508,
+            "height": 478,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "paragraph_title",
+                    "block_content": "...HE'LL KILL YOUR SON.",
+                    "block_bbox": [
+                        100,
+                        191,
+                        405,
+                        296
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            100.0,
+                            191.0
+                        ],
+                        [
+                            405.0,
+                            191.0
+                        ],
+                        [
+                            405.0,
+                            296.0
+                        ],
+                        [
+                            100.0,
+                            296.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 17,
+                        "label": "paragraph_title",
+                        "score": 0.83345627784729,
+                        "coordinate": [
+                            100,
+                            191,
+                            405,
+                            296
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                100.0,
+                                191.0
+                            ],
+                            [
+                                405.0,
+                                191.0
+                            ],
+                            [
+                                405.0,
+                                296.0
+                            ],
+                            [
+                                100.0,
+                                296.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_25_bulle_0.90.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 488,
+            "height": 431,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "ONCE THAT SENILE\nOLD CHAIRMAN DIES,\nMY SON WILL TAKE\nOVER IN HIS PLACE.",
+                    "block_bbox": [
+                        61,
+                        156,
+                        422,
+                        309
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            61.0,
+                            156.0
+                        ],
+                        [
+                            422.0,
+                            156.0
+                        ],
+                        [
+                            422.0,
+                            309.0
+                        ],
+                        [
+                            61.0,
+                            309.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8449767231941223,
+                        "coordinate": [
+                            61,
+                            156,
+                            422,
+                            309
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                61.0,
+                                156.0
+                            ],
+                            [
+                                422.0,
+                                156.0
+                            ],
+                            [
+                                422.0,
+                                309.0
+                            ],
+                            [
+                                61.0,
+                                309.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_26_bulle_0.49.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 548,
+            "height": 95,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": []
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_27_bulle_0.88.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 412,
+            "height": 374,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "LOOK FORWARD\nTO IT...",
+                    "block_bbox": [
+                        66,
+                        149,
+                        351,
+                        225
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            66.0,
+                            149.0
+                        ],
+                        [
+                            351.0,
+                            149.0
+                        ],
+                        [
+                            351.0,
+                            225.0
+                        ],
+                        [
+                            66.0,
+                            225.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8225811719894409,
+                        "coordinate": [
+                            66,
+                            149,
+                            351,
+                            225
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                66.0,
+                                149.0
+                            ],
+                            [
+                                351.0,
+                                149.0
+                            ],
+                            [
+                                351.0,
+                                225.0
+                            ],
+                            [
+                                66.0,
+                                225.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_28_bulle_0.90.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 404,
+            "height": 368,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "...AGENT 101.",
+                    "block_bbox": [
+                        65,
+                        163,
+                        335,
+                        214
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            65.0,
+                            163.0
+                        ],
+                        [
+                            335.0,
+                            163.0
+                        ],
+                        [
+                            335.0,
+                            214.0
+                        ],
+                        [
+                            65.0,
+                            214.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.6164130568504333,
+                        "coordinate": [
+                            65,
+                            163,
+                            335,
+                            214
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                65.0,
+                                163.0
+                            ],
+                            [
+                                335.0,
+                                163.0
+                            ],
+                            [
+                                335.0,
+                                214.0
+                            ],
+                            [
+                                65.0,
+                                214.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_29_bulle_0.89.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 300,
+            "height": 286,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": []
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_30_bulle_0.84.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 425,
+            "height": 238,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "paragraph_title",
+                    "block_content": "I WILL.",
+                    "block_bbox": [
+                        115,
+                        172,
+                        295,
+                        220
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            115.0,
+                            172.0
+                        ],
+                        [
+                            295.0,
+                            172.0
+                        ],
+                        [
+                            295.0,
+                            220.0
+                        ],
+                        [
+                            115.0,
+                            220.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 17,
+                        "label": "paragraph_title",
+                        "score": 0.5687909126281738,
+                        "coordinate": [
+                            115,
+                            172,
+                            295,
+                            220
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                115.0,
+                                172.0
+                            ],
+                            [
+                                295.0,
+                                172.0
+                            ],
+                            [
+                                295.0,
+                                220.0
+                            ],
+                            [
+                                115.0,
+                                220.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_31_bulle_0.88.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 537,
+            "height": 372,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "UUUUUGH!!\nI'M TOO TIRED!!!",
+                    "block_bbox": [
+                        102,
+                        141,
+                        468,
+                        239
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            102.0,
+                            141.0
+                        ],
+                        [
+                            468.0,
+                            141.0
+                        ],
+                        [
+                            468.0,
+                            239.0
+                        ],
+                        [
+                            102.0,
+                            239.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.6432614326477051,
+                        "coordinate": [
+                            102,
+                            141,
+                            468,
+                            239
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                102.0,
+                                141.0
+                            ],
+                            [
+                                468.0,
+                                141.0
+                            ],
+                            [
+                                468.0,
+                                239.0
+                            ],
+                            [
+                                102.0,
+                                239.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_32_bulle_0.91.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 372,
+            "height": 342,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "WHAT DO YOU MEAN? WE JUST STARTED.",
+                    "block_bbox": [
+                        84,
+                        99,
+                        292,
+                        251
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            84.0,
+                            99.0
+                        ],
+                        [
+                            292.0,
+                            99.0
+                        ],
+                        [
+                            292.0,
+                            251.0
+                        ],
+                        [
+                            84.0,
+                            251.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.7535390257835388,
+                        "coordinate": [
+                            84,
+                            99,
+                            292,
+                            251
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                84.0,
+                                99.0
+                            ],
+                            [
+                                292.0,
+                                99.0
+                            ],
+                            [
+                                292.0,
+                                251.0
+                            ],
+                            [
+                                84.0,
+                                251.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_33_bulle_0.89.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 347,
+            "height": 318,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "chart",
+                    "block_content": "",
+                    "block_bbox": [
+                        0,
+                        0,
+                        347,
+                        318
+                    ],
+                    "block_id": 0,
+                    "block_order": null,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            0.0,
+                            0.0
+                        ],
+                        [
+                            347.0,
+                            0.0
+                        ],
+                        [
+                            347.0,
+                            318.0
+                        ],
+                        [
+                            0.0,
+                            318.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 3,
+                        "label": "chart",
+                        "score": 0.5012199878692627,
+                        "coordinate": [
+                            0,
+                            0,
+                            347,
+                            318
+                        ],
+                        "order": null,
+                        "polygon_points": [
+                            [
+                                0.0,
+                                0.0
+                            ],
+                            [
+                                347.0,
+                                0.0
+                            ],
+                            [
+                                347.0,
+                                318.0
+                            ],
+                            [
+                                0.0,
+                                318.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_34_bulle_0.88.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 429,
+            "height": 352,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "I RAN\nIN THE MORNING\nAND DID SQUATS\nAT LUNCHTIME!!",
+                    "block_bbox": [
+                        60,
+                        123,
+                        367,
+                        280
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            60.0,
+                            123.0
+                        ],
+                        [
+                            367.0,
+                            123.0
+                        ],
+                        [
+                            367.0,
+                            280.0
+                        ],
+                        [
+                            60.0,
+                            280.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8328847885131836,
+                        "coordinate": [
+                            60,
+                            123,
+                            367,
+                            280
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                60.0,
+                                123.0
+                            ],
+                            [
+                                367.0,
+                                123.0
+                            ],
+                            [
+                                367.0,
+                                280.0
+                            ],
+                            [
+                                60.0,
+                                280.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_35_bulle_0.91.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 518,
+            "height": 362,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "AND I EVEN SWAM!\nI'M ONLY 8 YEARS OLD!\nTHIS IS CHILD ABUSE!!",
+                    "block_bbox": [
+                        35,
+                        75,
+                        475,
+                        192
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            35.0,
+                            75.0
+                        ],
+                        [
+                            475.0,
+                            75.0
+                        ],
+                        [
+                            475.0,
+                            192.0
+                        ],
+                        [
+                            35.0,
+                            192.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8847287893295288,
+                        "coordinate": [
+                            35,
+                            75,
+                            475,
+                            192
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                35.0,
+                                75.0
+                            ],
+                            [
+                                475.0,
+                                75.0
+                            ],
+                            [
+                                475.0,
+                                192.0
+                            ],
+                            [
+                                35.0,
+                                192.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "res": {
+            "input_path": "A:\\omni read\\output\\debug\\Chapitre 001_merged_part01_crops\\crop_36_bulle_0.92.png",
+            "page_index": null,
+            "page_count": null,
+            "width": 457,
+            "height": 411,
+            "model_settings": {
+                "use_doc_preprocessor": false,
+                "use_layout_detection": true,
+                "use_chart_recognition": false,
+                "use_seal_recognition": false,
+                "use_ocr_for_image_block": false,
+                "format_block_content": false,
+                "merge_layout_blocks": true,
+                "markdown_ignore_labels": [
+                    "number",
+                    "footnote",
+                    "header",
+                    "header_image",
+                    "footer",
+                    "footer_image",
+                    "aside_text"
+                ],
+                "return_layout_polygon_points": true
+            },
+            "parsing_res_list": [
+                {
+                    "block_label": "text",
+                    "block_content": "WELL, THAT'S WHAT YOU GET FOR HITTING YOUR CLASSMATES.",
+                    "block_bbox": [
+                        40,
+                        150,
+                        414,
+                        264
+                    ],
+                    "block_id": 0,
+                    "block_order": 1,
+                    "group_id": 0,
+                    "block_polygon_points": [
+                        [
+                            40.0,
+                            150.0
+                        ],
+                        [
+                            414.0,
+                            150.0
+                        ],
+                        [
+                            414.0,
+                            264.0
+                        ],
+                        [
+                            40.0,
+                            264.0
+                        ]
+                    ]
+                }
+            ],
+            "layout_det_res": {
+                "input_path": null,
+                "page_index": null,
+                "boxes": [
+                    {
+                        "cls_id": 22,
+                        "label": "text",
+                        "score": 0.8816562294960022,
+                        "coordinate": [
+                            40,
+                            150,
+                            414,
+                            264
+                        ],
+                        "order": 1,
+                        "polygon_points": [
+                            [
+                                40.0,
+                                150.0
+                            ],
+                            [
+                                414.0,
+                                150.0
+                            ],
+                            [
+                                414.0,
+                                264.0
+                            ],
+                            [
+                                40.0,
+                                264.0
+                            ]
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+]

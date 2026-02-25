@@ -1,0 +1,6 @@
+class: bulle
+bbox: [88.59811401367188, 42540, 415.2274475097656, 42844]
+ocr: OH, LOOK AT THE TIME!
+translation: Oh, regarde l'heure !
+style: dialogue
+mask_regions: 1

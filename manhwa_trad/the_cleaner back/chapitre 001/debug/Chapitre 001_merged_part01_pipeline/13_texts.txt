@@ -1,0 +1,6 @@
+class: bulle
+bbox: [244.9987284342448, 23523, 682.2844950358074, 23925]
+ocr: WE KNEW THIS WOULD HAPPEN, DIDN'T WE?
+translation: Nous le savions, n'est-ce pas ?
+style: dialogue
+mask_regions: 1

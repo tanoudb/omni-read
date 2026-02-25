@@ -1,0 +1,6 @@
+class: bulle
+bbox: [4.196116129557292, 55605, 558.8323974609375, 55938]
+ocr: SERIOUSLY, WHAT'S GOING ON?!
+translation: Sérieusement, qu'est-ce qui se passe?!
+style: dialogue
+mask_regions: 1

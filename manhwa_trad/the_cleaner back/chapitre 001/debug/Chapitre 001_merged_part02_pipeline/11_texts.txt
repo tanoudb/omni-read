@@ -1,0 +1,6 @@
+class: bulle
+bbox: [123.63362630208334, 12800, 570.1913452148438, 13218]
+ocr: NO DINNER?!
+translation: NO DINNER?!
+style: scream
+mask_regions: 1

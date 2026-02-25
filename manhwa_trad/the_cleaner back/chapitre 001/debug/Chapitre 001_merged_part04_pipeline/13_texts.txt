@@ -1,0 +1,6 @@
+class: bulle
+bbox: [175.07466634114584, 19196, 616.8282063802084, 19588]
+ocr: THAT THOSE IN POWER NEVER FOR GET A GRUDGE.
+translation: Ce que ceux qui sont au pouvoir ne doivent jamais oublier, c'est de ne pas porter rancune.
+style: dialogue
+mask_regions: 1

@@ -1,0 +1,6 @@
+class: bulle
+bbox: [30.0194091796875, 23027, 680.763427734375, 23142]
+ocr: You need to move.
+translation: Vous devez bouger.
+style: dialogue
+mask_regions: 1

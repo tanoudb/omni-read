@@ -1,0 +1,196 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 002\\Chapitre 002_merged_part01.jpg",
+  "output": "manhwa_trad\\the_cleaner\\Chapitre 002\\Chapitre 002_merged_part01_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 37120
+  },
+  "stats": {
+    "detections": 15,
+    "translated": 14
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        7.474721272786459,
+        792,
+        690.0,
+        938
+      ],
+      "original": "EHL TT",
+      "translated": "EHL TT",
+      "confidence": 0.6244149999999999,
+      "detection_confidence": 0.715760350227356
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        4.6921030680338545,
+        7216,
+        377.501703898112,
+        7486
+      ],
+      "original": "ERGH...!!",
+      "translated": "ERGH...!!",
+      "confidence": 0.91247,
+      "detection_confidence": 0.8854235410690308
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        122.82719930013022,
+        9543,
+        589.4469706217449,
+        9847
+      ],
+      "original": "HRRRGH!",
+      "translated": "HRRRGH!",
+      "confidence": 0.98795,
+      "detection_confidence": 0.8375687599182129
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        23.753616333007812,
+        18555,
+        507.24615478515625,
+        18732
+      ],
+      "original": "GUYS.?",
+      "translated": "Des types... ?",
+      "confidence": 0.76838,
+      "detection_confidence": 0.5298750400543213
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        25.81029256184896,
+        18320,
+        469.1658020019531,
+        18687
+      ],
+      "original": "D-DAD...? WHO ARE THESE GUYS..?",
+      "translated": "P-Papa... ? Qui sont ces types... ?",
+      "confidence": 0.85462,
+      "detection_confidence": 0.9075160026550293
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        230.08468627929688,
+        18634,
+        661.9896952311199,
+        19022
+      ],
+      "original": "I'VE NO CLUE WHAT'S GOING ON RIGHT NOW...",
+      "translated": "Je n'ai aucune idée de ce qui se passe en ce moment...",
+      "confidence": 0.9144,
+      "detection_confidence": 0.8992247581481934
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        4.432830810546875,
+        19782,
+        576.3673909505209,
+        20189
+      ],
+      "original": "..BUT IF THIS HAS TO DO WITH THAT SECRET YOU MENTIONED--",
+      "translated": "...Mais si ça a un rapport avec ce secret dont tu as parlé--",
+      "confidence": 0.9263775,
+      "detection_confidence": 0.8895055055618286
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        300.7547607421875,
+        22246,
+        631.1487426757812,
+        22543
+      ],
+      "original": "ISU JIN.",
+      "translated": "Isu Jin.",
+      "confidence": 0.89578,
+      "detection_confidence": 0.8798379302024841
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        86.3885498046875,
+        22500,
+        523.2211303710938,
+        22884
+      ],
+      "original": "I'LL EXPLAIN EVERYTHING LATER. RIGHT NOW..",
+      "translated": "J'expliquerai tout plus tard. Pour l'instant...",
+      "confidence": 0.9489066666666667,
+      "detection_confidence": 0.902684211730957
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        39.81109619140625,
+        24094,
+        426.77144368489587,
+        24446
+      ],
+      "original": ".I NEED YOU TO STOP THINKING.",
+      "translated": "...J'ai besoin que tu arrêtes de réfléchir.",
+      "confidence": 0.9015400000000001,
+      "detection_confidence": 0.9049488306045532
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        139.13639068603516,
+        25346,
+        553.1141662597656,
+        25748
+      ],
+      "original": "..AND 'Nna Lsne",
+      "translated": "...Et écoute.",
+      "confidence": 0.68174,
+      "detection_confidence": 0.8750237822532654
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        7.293802897135417,
+        27438,
+        451.44673665364587,
+        27764
+      ],
+      "original": "IcHNH NOW?!",
+      "translated": "MAINTENANT ?!",
+      "confidence": 0.82309,
+      "detection_confidence": 0.8793108463287354
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        58.70488484700521,
+        32439,
+        580.6836446126302,
+        32798
+      ],
+      "original": "AAAAAAH!!!",
+      "translated": "AAAAAAH!!!",
+      "confidence": 0.93116,
+      "detection_confidence": 0.8577420115470886
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        349.2313232421875,
+        35439,
+        606.8493041992188,
+        35676
+      ],
+      "original": "ERK.!!!",
+      "translated": "ERK.!!!",
+      "confidence": 0.91242,
+      "detection_confidence": 0.9021067023277283
+    }
+  ]
+}

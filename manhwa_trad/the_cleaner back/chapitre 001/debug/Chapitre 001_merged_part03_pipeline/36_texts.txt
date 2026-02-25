@@ -1,0 +1,6 @@
+class: bulle
+bbox: [78.09710693359375, 57750, 317.73773193359375, 57982]
+ocr: ISu...
+translation: ISu...
+style: dialogue
+mask_regions: 1

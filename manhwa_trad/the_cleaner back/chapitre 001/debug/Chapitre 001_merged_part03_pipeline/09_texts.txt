@@ -1,0 +1,6 @@
+class: bulle
+bbox: [230.30100504557294, 15455, 662.4839274088542, 15746]
+ocr: THIS IS CSY NEWS. TODAY'S TOP STORY...
+translation: C'est l'actualité csy. Aujourd'hui, la nouvelle en tête...
+style: dialogue
+mask_regions: 1

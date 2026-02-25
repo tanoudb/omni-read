@@ -32,7 +32,17 @@ from utils.prompts import (
     LOCAL_LLM_PAGE_SYSTEM,
     LOCAL_LLM_SINGLE_SYSTEM,
     build_single_text_prompt,
+    # Mode Série
+    build_series_page_system,
+    build_series_single_system,
+    build_series_page_user_prompt,
 )
+
+# Import optionnel (mode série pas toujours actif)
+try:
+    from utils.series_db import SeriesDB
+except ImportError:
+    SeriesDB = None
 
 try:
     import torch
@@ -162,10 +172,11 @@ class NLLBTranslator:
         "pt": {"o", "a", "os", "as", "e", "que", "não", "uma", "com", "para"},
     }
     
-    def __init__(self, device: str = 'cuda'):
+    def __init__(self, device: str = 'cuda', series_db=None):
         self.device = device
         self.cfg = config.translation
         self.backend = getattr(self.cfg, 'backend', 'nllb')
+        self.series_db = series_db  # Mode Série
         self.tokenizer = None
         self.model = None
         self.llm_backend = "transformers"
@@ -734,11 +745,18 @@ class NLLBTranslator:
         return translation or source_text
 
     def _translate_page_with_local_llm(self, texts: List[str]) -> dict:
-        numbered_lines = [f"{idx}. {txt}" for idx, txt in enumerate(texts)]
-        user_prompt = "\n".join(numbered_lines)
-        system_prompt = LOCAL_LLM_PAGE_SYSTEM
+        # ── Construire le prompt (avec ou sans contexte série) ──
+        if self.series_db:
+            series_context = self.series_db.build_context_prompt(texts)
+            system_prompt = build_series_page_system(series_context)
+            annotations = self.series_db.build_bubble_annotations(texts)
+            user_prompt = build_series_page_user_prompt(texts, annotations)
+        else:
+            system_prompt = LOCAL_LLM_PAGE_SYSTEM
+            numbered_lines = [f"{idx}. {txt}" for idx, txt in enumerate(texts)]
+            user_prompt = "\n".join(numbered_lines)
 
-        self.last_page_payload_lines = list(numbered_lines)
+        self.last_page_payload_lines = user_prompt.splitlines()
         self.last_page_system_prompt = system_prompt
         self.last_page_user_prompt = user_prompt
         page_max_tokens = self._adaptive_page_max_tokens(texts, fallback=512)
@@ -905,25 +923,69 @@ class NLLBTranslator:
                     if m:
                         mapped[str(int(m.group(1)))] = self._clean_llm_value(m.group(2))
 
-        # Remplir les index manquants avec la source nettoyée
+        # Remplir les index manquants — retry si LLM recopie l'anglais
         final_map = {}
         for i, src in enumerate(source_texts):
             tr = self._clean_llm_value(mapped.get(str(i), ''))
+
+            # Cas 1 : traduction valide et différente de la source
+            if tr and tr.upper().strip().rstrip('.!?,') != src.upper().strip().rstrip('.!?,'):
+                final_map[str(i)] = tr
+                continue
+
+            # Cas 2 : LLM a recopié la source EN ou pas de traduction
+            # → retry en traduction unitaire (plus fiable pour les phrases courtes)
+            if self.backend == 'local_llm' and src.strip():
+                try:
+                    single_tr = self._translate_with_local_llm(src, 'en')
+                    if (single_tr
+                            and single_tr.upper().strip().rstrip('.!?,') != src.upper().strip().rstrip('.!?,')):
+                        final_map[str(i)] = single_tr
+                        continue
+                except Exception:
+                    pass
+
+            # Cas 3 : fallback — garder ce qu'on a
             final_map[str(i)] = tr if tr else src
         return final_map
 
     def translate_page_json(self, texts: List[str]) -> dict:
         if not texts:
             return {}
-        clean_inputs = [clean_ocr_text((text or '').strip()) for text in texts]
-        if self.backend == 'local_llm':
-            return self._translate_page_with_local_llm(clean_inputs)
 
-        # fallback NLLB: traduction unitaire + map JSON indexée
-        out = {}
-        for i, text in enumerate(clean_inputs):
-            out[str(i)] = self.translate(text)
-        return out
+        clean_inputs = [clean_ocr_text((text or '').strip()) for text in texts]
+
+        # ── Mode Série : glossaire forcé + phrases récurrentes ──
+        forced_indices = {}
+        if self.series_db:
+            annotations = self.series_db.build_bubble_annotations(clean_inputs)
+            for idx, ann in annotations.items():
+                forced = ann.get("forced_translation")
+                if forced:
+                    forced_indices[idx] = forced
+                repeated = ann.get("repeated_phrase")
+                if repeated and idx not in forced_indices:
+                    forced_indices[idx] = repeated
+
+        if self.backend == 'local_llm':
+            result = self._translate_page_with_local_llm(clean_inputs)
+        else:
+            # fallback NLLB: traduction unitaire
+            result = {}
+            for i, text in enumerate(clean_inputs):
+                result[str(i)] = self.translate(text)
+
+        # ── Appliquer glossaire forcé (glossaire > LLM) ──
+        for idx, forced_text in forced_indices.items():
+            result[str(idx)] = forced_text
+
+        # ── Enregistrer dans series_db ──
+        if self.series_db:
+            for i, text in enumerate(clean_inputs):
+                fr = result.get(str(i), text)
+                self.series_db.record_translation(str(i), text, fr)
+
+        return result
 
     def get_generation_seconds_total(self) -> float:
         return float(self.generation_seconds_total)
@@ -957,23 +1019,29 @@ class NLLBTranslator:
             return True
         text = text.strip()
 
+        # SFX purs (WAAAH, BOOM, KRGH) → pas de traduction
         alpha_tokens = re.findall(r"[A-Za-z]+", text.upper())
         if alpha_tokens:
             looks_like_sfx_token = all(
                 tok in self.SFX_TOKENS or re.search(r"(.)\1{2,}", tok) for tok in alpha_tokens
             )
-            has_dialogue_words = any(tok in {"I", "YOU", "WE", "HE", "SHE", "THE", "A", "AN", "AND", "BUT"} for tok in alpha_tokens)
+            has_dialogue_words = any(
+                tok in {"I", "YOU", "WE", "HE", "SHE", "THE", "A", "AN", "AND", "BUT",
+                        "MY", "YOUR", "OUR", "HIS", "HER", "WILL", "OKAY", "OK",
+                        "PLEASE", "SO", "LOOK", "FORWARD", "AGENT", "ABOUT", "IS",
+                        "IT", "TO", "NOT", "DO", "THAT", "THIS", "ARE", "WAS",
+                        "TELL", "KNOW", "WANT", "NEED", "FEEL", "THINK", "MEAN",
+                        "STILL", "HOLD", "WHAT", "HOW", "WHY", "WHO", "WELL",
+                        "JUST", "ONLY", "NEVER", "ALWAYS", "HERE", "THERE"}
+                for tok in alpha_tokens
+            )
             if looks_like_sfx_token and not has_dialogue_words:
                 return True
 
-        if self.cfg.skip_numeric_only:
-            if all(c.isdigit() or c.isspace() or c in '.,;:' for c in text):
-                return True
-        if self.cfg.skip_single_char and len(text) == 1:
+        # Pas de lettres du tout → skip
+        if not any(c.isalpha() for c in text):
             return True
-        if self.cfg.skip_if_no_letters:
-            if not any(c.isalpha() for c in text):
-                return True
+
         return False
     
     def translate(self, text: str) -> str:
@@ -988,12 +1056,52 @@ class NLLBTranslator:
         if name_key and name_key in self.name_memory:
             return self.name_memory[name_key]
 
-        # Glossaire forcé
+        # Glossaire forcé (match normalisé + insensible ponctuation/espaces)
         forced_map = getattr(self.cfg, 'forced_translations', {}) or {}
         forced_key = self._normalize_text_key(source_text)
-        forced_translation = forced_map.get(forced_key)
+
+        def _alphanumeric_norm(s: str) -> str:
+            return re.sub(r"\W+", "", (s or "").upper())
+
+        forced_translation = None
+        # 1) Try direct normalized key lookup in forced_map
+        if forced_map:
+            # Keys in forced_map may be stored in various forms; try multiple strategies
+            if forced_key in forced_map:
+                forced_translation = forced_map.get(forced_key)
+            else:
+                norm_src = _alphanumeric_norm(source_text)
+                for k, v in forced_map.items():
+                    if not k:
+                        continue
+                    if _alphanumeric_norm(k) == norm_src or _alphanumeric_norm(k) in norm_src or norm_src in _alphanumeric_norm(k):
+                        forced_translation = v
+                        break
         if forced_translation:
             return forced_translation
+
+        # 2) If SeriesDB available, try exact then fuzzy using same normalization
+        try:
+            if getattr(self, 'series_db', None):
+                exact = self.series_db.glossary.lookup(source_text.strip())
+                if exact:
+                    return exact
+
+                # Fuzzy: check alphanumeric-normalized containment both ways
+                norm_src = _alphanumeric_norm(source_text)
+                best = None
+                for k, v in self.series_db.glossary.entries.items():
+                    if not k:
+                        continue
+                    norm_k = _alphanumeric_norm(k)
+                    if norm_k == norm_src or norm_k in norm_src or norm_src in norm_k:
+                        # prefer longest key (more specific)
+                        if best is None or len(k) > len(best[0]):
+                            best = (k, v)
+                if best:
+                    return best[1]
+        except Exception:
+            pass
 
         # Noms propres simples (ex: "Miso.") : conserver tel quel
         if self._is_single_proper_name(source_text):

@@ -1,0 +1,398 @@
+{
+  "source": "manhwa\\the_cleaner\\chapitre 001\\Chapitre 001_merged_part04.jpg",
+  "output": "manhwa_trad\\the_cleaner\\chapitre 001\\Chapitre 001_merged_part04_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 57600
+  },
+  "stats": {
+    "image": "Chapitre 001_merged_part04.jpg",
+    "width": 690,
+    "height": 57600,
+    "detections": 44,
+    "translatable": 29,
+    "translated": 29,
+    "skipped": 0,
+    "skip_reasons": {},
+    "time_seconds": 0
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        115.4364013671875,
+        448,
+        577.5944010416667,
+        878
+      ],
+      "original": "EVERY PARENT CARRIES AT LEAST ONE SECRET FROM THEIR CHILDREN.",
+      "translated": "Chaque parent cache au moins un secret de ses enfants.",
+      "confidence": 0.9658875,
+      "detection_confidence": 0.9095691442489624
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        210.9326934814453,
+        2062,
+        663.4986368815105,
+        2480
+      ],
+      "original": "I'D BE ABLE TO EXPLAIN IT TO YOU SOMEDAY...",
+      "translated": "Un jour, je pourrai te l'expliquer...",
+      "confidence": 0.8841600000000001,
+      "detection_confidence": 0.9133521318435669
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        71.39124552408855,
+        3735,
+        609.9480692545574,
+        4130
+      ],
+      "original": "NOT SLRE ILL BE ABLE TO NOW. DUN",
+      "translated": "Je ne suis pas sûr que je le puisse maintenant. dun",
+      "confidence": 0.95444,
+      "detection_confidence": 0.44424277544021606
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        84.36589558919272,
+        3502,
+        607.7544148763021,
+        3983
+      ],
+      "original": "...BUT I'M NOT SURE I'LL BE ABLE TO NOW.",
+      "translated": "...Mais je ne suis pas sûr de pouvoir le faire maintenant.",
+      "confidence": 0.9291475,
+      "detection_confidence": 0.8498793244361877
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        79.99917602539062,
+        5921,
+        366.3413391113281,
+        6082
+      ],
+      "original": "GLUNK",
+      "translated": "GLUNK",
+      "confidence": 0.92495,
+      "detection_confidence": 0.4614301025867462
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        269.6378580729167,
+        9410,
+        638.4318033854167,
+        9748
+      ],
+      "original": "WH-WHO ARE THESE GUYS?!",
+      "translated": "Qui diable sont ces types ? !",
+      "confidence": 0.9232199999999999,
+      "detection_confidence": 0.905771017074585
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        17.255961100260418,
+        10593,
+        465.062255859375,
+        11004
+      ],
+      "original": "DID THE YOLNGCHAIRMAN JINSEND YOU ALL.",
+      "translated": "Le jeune chairman Jin vous a-t-il tous convaincus.",
+      "confidence": 0.9037299999999999,
+      "detection_confidence": 0.9009754657745361
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        132.40690867106122,
+        11472,
+        558.5079956054688,
+        11861
+      ],
+      "original": "TO KILL ME?",
+      "translated": "Me tuer ?",
+      "confidence": 0.90249,
+      "detection_confidence": 0.9062330722808838
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        56.3836669921875,
+        14744,
+        634.8054504394531,
+        15274
+      ],
+      "original": ".THINGS MOVED MORE QLICKLY THAN WE'D PLANNED, YOU SEE.",
+      "translated": "Les choses se sont mises en mouvement plus rapidement que prévu, tu vois.",
+      "confidence": 0.9329525000000001,
+      "detection_confidence": 0.9041922092437744
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        43.83921305338542,
+        16503,
+        486.339111328125,
+        16881
+      ],
+      "original": "SINCE CHAIRMAN DAEHO IS FINALLYDEAD,",
+      "translated": "Depuis que le président Daeho est enfin mort,",
+      "confidence": 0.9677600000000001,
+      "detection_confidence": 0.8923555612564087
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        161.28122965494794,
+        16820,
+        632.1260579427084,
+        17237
+      ],
+      "original": "THE DIRECTORS NEED YOLR HEAD TO PROVE THEIR LOYALTY.",
+      "translated": "Les directeurs ont besoin de ta tête pour prouver leur loyauté.",
+      "confidence": 0.9552849999999999,
+      "detection_confidence": 0.8989689350128174
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        61.68463134765625,
+        18952,
+        403.1454772949219,
+        19266
+      ],
+      "original": "YOU KNOW VERY WELL..",
+      "translated": "Vous le savez parfaitement..",
+      "confidence": 0.8905000000000001,
+      "detection_confidence": 0.8811531662940979
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        175.07466634114584,
+        19196,
+        616.8282063802084,
+        19588
+      ],
+      "original": "THAT THOSE IN POWER NEVER FOR GET A GRUDGE.",
+      "translated": "Ce que ceux qui sont au pouvoir ne doivent jamais oublier, c'est de ne pas porter rancune.",
+      "confidence": 0.936125,
+      "detection_confidence": 0.9006777405738831
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        74.26657104492188,
+        21309,
+        411.71807861328125,
+        21621
+      ],
+      "original": "ESPECIALLY.",
+      "translated": "ESPECIALLY.",
+      "confidence": 0.93489,
+      "detection_confidence": 0.8965469598770142
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        225.52220662434897,
+        22608,
+        606.9149271647136,
+        22953
+      ],
+      "original": ".WHEN FAMILY IS INVOLVED.",
+      "translated": "Quand la famille est impliquée.",
+      "confidence": 0.93672,
+      "detection_confidence": 0.909295380115509
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        117.57471720377605,
+        26005,
+        573.0648803710938,
+        26269
+      ],
+      "original": "iiavo",
+      "translated": "iiavo",
+      "confidence": 0.68955,
+      "detection_confidence": 0.8686413764953613
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        33.840240478515625,
+        37608,
+        400.7403869628906,
+        37919
+      ],
+      "original": "SO IT'S TRUE.",
+      "translated": "C'est bien vrai.",
+      "confidence": 0.88795,
+      "detection_confidence": 0.8843030333518982
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        280.5295817057292,
+        39343,
+        649.26513671875,
+        39671
+      ],
+      "original": "….AGENT I O 1.",
+      "translated": "…Agent I o 1.",
+      "confidence": 0.86816,
+      "detection_confidence": 0.9073511958122253
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        30.236307779947918,
+        40729,
+        514.4954935709636,
+        41177
+      ],
+      "original": "ALL THE STORIES ABOUT YOU WERE REAL.",
+      "translated": "Toutes les histoires sur toi étaient réelles.",
+      "confidence": 0.938515,
+      "detection_confidence": 0.8974261283874512
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        87.15108235677084,
+        41596,
+        604.356180826823,
+        42079
+      ],
+      "original": "WHAT THE HELL ISHAPPENINGRIGHT iiMON",
+      "translated": "Qu'est-ce que diable se passe-t-il ici, putain?!",
+      "confidence": 0.9142233333333333,
+      "detection_confidence": 0.9074118733406067
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        125.865478515625,
+        42827,
+        675.1556396484375,
+        43339
+      ],
+      "original": "DAD CUTA GUY IN TWO WITH ONE SWINGOF THAT AXE.!!",
+      "translated": "Papa a tranché ce type en deux d'un seul coup de cette hache !!",
+      "confidence": 0.9489325,
+      "detection_confidence": 0.882860004901886
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        10.6878662109375,
+        43684,
+        486.69769287109375,
+        44126
+      ],
+      "original": "IWASN'T HAPPY ABOUT THE WHOLE LOT OF US BEING SENT OUT...",
+      "translated": "Je n'étais pas content du tout de voir tous nous être envoyés...",
+      "confidence": 0.933694,
+      "detection_confidence": 0.91265469789505
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        212.00660705566406,
+        45246,
+        672.3543294270834,
+        45667
+      ],
+      "original": "TO TAKE OUT A SINGLETRAITOR..",
+      "translated": "Pour sortir un traître...",
+      "confidence": 0.912465,
+      "detection_confidence": 0.8962547779083252
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        103.40667724609375,
+        46039,
+        587.8688557942709,
+        46488
+      ],
+      "original": "…..BUT THIS MAKES IT ALL WORTH THE TROUBLE.",
+      "translated": "Mais cela en vaut la peine.",
+      "confidence": 0.9087299999999999,
+      "detection_confidence": 0.907836377620697
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        85.29429117838542,
+        48325,
+        605.961405436198,
+        48808
+      ],
+      "original": "….YOU'RE GOING TO NEED MORE THAN THAT.",
+      "translated": "….YOU'RE GOING TO NEED MORE THAN THAT.",
+      "confidence": 0.9128275,
+      "detection_confidence": 0.8977077007293701
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        96.41225179036459,
+        49722,
+        597.1885681152344,
+        50186
+      ],
+      "original": "SO YOU'RE AFTER MY HEAD, ARE YOU?",
+      "translated": "Tu veux ma tête, c'est ça ?",
+      "confidence": 0.9183133333333333,
+      "detection_confidence": 0.8829911351203918
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        22.55980173746745,
+        53353,
+        437.4387613932292,
+        53734
+      ],
+      "original": "AND YOU THOUGHT THIS WOLLD BE ENOUGH?",
+      "translated": "Et tu pensais que ça serait suffisant ?",
+      "confidence": 0.9184375,
+      "detection_confidence": 0.8954268097877502
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        113.33577473958334,
+        54707,
+        604.2174275716146,
+        55176
+      ],
+      "original": "I'LL SHOW YOU AMATEURS..",
+      "translated": "Je vais vous montrer les amateurs...",
+      "confidence": 0.87296,
+      "detection_confidence": 0.883686900138855
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        27.734375,
+        56672,
+        660.3548177083334,
+        57279
+      ],
+      "original": "...WHAT REAL STRENGTH LOOKS LIKE.",
+      "translated": "...Ce que la véritable force ressemble à.",
+      "confidence": 0.9286133333333333,
+      "detection_confidence": 0.8997793793678284
+    }
+  ]
+}

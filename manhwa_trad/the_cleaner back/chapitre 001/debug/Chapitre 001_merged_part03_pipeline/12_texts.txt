@@ -1,0 +1,6 @@
+class: bulle
+bbox: [44.0440673828125, 18785, 500.25531005859375, 19092]
+ocr: ….OF THE LATE DAEHO JIN AND HEIRTO CHEONGDO.
+translation: ...Du daeho jin décédé et de son héritier cheongdo.
+style: dialogue
+mask_regions: 1

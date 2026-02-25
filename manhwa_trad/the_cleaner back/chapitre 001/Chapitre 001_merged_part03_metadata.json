@@ -1,0 +1,491 @@
+{
+  "source": "manhwa\\the_cleaner\\chapitre 001\\Chapitre 001_merged_part03.jpg",
+  "output": "manhwa_trad\\the_cleaner\\chapitre 001\\Chapitre 001_merged_part03_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 58880
+  },
+  "stats": {
+    "image": "Chapitre 001_merged_part03.jpg",
+    "width": 690,
+    "height": 58880,
+    "detections": 48,
+    "translatable": 37,
+    "translated": 36,
+    "skipped": 1,
+    "skip_reasons": {
+      "empty": 1
+    },
+    "time_seconds": 0
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        155.16098022460938,
+        5797,
+        532.8996276855469,
+        6145
+      ],
+      "original": "OOPS... ITBURST.",
+      "translated": "Oups... Je me suis éclaté.",
+      "confidence": 0.9709031283855438,
+      "detection_confidence": 0.9173871278762817
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        43.506978352864586,
+        8119,
+        499.5416259765625,
+        8503
+      ],
+      "original": "HMM... YOU'VE GOTTEN A LOT STRONGER, I'LL GIVE YOU THAT.",
+      "translated": "Hmm... tu as beaucoup grandi en force, je te l'accorde.",
+      "confidence": 0.9410316586494446,
+      "detection_confidence": 0.9117023348808289
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        220.3112284342448,
+        8434,
+        687.2229512532552,
+        8841
+      ],
+      "original": "GET SOME REST BEFORE YOUR EVENING WEIGHT TRAINING.",
+      "translated": "Prends ta réplique avant ton entraînement de poids cet evening.",
+      "confidence": 0.9743660539388657,
+      "detection_confidence": 0.9007251262664795
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        24.71356201171875,
+        9895,
+        402.4248046875,
+        10160
+      ],
+      "original": "WHAT?!",
+      "translated": "WHAT?!",
+      "confidence": 0.9531963467597961,
+      "detection_confidence": 0.8767302632331848
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        23.065155029296875,
+        11470,
+        500.9418029785156,
+        11753
+      ],
+      "original": "IFYOU'RE GOING TO WORK ME SO HARD,CAN'T YOU ATLEASTTELLME",
+      "translated": "Si tu me travailles si dur, ne pouvais-tu au moins me le dire?",
+      "confidence": 0.9508478194475174,
+      "detection_confidence": 0.8963159322738647
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        148.25785319010419,
+        11892,
+        672.133280436198,
+        12221
+      ],
+      "original": "SERIOUSLY YOUDIDN'T LET ME GO TO COLLEGE OR EVEN GO PRO. WHAT'S THE POINT OF ALL THIS?!",
+      "translated": "Sérieusement, tu n'as pas même permis que je fasse des études ou m'y essayer professionnellement. Quelle est l'utilité de tout ça?!",
+      "confidence": 0.931687593460083,
+      "detection_confidence": 0.9138628244400024
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        57.65239715576172,
+        13054,
+        453.77695719401044,
+        13420
+      ],
+      "original": "YOU'LL FIND OUT WHEN THE TIME IS RIGHT, SON.",
+      "translated": "Tu le sauras à temps, mon fils.",
+      "confidence": 0.9593010544776917,
+      "detection_confidence": 0.9107587337493896
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        31.075032552083336,
+        13926,
+        627.739969889323,
+        14284
+      ],
+      "original": "I'M GONNA END UP AN OLD UNMARRIEDMAN AT THIS RATE!",
+      "translated": "Je vais finir par être un vieux garçon à ce rythme !",
+      "confidence": 0.9548107981681824,
+      "detection_confidence": 0.8828667402267456
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        230.30100504557294,
+        15455,
+        662.4839274088542,
+        15746
+      ],
+      "original": "THIS IS CSY NEWS. TODAY'S TOP STORY...",
+      "translated": "C'est l'actualité csy. Aujourd'hui, la nouvelle en tête...",
+      "confidence": 0.9439690858125687,
+      "detection_confidence": 0.8647131323814392
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        4.018656412760417,
+        16226,
+        555.674540201823,
+        16596
+      ],
+      "original": "DAESEONG JIN HAS TAKEN OVER AS THE NEW CHAIRMAN OF THE CHEONGDO GROUP.",
+      "translated": "Daeseong Jin a pris la tête du nouveau groupe cheongdo.",
+      "confidence": 0.9577379584312439,
+      "detection_confidence": 0.8610385656356812
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        162.25677490234375,
+        17714,
+        646.3162231445312,
+        18034
+      ],
+      "original": "CHAIRMAN DAESEONG JINIS THE GRANDSON...",
+      "translated": "Le président Daeseong jinis est le petit-fils...",
+      "confidence": 0.9615403612454733,
+      "detection_confidence": 0.8755215406417847
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        44.0440673828125,
+        18785,
+        500.25531005859375,
+        19092
+      ],
+      "original": "….OF THE LATE DAEHO JIN AND HEIRTO CHEONGDO.",
+      "translated": "...Du daeho jin décédé et de son héritier cheongdo.",
+      "confidence": 0.9415310919284821,
+      "detection_confidence": 0.86482173204422
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        70.17166137695312,
+        19577,
+        618.2811482747396,
+        19938
+      ],
+      "original": "THE CHAIRMAN STATED THAT HE IS COMMITTED TOGUIDING THE GROUPINTO ANEWERA.",
+      "translated": "Le président a déclaré qu'il était déterminé à guider le groupe vers une nouvelle ère.",
+      "confidence": 0.956843900680542,
+      "detection_confidence": 0.8928179740905762
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        14.51934814453125,
+        22831,
+        690.0,
+        23019
+      ],
+      "original": "The plan's gone awry. They're going to do it tonight.",
+      "translated": "Le plan a mal tourné. Ils vont le faire ce soir.",
+      "confidence": 0.9440426230430603,
+      "detection_confidence": 0.7500772476196289
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        30.0194091796875,
+        23027,
+        680.763427734375,
+        23142
+      ],
+      "original": "You need to move.",
+      "translated": "Vous devez bouger.",
+      "confidence": 0.9912746548652649,
+      "detection_confidence": 0.7098844051361084
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        108.3470458984375,
+        23695,
+        361.1723937988281,
+        23928
+      ],
+      "original": "SON...",
+      "translated": "SON...",
+      "confidence": 0.9108078479766846,
+      "detection_confidence": 0.9037665128707886
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        362.41375732421875,
+        24872,
+        646.5530395507812,
+        25138
+      ],
+      "original": "WHAT NOW?",
+      "translated": "WHAT NOW?",
+      "confidence": 0.9445877075195312,
+      "detection_confidence": 0.9049890041351318
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        39.86333211263021,
+        25624,
+        451.50156656901044,
+        25999
+      ],
+      "original": "GO SHOWER AND GETDRESSED.",
+      "translated": "Prends ta douche et habille-toi.",
+      "confidence": 0.9625218212604523,
+      "detection_confidence": 0.9141398668289185
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        406.5299377441406,
+        26893,
+        650.8028564453125,
+        27121
+      ],
+      "original": "HUH?",
+      "translated": "HUH?",
+      "confidence": 0.9534949064254761,
+      "detection_confidence": 0.902428388595581
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        32.079671223958336,
+        27558,
+        503.3635965983073,
+        27984
+      ],
+      "original": "TRAINING'S CANCELED.LET'S GO OUTFORDINNER.",
+      "translated": "La formation est annulée. On sort dîner.",
+      "confidence": 0.9646956125895182,
+      "detection_confidence": 0.9105691909790039
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        216.93954467773438,
+        30247,
+        662.5386047363281,
+        30596
+      ],
+      "original": "HA,ICAN'T EVEN REMEMBER THE LAST TIME WE WENT OUT LIKE THIS!",
+      "translated": "Hé, je ne me souviens même plus de la dernière fois où nous sommes sortis comme ça !",
+      "confidence": 0.9361972451210022,
+      "detection_confidence": 0.8902367353439331
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        13.680165608723959,
+        30548,
+        477.29497273763025,
+        30939
+      ],
+      "original": "AGUY'S GOTTATAKEA BREAKSOMETIMES, YOu KNOW?",
+      "translated": "Aguy's gotta take a breakparfois, tu le sais ?",
+      "confidence": 0.9000395685434341,
+      "detection_confidence": 0.8992794156074524
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        208.68911743164062,
+        32494,
+        637.4166361490886,
+        32854
+      ],
+      "original": "WHY CAN'T WE GO OUT LIKE THIS MOREOFTEN, HUH?",
+      "translated": "Pourquoi ne pouvons-nous pas sortir comme ça plus souvent, hein ?",
+      "confidence": 0.9473165571689606,
+      "detection_confidence": 0.9014617204666138
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        56.228841145833336,
+        32814,
+        481.22690836588544,
+        33197
+      ],
+      "original": "LET'S DO THIS AGAIN NEXT WEEK!",
+      "translated": "On se revoit la semaine prochaine !",
+      "confidence": 0.9435445070266724,
+      "detection_confidence": 0.909707248210907
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        83.5496826171875,
+        34406,
+        352.391357421875,
+        34655
+      ],
+      "original": "SURE...",
+      "translated": "SURE...",
+      "confidence": 0.9219648241996765,
+      "detection_confidence": 0.8994239568710327
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        104.73897298177084,
+        36159,
+        585.5159505208334,
+        36606
+      ],
+      "original": "...IF WE'RE STILL HERE BY THEN.",
+      "translated": "...Si nous sommes encore ici à ce moment-là.",
+      "confidence": 0.9291253288586935,
+      "detection_confidence": 0.9140808582305908
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        14.180450439453125,
+        40745,
+        402.9730224609375,
+        41073
+      ],
+      "original": "HUH? WHAT'RE YOU DOING, DAD?",
+      "translated": "Huh ? Qu'est-ce que tu fais, papa ?",
+      "confidence": 0.9253611962000529,
+      "detection_confidence": 0.8997190594673157
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        204.60731506347656,
+        41009,
+        577.12939453125,
+        41343
+      ],
+      "original": "THIS ISN'T THE WAY TO THE RESTAURANT!",
+      "translated": "Ce n'est pas la voie menant au restaurant !",
+      "confidence": 0.9499874711036682,
+      "detection_confidence": 0.8779820203781128
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        269.11516825358075,
+        42265,
+        637.0975748697917,
+        42605
+      ],
+      "original": "WHY AREN'T YOU SAYING ANYTHING--",
+      "translated": "Pourquoi tu ne dis rien--",
+      "confidence": 0.935894250869751,
+      "detection_confidence": 0.9205254912376404
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        65.06208038330078,
+        43181,
+        306.6744384765625,
+        43401
+      ],
+      "original": "HUH?",
+      "translated": "HUH?",
+      "confidence": 0.944398045539856,
+      "detection_confidence": 0.8978703618049622
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        100.9271240234375,
+        43725,
+        588.9543660481771,
+        44174
+      ],
+      "original": "WHAT THE... WHY ARE THERE A WHOLE BUNCH OFBLACK CARS FOLLOWING US..?",
+      "translated": "Qu'est-ce que... pourquoi on est suivis par une dizaine de voitures noires..?",
+      "confidence": 0.9421173532803854,
+      "detection_confidence": 0.9272959232330322
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        206.58276875813803,
+        53797,
+        606.237284342448,
+        54036
+      ],
+      "original": "DAD!!",
+      "translated": "DAD!!",
+      "confidence": 0.9329692125320435,
+      "detection_confidence": 0.860293447971344
+    },
+    {
+      "class": "out_text",
+      "bbox": [
+        429.5659484863281,
+        54172,
+        641.49365234375,
+        54274
+      ],
+      "original": "CLUNK",
+      "translated": "CLUNK",
+      "confidence": 0.9856902956962585,
+      "detection_confidence": 0.3013870418071747
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        4.196116129557292,
+        55605,
+        558.8323974609375,
+        55938
+      ],
+      "original": "SERIOUSLY, WHAT'S GOING ON?!",
+      "translated": "Sérieusement, qu'est-ce qui se passe?!",
+      "confidence": 0.9545239806175232,
+      "detection_confidence": 0.8634896874427795
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        176.44999186197919,
+        55886,
+        690.0,
+        56248
+      ],
+      "original": "PLEASE, JUSTEXPLAIN SOMETHING TO ME FOR ONCE!!",
+      "translated": "S'il te plaît, explique-moi une fois ce que c'est !",
+      "confidence": 0.974296897649765,
+      "detection_confidence": 0.8728418350219727
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        78.09710693359375,
+        57750,
+        317.73773193359375,
+        57982
+      ],
+      "original": "ISu...",
+      "translated": "ISu...",
+      "confidence": 0.8252286911010742,
+      "detection_confidence": 0.8887712359428406
+    }
+  ]
+}
