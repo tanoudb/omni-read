@@ -512,27 +512,33 @@ class TextRenderer:
         crop = img[cy1:cy2, cx1:cx2]
         if crop.size == 0:
             crop = img[y1:y2, x1:x2]
-        
-        bg_color = tuple(int(x) for x in np.median(crop.reshape(-1, 3), axis=0))
-        luminosity = sum(bg_color) / 3
-        
-        if luminosity > self.cfg.luminosity_threshold:
-            tc, oc = (0, 0, 0), (255, 255, 255)
-        else:
-            tc, oc = (255, 255, 255), (0, 0, 0)
+        # ⚠️ CORRECTION: OpenCV uses BGR; convert median BGR -> RGB for PIL and luma calcs
+        bg_bgr = np.median(crop.reshape(-1, 3), axis=0)
+        bg_rgb = (int(bg_bgr[2]), int(bg_bgr[1]), int(bg_bgr[0]))
+        luminosity = sum(bg_rgb) / 3
 
-        # Ensure sufficient contrast between text and background; if not, fallback to defaults
+        # If the region is very close to pure white or pure black, force obvious contrast
+        if all(v >= 240 for v in bg_rgb):
+            tc, oc = (0, 0, 0), (255, 255, 255)
+        elif all(v <= 15 for v in bg_rgb):
+            tc, oc = (255, 255, 255), (0, 0, 0)
+        else:
+            if luminosity > self.cfg.luminosity_threshold:
+                tc, oc = (0, 0, 0), (255, 255, 255)
+            else:
+                tc, oc = (255, 255, 255), (0, 0, 0)
+
+        # luma expects RGB ordering
         def luma(c):
             return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
 
-        bg_l = luma(bg_color)
-        tc_l = luma(tc)
-        if abs(bg_l - tc_l) < 40:
-            # Not enough contrast — use configured defaults
+        if abs(luma(bg_rgb) - luma(tc)) < 40:
+            # Assume configured defaults are already RGB
             tc = tuple(self.cfg.default_text_color)
             oc = tuple(self.cfg.default_outline_color)
-        
-        return (tc[2], tc[1], tc[0]), (oc[2], oc[1], oc[0])
+
+        # Return RGB tuples suitable for PIL
+        return tc, oc
     
     # ─────────────────────────────────────────────────────────────────────────
     # SIZING
@@ -765,6 +771,28 @@ class TextRenderer:
             text_color = text_color_rgb
             avg_luma = (text_color[0] + text_color[1] + text_color[2]) / 3
             outline_color = (0, 0, 0) if avg_luma > 140 else (255, 255, 255)
+
+        # For bubble class names, prefer single-color text (no visible outline)
+        try:
+            cls = (class_name or "").lower()
+            if 'bub' in cls or 'bulle' in cls or 'bubble' in cls:
+                # Only remove outline if there is sufficient contrast between text and background.
+                # Otherwise keep a contrasting outline so text remains readable.
+                outline_color = text_color
+                try:
+                    crop = img[y1:y2, x1:x2]
+                    bg_bgr = np.median(crop.reshape(-1, 3), axis=0)
+                    bg_rgb = (int(bg_bgr[2]), int(bg_bgr[1]), int(bg_bgr[0]))
+                    def luma(c):
+                        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+                    if abs(luma(bg_rgb) - luma(text_color)) < 40:
+                        # Not enough contrast: choose black or white outline against text
+                        outline_color = (0, 0, 0) if luma(text_color) > 128 else (255, 255, 255)
+                except Exception:
+                    # if anything goes wrong, keep the original outline_color (text_color)
+                    pass
+        except Exception:
+            pass
         
         bw, bh = x2 - x1, y2 - y1
         if text_style == "dialogue":
@@ -842,12 +870,12 @@ class TextRenderer:
             xp = max(ix1 + self.cfg.padding_horizontal, min(xp, ix2 - lw - self.cfg.padding_horizontal))
             yp = max(iy1 + self.cfg.padding_vertical, min(yp, iy2 - lh - self.cfg.padding_vertical))
             
-            if self.cfg.enable_outline:
-                for ox in range(-self.cfg.outline_width, self.cfg.outline_width + 1):
-                    for oy in range(-self.cfg.outline_width, self.cfg.outline_width + 1):
-                        if ox != 0 or oy != 0:
-                            draw.text((xp + ox, yp + oy), line, font=font, fill=outline_color)
-            
-            draw.text((xp, yp), line, font=font, fill=text_color)
+            # ⚠️ CORRECTION: Use Pillow native stroke parameters for clean outlines
+            if self.cfg.enable_outline and outline_color != text_color:
+                draw.text((xp, yp), line, font=font, fill=text_color,
+                          stroke_width=self.cfg.outline_width,
+                          stroke_fill=outline_color)
+            else:
+                draw.text((xp, yp), line, font=font, fill=text_color)
         
         return ImageUtils.pil_to_cv2(img_pil)

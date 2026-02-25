@@ -1,0 +1,222 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 003\\Chapitre 003_merged_part03.jpg",
+  "output": "manhwa_trad\\the_cleaner\\Chapitre 003\\Chapitre 003_merged_part03_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 40960
+  },
+  "stats": {
+    "detections": 17,
+    "translated": 16
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        158.62147013346356,
+        2151,
+        690.0,
+        2657
+      ],
+      "original": "IT ALL FEELS LIKEADREAM,THEN IT HITS ME AGAIN ALL ATONCE.",
+      "translated": "Tout ça me semble être un rêve, puis ça me frappe de nouveau d'un coup.",
+      "confidence": 0.9593449234962463,
+      "detection_confidence": 0.899389922618866
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        5.21209716796875,
+        3259,
+        517.3521931966146,
+        3741
+      ],
+      "original": "WHAT IF THOSE GUYS COME AFTER ME AGAIN?",
+      "translated": "Et si ces types reviennent me chercher ?",
+      "confidence": 0.9668336709340414,
+      "detection_confidence": 0.8982600569725037
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        52.693023681640625,
+        4938,
+        642.0218912760417,
+        5497
+      ],
+      "original": "IF THEY DO, I NEED TO MAKE SURE SOYEONDOESN'T GET CAUGHTUP IN IT.",
+      "translated": "S'ils reviennent, je dois m'assurer que Soyeon ne soit pas mêlée à ça.",
+      "confidence": 0.941250741481781,
+      "detection_confidence": 0.9111468195915222
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        173.270263671875,
+        6163,
+        678.2661946614584,
+        6650
+      ],
+      "original": "THAT'S THE ONE THING I KNOW FOR CERTAIN RIGHT NOW.",
+      "translated": "C'est la seule chose dont je suis certain pour l'instant.",
+      "confidence": 0.9768998473882675,
+      "detection_confidence": 0.8663856983184814
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        195.28656005859375,
+        7375,
+        495.09503173828125,
+        7651
+      ],
+      "original": "TIME FOR YOURIV.",
+      "translated": "C'est l'heure de votre intraveineuse.",
+      "confidence": 0.9777475595474243,
+      "detection_confidence": 0.89394211769104
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        28.094207763671875,
+        9009,
+        309.9323425292969,
+        9290
+      ],
+      "original": "CLACK",
+      "translated": "CLAC",
+      "confidence": 0.9808425903320312,
+      "detection_confidence": 0.8827436566352844
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        404.50634765625,
+        9649,
+        636.662353515625,
+        9865
+      ],
+      "original": "IV..?",
+      "translated": "Intraveineuse... ?",
+      "confidence": 0.8204808235168457,
+      "detection_confidence": 0.904452919960022
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        123.8568115234375,
+        10462,
+        564.3678792317709,
+        10868
+      ],
+      "original": "BUT THE NURSE SAID I DIDN'T NEED IT ANY MORE.",
+      "translated": "Mais l'infirmière a dit que je n'en avais plus besoin.",
+      "confidence": 0.9542283614476522,
+      "detection_confidence": 0.9060842990875244
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        151.71656290690106,
+        12221,
+        534.863993326823,
+        12575
+      ],
+      "original": "...MA'AM?",
+      "translated": "...Madame ?",
+      "confidence": 0.8100669384002686,
+      "detection_confidence": 0.8929501175880432
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        9.0460205078125,
+        19625,
+        540.4545593261719,
+        19979
+      ],
+      "original": "DIE-!!",
+      "translated": "MEURS-!!",
+      "confidence": 0.9696077704429626,
+      "detection_confidence": 0.8083521127700806
+    },
+    {
+      "class": "System",
+      "bbox": [
+        286.1466064453125,
+        22791,
+        661.6690063476562,
+        23077
+      ],
+      "original": "STAGGER",
+      "translated": "CHANCELLEMENT",
+      "confidence": 0.9979281425476074,
+      "detection_confidence": 0.41664478182792664
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        48.96860758463542,
+        24585,
+        607.7822875976562,
+        24978
+      ],
+      "original": "WHAT THE HELL IS WRONG WITH YOU? WHO EVEN ARE YOU?!",
+      "translated": "Mais qu'est-ce qui te prend ?! Qui es-tu, bon sang ?!",
+      "confidence": 0.901317685842514,
+      "detection_confidence": 0.8886629939079285
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        72.55482991536459,
+        28869,
+        586.194559733073,
+        29240
+      ],
+      "original": "SOYEON!!",
+      "translated": "SOYEON !!",
+      "confidence": 0.9502803087234497,
+      "detection_confidence": 0.8744606375694275
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        69.95534261067709,
+        32324,
+        589.3212890625,
+        32683
+      ],
+      "original": "yOu LITTLE.!!",
+      "translated": "Petite... !!",
+      "confidence": 0.7890006303787231,
+      "detection_confidence": 0.8754286766052246
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        31.167195638020836,
+        38232,
+        481.85506184895837,
+        38649
+      ],
+      "original": "HAA..Hâ–³A... WHO IS THIS LADY? WHAT'S HER DEAL?!",
+      "translated": "Haa... Haa... Qui est cette femme ? Qu'est-ce qu'elle veut ?!",
+      "confidence": 0.9118210226297379,
+      "detection_confidence": 0.9148634672164917
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        251.87777201334637,
+        40386,
+        635.09521484375,
+        40749
+      ],
+      "original": "I'LL TAKE HER IN TO THE STATION--",
+      "translated": "Je vais l'emmener au poste...",
+      "confidence": 0.9388954838116964,
+      "detection_confidence": 0.9143884778022766
+    }
+  ]
+}

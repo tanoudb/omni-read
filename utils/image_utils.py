@@ -155,6 +155,45 @@ class ImageUtils:
             color = np.median(crop.reshape(-1, 3), axis=0)
         
         return tuple(map(int, color))
+
+    @staticmethod
+    def detect_border_color(img: np.ndarray, x1: int, y1: int, x2: int, y2: int,
+                            thickness: int = 6) -> Tuple[int, int, int]:
+        """
+        Échantillonne la zone immédiatement autour du cadre donné (épaisseur `thickness`)
+        et retourne la couleur médiane des pixels de bord (utile pour retrouver la
+        couleur du contour de bulle).
+        """
+        h, w = img.shape[:2]
+        xa = max(0, x1 - thickness)
+        ya = max(0, y1 - thickness)
+        xb = min(w, x2 + thickness)
+        yb = min(h, y2 + thickness)
+
+        outer = img[ya:yb, xa:xb]
+        if outer.size == 0:
+            return (0, 0, 0)
+
+        # Créer un masque qui exclut l'intérieur du cadre pour ne garder que la bordure
+        mask = np.ones(outer.shape[:2], dtype=bool)
+        inner_x1 = x1 - xa
+        inner_y1 = y1 - ya
+        inner_x2 = inner_x1 + (x2 - x1)
+        inner_y2 = inner_y1 + (y2 - y1)
+        inner_x1 = max(0, inner_x1)
+        inner_y1 = max(0, inner_y1)
+        inner_x2 = min(outer.shape[1], inner_x2)
+        inner_y2 = min(outer.shape[0], inner_y2)
+        if inner_x2 > inner_x1 and inner_y2 > inner_y1:
+            mask[inner_y1:inner_y2, inner_x1:inner_x2] = False
+
+        pixels = outer[mask].reshape(-1, 3)
+        if pixels.size == 0:
+            return (0, 0, 0)
+
+        color = np.median(pixels, axis=0)
+        # color is in BGR (cv2). Return as RGB to be consistent with PIL usage.
+        return tuple(map(int, color[::-1]))
     
     @staticmethod
     def auto_text_color(bg_color: Tuple[int, int, int], 

@@ -19,7 +19,7 @@
         6145
       ],
       "original": "OOPS... IT BURST.",
-      "translated": "OUPS... Ça a éclaté.",
+      "translated": "OUPS... IL A ÉCLATÉ.",
       "confidence": 0.9709031283855438,
       "detection_confidence": 0.9173871278762817
     },
@@ -32,7 +32,7 @@
         8503
       ],
       "original": "HMM... YOU'VE GOTTEN A LOT STRONGER, I'LL GIVE YOU THAT.",
-      "translated": "Hmm... Tu es devenu beaucoup plus fort, je te l'accorde.",
+      "translated": "HMM... TU ES DEVENU BEAUCOUP PLUS FORT, JE TE L'ACCORDE.",
       "confidence": 0.9410316586494446,
       "detection_confidence": 0.9117023348808289
     },
@@ -45,7 +45,7 @@
         8841
       ],
       "original": "GET SOME REST BEFORE YOUR EVENING WEIGHT TRAINING.",
-      "translated": "Repose-toi avant ton entraînement de musculation du soir.",
+      "translated": "REPOSE-TOI AVANT TON ENTRAÎNEMENT DE MUSCULATION DU SOIR.",
       "confidence": 0.9743660539388657,
       "detection_confidence": 0.9007251262664795
     },
@@ -58,7 +58,7 @@
         10160
       ],
       "original": "WHAT?!",
-      "translated": "Quoi ?!",
+      "translated": "QUOI ?!",
       "confidence": 0.9531963467597961,
       "detection_confidence": 0.8767302632331848
     },
@@ -71,7 +71,7 @@
         11753
       ],
       "original": "IFYOU'RE GOING TO WORK ME SO HARD,CAN'T YOU AT LEAST TELL ME",
-      "translated": "Si tu vas me faire travailler si dur, ne peux-tu pas au moins me dire",
+      "translated": "SI TU VAS ME FAIRE BOSSER COMME UN FOU, TU PEUX PAS AU MOINS ME DIRE",
       "confidence": 0.9508478194475174,
       "detection_confidence": 0.8963159322738647
     },
@@ -84,7 +84,7 @@
         12221
       ],
       "original": "SERIOUSLY YOUDIDN'T LET ME GO TO COLLEGE OR EVEN GO PRO. WHAT'S THE POINT OF ALL THIS?!",
-      "translated": "Sérieusement, tu ne m'as pas laissé aller à l'université ni même devenir pro. À quoi bon tout ça ?!",
+      "translated": "SÉRIEUSEMENT, TU NE M'AS PAS LAISSÉ ALLER À L'UNIVERSITÉ OU MÊME DEVENIR PRO. À QUOI BON TOUT ÇA ?!",
       "confidence": 0.931687593460083,
       "detection_confidence": 0.9138628244400024
     },
@@ -97,7 +97,7 @@
         13420
       ],
       "original": "YOU'LL FIND OUT WHEN THE TIME IS RIGHT, SON.",
-      "translated": "Tu le sauras le moment venu, mon fils.",
+      "translated": "TU LE SAURAS QUAND LE MOMENT SERA VENU, MON FILS.",
       "confidence": 0.9593010544776917,
       "detection_confidence": 0.9107587337493896
     },
@@ -110,7 +110,7 @@
         14284
       ],
       "original": "I'M GONNA END UP AN OLD UNMARRIED MAN AT THIS RATE!",
-      "translated": "Je vais finir vieux garçon à ce rythme !",
+      "translated": "JE VAIS FINIR VIEUX GARÇON À CE RYTHME !",
       "confidence": 0.9548107981681824,
       "detection_confidence": 0.8828667402267456
     },
@@ -123,7 +123,7 @@
         15746
       ],
       "original": "THIS IS CSY NEWS. TODAY'S TOP STORY...",
-      "translated": "Ceci est CSY NEWS. Le titre du jour...",
+      "translated": "ICI CSY NEWS. LE TITRE DU JOUR...",
       "confidence": 0.9439690858125687,
       "detection_confidence": 0.8647131323814392
     },
@@ -136,7 +136,7 @@
         16596
       ],
       "original": "DAESEONG JIN HAS TAKEN OVER AS THE NEW CHAIRMAN OF THE CHEONGDO GROUP.",
-      "translated": "Daeseong Jin a pris la tête du groupe Cheongdo en tant que nouveau président.",
+      "translated": "DAESEONG JIN A PRIS LA TÊTE DU GROUPE CHEONGDO EN TANT QUE NOUVEAU PRÉSIDENT.",
       "confidence": 0.9577379584312439,
       "detection_confidence": 0.8610385656356812
     },
@@ -149,7 +149,7 @@
         18034
       ],
       "original": "CHAIRMAN DAESEONG JINIS THE GRANDSON...",
-      "translated": "Le président Daeseong Jin est le petit-fils...",
+      "translated": "LE PRÉSIDENT DAESEONG JIN EST LE PETIT-FILS...",
       "confidence": 0.9615403612454733,
       "detection_confidence": 0.8755215406417847
     },
@@ -162,7 +162,7 @@
         19092
       ],
       "original": "â€¦.OF THE LATE DAEHO JIN AND HEIR TO CHEONGDO.",
-      "translated": "...du défunt Daeho Jin et héritier de Cheongdo.",
+      "translated": "...DU DÉFUNT DAEHO JIN ET HÉRITIER DE CHEONGDO.",
       "confidence": 0.9415310919284821,
       "detection_confidence": 0.86482173204422
     },
@@ -175,7 +175,7 @@
         19938
       ],
       "original": "THE CHAIRMAN STATED THAT HE IS COMMITTED TO GUIDING THE GROUP INTO A NEW ERA.",
-      "translated": "Le président a déclaré qu'il s'engageait à guider le groupe vers une nouvelle ère.",
+      "translated": "LE PRÉSIDENT A DÉCLARÉ QU'IL S'ENGAGEAIT À GUIDER LE GROUPE VERS UNE NOUVELLE ÈRE.",
       "confidence": 0.956843900680542,
       "detection_confidence": 0.8928179740905762
     },
@@ -188,7 +188,7 @@
         23019
       ],
       "original": "The plan's gone awry. They're going to do it tonight.",
-      "translated": "Le plan a mal tourné. Ils vont le faire ce soir.",
+      "translated": "Le plan a tourné au vinaigre. Ils vont le faire ce soir.",
       "confidence": 0.9440426230430603,
       "detection_confidence": 0.7500772476196289
     },
@@ -214,7 +214,7 @@
         23928
       ],
       "original": "SON...",
-      "translated": "Fils...",
+      "translated": "MON FILS...",
       "confidence": 0.9108078479766846,
       "detection_confidence": 0.9037665128707886
     },
@@ -227,7 +227,7 @@
         25138
       ],
       "original": "WHAT NOW?",
-      "translated": "Quoi maintenant ?",
+      "translated": "QUOI ENCORE ?",
       "confidence": 0.9445877075195312,
       "detection_confidence": 0.9049890041351318
     },
@@ -240,7 +240,7 @@
         25999
       ],
       "original": "GO SHOWER AND GET DRESSED.",
-      "translated": "Va prendre une douche et habille-toi.",
+      "translated": "VA PRENDRE UNE DOUCHE ET HABILLE-TOI.",
       "confidence": 0.9625218212604523,
       "detection_confidence": 0.9141398668289185
     },
@@ -253,7 +253,7 @@
         27121
       ],
       "original": "HUH?",
-      "translated": "Hein ?",
+      "translated": "HEIN ?",
       "confidence": 0.9534949064254761,
       "detection_confidence": 0.902428388595581
     },
@@ -266,7 +266,7 @@
         27984
       ],
       "original": "TRAINING'S CANCELED.LET'S GO OUT FOR DINNER.",
-      "translated": "L'entraînement est annulé. Allons dîner dehors.",
+      "translated": "L'ENTRAÎNEMENT EST ANNULÉ. ALLONS DÎNER DEHORS.",
       "confidence": 0.9646956125895182,
       "detection_confidence": 0.9105691909790039
     },
@@ -279,7 +279,7 @@
         30596
       ],
       "original": "HA,ICAN'T EVEN REMEMBER THE LAST TIME WE WENT OUT LIKE THIS!",
-      "translated": "Ha, je ne me souviens même plus de la dernière fois qu'on est sortis comme ça !",
+      "translated": "HA, JE ME SOUVIENS MÊME PLUS DE LA DERNIÈRE FOIS QU'ON EST SORTIS COMME ÇA !",
       "confidence": 0.9361972451210022,
       "detection_confidence": 0.8902367353439331
     },
@@ -292,7 +292,7 @@
         30939
       ],
       "original": "AGUY'S GOTTA TAKE A BREAK SOMETIMES, YOu KNOW?",
-      "translated": "Un homme doit parfois faire une pause, tu sais ?",
+      "translated": "FAUT BIEN PRENDRE UNE PAUSE PARFOIS, TU SAIS ?",
       "confidence": 0.9000395685434341,
       "detection_confidence": 0.8992794156074524
     },
@@ -305,7 +305,7 @@
         32854
       ],
       "original": "WHY CAN'T WE GO OUT LIKE THIS MORE OFTEN, HUH?",
-      "translated": "Pourquoi ne pouvons-nous pas sortir comme ça plus souvent, hein ?",
+      "translated": "POURQUOI ON NE PEUT PAS SORTIR PLUS SOUVENT COMME ÇA, HEIN ?",
       "confidence": 0.9473165571689606,
       "detection_confidence": 0.9014617204666138
     },
@@ -318,7 +318,7 @@
         33197
       ],
       "original": "LET'S DO THIS AGAIN NEXT WEEK!",
-      "translated": "Faisons ça encore la semaine prochaine !",
+      "translated": "ON REFAIT ÇA LA SEMAINE PROCHAINE !",
       "confidence": 0.9435445070266724,
       "detection_confidence": 0.909707248210907
     },
@@ -331,7 +331,7 @@
         34655
       ],
       "original": "SURE...",
-      "translated": "Bien sûr...",
+      "translated": "BIEN SÛR...",
       "confidence": 0.9219648241996765,
       "detection_confidence": 0.8994239568710327
     },
@@ -344,7 +344,7 @@
         36606
       ],
       "original": "...IF WE'RE STILL HERE BY THEN.",
-      "translated": "...Si nous sommes encore là d'ici là.",
+      "translated": "...SI ON EST ENCORE LÀ D'ICI LÀ.",
       "confidence": 0.9291253288586935,
       "detection_confidence": 0.9140808582305908
     },
@@ -357,7 +357,7 @@
         41073
       ],
       "original": "HUH? WHAT'RE YOU DOING, DAD?",
-      "translated": "Hein ? Qu'est-ce que tu fais, Papa ?",
+      "translated": "HEIN ? QU'EST-CE QUE TU FAIS, PAPA ?",
       "confidence": 0.9253611962000529,
       "detection_confidence": 0.8997190594673157
     },
@@ -370,7 +370,7 @@
         41343
       ],
       "original": "THIS ISN'T THE WAY TO THE RESTAURANT!",
-      "translated": "Ce n'est pas le chemin du restaurant !",
+      "translated": "CE N'EST PAS LE CHEMIN DU RESTAURANT !",
       "confidence": 0.9499874711036682,
       "detection_confidence": 0.8779820203781128
     },
@@ -383,7 +383,7 @@
         42605
       ],
       "original": "WHY AREN'T YOU SAYING ANYTHING--",
-      "translated": "Pourquoi ne dis-tu rien...",
+      "translated": "POURQUOI TU NE DIS RIEN--",
       "confidence": 0.935894250869751,
       "detection_confidence": 0.9205254912376404
     },
@@ -396,7 +396,7 @@
         43401
       ],
       "original": "HUH?",
-      "translated": "Hein ?",
+      "translated": "HEIN ?",
       "confidence": 0.944398045539856,
       "detection_confidence": 0.8978703618049622
     },
@@ -409,7 +409,7 @@
         44174
       ],
       "original": "WHAT THE... WHY ARE THERE A WHOLE BUNCH OF BLACK CARS FOLLOWING US..?",
-      "translated": "Qu'est-ce que... Pourquoi y a-t-il plein de voitures noires qui nous suivent...?",
+      "translated": "MAIS QU'EST-CE QUE... POURQUOI IL Y A TOUT UN TAS DE VOITURES NOIRES QUI NOUS SUIVENT...?",
       "confidence": 0.9421173532803854,
       "detection_confidence": 0.9272959232330322
     },
@@ -422,7 +422,7 @@
         54036
       ],
       "original": "DAD!!",
-      "translated": "Papa !!",
+      "translated": "PAPA !!",
       "confidence": 0.9329692125320435,
       "detection_confidence": 0.860293447971344
     },
@@ -448,7 +448,7 @@
         55938
       ],
       "original": "SERIOUSLY, WHAT'S GOING ON?!",
-      "translated": "Sérieusement, qu'est-ce qui se passe ?!",
+      "translated": "SÉRIEUSEMENT, QU'EST-CE QUI SE PASSE ?!",
       "confidence": 0.9545239806175232,
       "detection_confidence": 0.8634896874427795
     },
@@ -461,7 +461,7 @@
         56248
       ],
       "original": "PLEASE, JUST EXPLAIN SOMETHING TO ME FORONCE!!",
-      "translated": "S'il te plaît, explique-moi juste quelque chose pour une fois !!",
+      "translated": "S'IL TE PLAÎT, EXPLIQUE-MOI QUELQUE CHOSE POUR UNE FOIS !!",
       "confidence": 0.974296897649765,
       "detection_confidence": 0.8728418350219727
     },
@@ -474,7 +474,7 @@
         57982
       ],
       "original": "ISu...",
-      "translated": "Isu...",
+      "translated": "ISU...",
       "confidence": 0.8252286911010742,
       "detection_confidence": 0.8887712359428406
     }

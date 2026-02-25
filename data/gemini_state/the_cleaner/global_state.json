@@ -28,5 +28,445 @@
     "Voix mystérieuse": [
       "L'Agent 101 (CHNH)"
     ]
-  }
+  },
+  "fonts": {
+    "35": {
+      "font_key": "FEAR"
+    },
+    "36": {
+      "font_key": "STANDARD"
+    },
+    "37": {
+      "font_key": "STANDARD"
+    },
+    "38": {
+      "font_key": "STANDARD"
+    },
+    "39": {
+      "font_key": "FEAR"
+    },
+    "40": {
+      "font_key": "FEAR"
+    },
+    "41": {
+      "font_key": "ANGRY"
+    },
+    "42": {
+      "font_key": "STANDARD"
+    },
+    "43": {
+      "font_key": "ANGRY"
+    },
+    "44": {
+      "font_key": "ANGRY"
+    },
+    "45": {
+      "font_key": "ANGRY"
+    },
+    "46": {
+      "font_key": "ANGRY"
+    },
+    "47": {
+      "font_key": "ANGRY"
+    },
+    "48": {
+      "font_key": "FEAR"
+    },
+    "49": {
+      "font_key": "ANGRY"
+    },
+    "50": {
+      "font_key": "ANGRY"
+    },
+    "52": {
+      "font_key": "STANDARD"
+    },
+    "53": {
+      "font_key": "STANDARD"
+    },
+    "54": {
+      "font_key": "STANDARD"
+    },
+    "55": {
+      "font_key": "STANDARD"
+    },
+    "56": {
+      "font_key": "ANGRY"
+    },
+    "57": {
+      "font_key": "ANGRY"
+    },
+    "58": {
+      "font_key": "STANDARD"
+    },
+    "59": {
+      "font_key": "STANDARD"
+    },
+    "60": {
+      "font_key": "STANDARD"
+    },
+    "61": {
+      "font_key": "ANGRY"
+    },
+    "62": {
+      "font_key": "STANDARD"
+    },
+    "63": {
+      "font_key": "STANDARD"
+    },
+    "64": {
+      "font_key": "STANDARD"
+    },
+    "65": {
+      "font_key": "COMBAT"
+    },
+    "66": {
+      "font_key": "STANDARD"
+    },
+    "67": {
+      "font_key": "STANDARD"
+    },
+    "68": {
+      "font_key": "STANDARD"
+    },
+    "69": {
+      "font_key": "ANGRY"
+    },
+    "70": {
+      "font_key": "THOUGHT"
+    },
+    "71": {
+      "font_key": "ANGRY"
+    },
+    "72": {
+      "font_key": "ANGRY"
+    },
+    "73": {
+      "font_key": "ANGRY"
+    },
+    "74": {
+      "font_key": "STANDARD"
+    },
+    "75": {
+      "font_key": "STANDARD"
+    },
+    "76": {
+      "font_key": "ANGRY"
+    },
+    "77": {
+      "font_key": "STANDARD"
+    },
+    "78": {
+      "font_key": "STANDARD"
+    },
+    "79": {
+      "font_key": "STANDARD"
+    },
+    "80": {
+      "font_key": "STANDARD"
+    },
+    "81": {
+      "font_key": "STANDARD"
+    },
+    "82": {
+      "font_key": "STANDARD"
+    },
+    "83": {
+      "font_key": "STANDARD"
+    },
+    "84": {
+      "font_key": "STANDARD"
+    },
+    "85": {
+      "font_key": "STANDARD"
+    },
+    "86": {
+      "font_key": "STANDARD"
+    },
+    "87": {
+      "font_key": "STANDARD"
+    },
+    "88": {
+      "font_key": "STANDARD"
+    },
+    "89": {
+      "font_key": "STANDARD"
+    },
+    "90": {
+      "font_key": "STANDARD"
+    },
+    "91": {
+      "font_key": "STANDARD"
+    },
+    "92": {
+      "font_key": "STANDARD"
+    },
+    "93": {
+      "font_key": "STANDARD"
+    },
+    "94": {
+      "font_key": "STANDARD"
+    },
+    "95": {
+      "font_key": "STANDARD"
+    },
+    "96": {
+      "font_key": "STANDARD"
+    },
+    "97": {
+      "font_key": "STANDARD"
+    },
+    "98": {
+      "font_key": "STANDARD"
+    },
+    "99": {
+      "font_key": "STANDARD"
+    },
+    "100": {
+      "font_key": "STANDARD"
+    },
+    "101": {
+      "font_key": "STANDARD"
+    },
+    "102": {
+      "font_key": "STANDARD"
+    },
+    "103": {
+      "font_key": "STANDARD"
+    },
+    "104": {
+      "font_key": "STANDARD"
+    },
+    "105": {
+      "font_key": "STANDARD"
+    },
+    "106": {
+      "font_key": "STANDARD"
+    },
+    "107": {
+      "font_key": "STANDARD"
+    },
+    "108": {
+      "font_key": "STANDARD"
+    },
+    "109": {
+      "font_key": "ANGRY"
+    },
+    "110": {
+      "font_key": "ANGRY"
+    },
+    "111": {
+      "font_key": "ANGRY"
+    },
+    "112": {
+      "font_key": "ANGRY"
+    },
+    "113": {
+      "font_key": "ANGRY"
+    },
+    "114": {
+      "font_key": "SYSTEM"
+    },
+    "115": {
+      "font_key": "SYSTEM"
+    },
+    "116": {
+      "font_key": "SYSTEM"
+    },
+    "117": {
+      "font_key": "SYSTEM"
+    },
+    "118": {
+      "font_key": "STANDARD"
+    },
+    "119": {
+      "font_key": "STANDARD"
+    },
+    "120": {
+      "font_key": "STANDARD"
+    },
+    "121": {
+      "font_key": "STANDARD"
+    },
+    "122": {
+      "font_key": "STANDARD"
+    },
+    "123": {
+      "font_key": "STANDARD"
+    },
+    "124": {
+      "font_key": "STANDARD"
+    },
+    "125": {
+      "font_key": "STANDARD"
+    },
+    "126": {
+      "font_key": "STANDARD"
+    },
+    "127": {
+      "font_key": "FEAR"
+    },
+    "128": {
+      "font_key": "STANDARD"
+    },
+    "129": {
+      "font_key": "STANDARD"
+    },
+    "130": {
+      "font_key": "STANDARD"
+    },
+    "131": {
+      "font_key": "FEAR"
+    },
+    "132": {
+      "font_key": "FEAR"
+    },
+    "133": {
+      "font_key": "STANDARD"
+    },
+    "134": {
+      "font_key": "STANDARD"
+    },
+    "135": {
+      "font_key": "STANDARD"
+    },
+    "136": {
+      "font_key": "ANGRY"
+    },
+    "137": {
+      "font_key": "ANGRY"
+    },
+    "138": {
+      "font_key": "ANGRY"
+    },
+    "139": {
+      "font_key": "ANGRY"
+    },
+    "140": {
+      "font_key": "ANGRY"
+    },
+    "0": {
+      "font_key": "ANGRY"
+    },
+    "3": {
+      "font_key": "FEAR"
+    },
+    "4": {
+      "font_key": "FEAR"
+    },
+    "5": {
+      "font_key": "STANDARD"
+    },
+    "6": {
+      "font_key": "STANDARD"
+    },
+    "7": {
+      "font_key": "STANDARD"
+    },
+    "8": {
+      "font_key": "STANDARD"
+    },
+    "9": {
+      "font_key": "ANGRY"
+    },
+    "10": {
+      "font_key": "STANDARD"
+    },
+    "11": {
+      "font_key": "STANDARD"
+    },
+    "13": {
+      "font_key": "STANDARD"
+    },
+    "14": {
+      "font_key": "STANDARD"
+    },
+    "15": {
+      "font_key": "STANDARD"
+    },
+    "16": {
+      "font_key": "ANGRY"
+    },
+    "17": {
+      "font_key": "STANDARD"
+    },
+    "18": {
+      "font_key": "STANDARD"
+    },
+    "19": {
+      "font_key": "STANDARD"
+    },
+    "20": {
+      "font_key": "ANGRY"
+    },
+    "21": {
+      "font_key": "FEAR"
+    },
+    "22": {
+      "font_key": "STANDARD"
+    },
+    "23": {
+      "font_key": "COMBAT"
+    },
+    "24": {
+      "font_key": "COMBAT"
+    },
+    "25": {
+      "font_key": "STANDARD"
+    },
+    "26": {
+      "font_key": "STANDARD"
+    },
+    "27": {
+      "font_key": "STANDARD"
+    },
+    "28": {
+      "font_key": "STANDARD"
+    },
+    "29": {
+      "font_key": "STANDARD"
+    },
+    "30": {
+      "font_key": "STANDARD"
+    },
+    "31": {
+      "font_key": "STANDARD"
+    },
+    "32": {
+      "font_key": "STANDARD"
+    },
+    "33": {
+      "font_key": "STANDARD"
+    },
+    "34": {
+      "font_key": "FEAR"
+    },
+    "51": {
+      "font_key": "ANGRY"
+    },
+    "1": {
+      "font_key": "FEAR"
+    },
+    "2": {
+      "font_key": "COMBAT"
+    },
+    "12": {
+      "font_key": "STANDARD"
+    }
+  },
+  "relationship_changes": [
+    "Isu : Sa perception de son père, l'Agent 101, est bouleversée par la découverte de son passé violent et de son identité d'Agent 101.",
+    "Agent 101 : Son passé secret est révélé à son fils et il est désormais en conflit ouvert avec le groupe Cheongdo et son nouveau président, Daeseong Jin.",
+    "Daeseong Jin : Son rôle en tant qu'antagoniste principal est établi, motivé par une rancune familiale envers l'Agent 101.",
+    "Cheongdo Group : Le groupe est maintenant un adversaire direct de l'Agent 101.",
+    "La perception d'Isu envers l'Agent 101 passe d'un père aimant à une figure crainte et questionnée, potentiellement un 'meurtrier' ou un 'criminel'.",
+    "La détermination protectrice de l'Agent 101 envers Isu s'assombrit, passant de la garantie de l'avenir d'Isu à un engagement désespéré de mourir ensemble si la protection échoue.",
+    "Isu et Soyeon: Amis d'enfance, Soyeon est très protectrice envers Isu.",
+    "Isu et les assaillants: Les assaillants sont toujours à la poursuite d'Isu et sont prêts à le torturer.",
+    "La relation entre Isu et Soyeon se renforce alors que Soyeon le protège activement, et Isu ressent du regret concernant la mort de son père et son inaction passée.",
+    "Le conflit entre Isu et les assaillants s'intensifie, ces derniers révélant qu'Isu est leur cible et qu'il est lié à un destin prédéterminé.",
+    "Isu et Soyeon: Lien renforcé par le sacrifice de Soyeon.",
+    "Isu et les \"vieux amis de son père\": Alliance formée pour la protection d'Isu.",
+    "Agent 101 et Daeseong Jin: Hostilité ouverte et déclaration de vengeance."
+  ]
 }

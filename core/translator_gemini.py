@@ -6,7 +6,9 @@ SDK: google-genai (nouveau). Modèle: gemini-2.5-flash (free tier).
 
 import json, os, re, time, hashlib
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
+
+from utils.gemini_prompt import FONT_MAP, PromptBank
 
 STATE_DIR = Path("data/gemini_state")
 CACHE_FILE = Path("cache/gemini_cache.json")
@@ -32,6 +34,8 @@ SFX = {
 }
 
 # Structured output schema — force Gemini à renvoyer ce format exact
+FONT_KEYS = list(FONT_MAP.keys())
+
 RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
@@ -41,18 +45,18 @@ RESPONSE_SCHEMA = {
                 "type": "object",
                 "properties": {
                     "id": {"type": "string"},
-                    "fr": {"type": "string"}
+                    "fr": {"type": "string"},
+                    "font_key": {"type": "string", "enum": FONT_KEYS}
                 },
-                "required": ["id", "fr"]
+                "required": ["id", "fr", "font_key"]
             }
         },
-        "nouveau_resume": {"type": "string"},
-        "nouvelles_entites": {
+        "state_update": {
             "type": "object",
             "properties": {
-                "personnages": {"type": "object"},
-                "organisations": {"type": "object"},
-                "tutoiement": {"type": "object"}
+                "summary_update": {"type": "string"},
+                "relationship_changes": {"type": "array", "items": {"type": "string"}},
+                "entity_discovery": {"type": "object"}
             }
         }
     },
@@ -62,10 +66,11 @@ RESPONSE_SCHEMA = {
 
 class GeminiTranslator:
 
-    def __init__(self, device="cuda", series_db=None, series_name: str = "default"):
+    def __init__(self, device: str = "cuda", series_db=None, series_name: str = "default", source_lang: str = "en"):
         self.device = device
         self.backend = "gemini"
         self.series_db = series_db
+        self.source_lang = (source_lang or "en").lower()
         # Nettoie le nom de la série pour éviter les problèmes de chemin
         self.series_name = re.sub(r"[^\w\s-]", "", (series_name or "")).strip().replace(" ", "_") or "default"
         self.generation_seconds_total = 0.0
@@ -167,29 +172,80 @@ class GeminiTranslator:
         return self._intrigue_file.read_text("utf-8").strip() if self._intrigue_file.exists() else ""
 
     def _update_intrigue(self, summary: str):
+        """Consolide l'intrigue globale en demandant à Gemini de fusionner l'ancien
+        résumé et les nouveaux éléments en un résumé consolidé (éviter explosion tokens).
+        """
         old = self._get_intrigue()
-        combined = f"{old}\n---\n{summary}" if old else summary
-        # Keep a larger rolling window for the intrigue summary (50k chars)
-        if len(combined) > 50000:
-            combined = combined[-50000:]
-        self._intrigue_file.write_text(combined.strip(), "utf-8")
+        if not summary:
+            return
+        try:
+            types = self._types
+            # Build a compact prompt asking Gemini to merge summaries conservatively
+            prompt = (
+                f"Voici le RESUME global actuel :\n{old}\n\n"
+                f"Nouveaux faits :\n{summary}\n\n"
+                "Fusionne ces informations et renvoie un résumé global consolidé, concis (3-5 phrases)."
+            )
+            response = self._client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=PromptBank.BASE_SYSTEM,
+                    temperature=0.0,
+                    max_output_tokens=2000,
+                    response_mime_type="text/plain",
+                ),
+            )
+            consolidated = getattr(response, "text", "") or ""
+            consolidated = consolidated.strip()
+            if not consolidated:
+                # fallback to simple append if SDK returned nothing parseable
+                combined = f"{old}\n---\n{summary}" if old else summary
+            else:
+                combined = consolidated
+            # Keep a rolling window (50k chars)
+            if len(combined) > 50000:
+                combined = combined[-50000:]
+            self._intrigue_file.write_text(combined.strip(), "utf-8")
+        except Exception:
+            # Best-effort fallback
+            combined = f"{old}\n---\n{summary}" if old else summary
+            if len(combined) > 50000:
+                combined = combined[-50000:]
+            self._intrigue_file.write_text(combined.strip(), "utf-8")
 
     # ── CONTEXT ───────────────────────────────────────────────────────────
 
     def _build_context(self) -> str:
-        parts = []
+        return self._get_compact_context()
+
+    def _get_compact_context(self, max_chars: int = 3000) -> str:
+        """Return a compact, relevant context string for the current prompt.
+
+        Selects the last part of the global intrigue plus a concise listing of
+        characters and tutoiement state truncated to `max_chars`.
+        """
+        parts: List[str] = []
         intr = self._get_intrigue()
         if intr:
-            parts.append(f"RESUME :\n{intr}")
+            # keep only the tail (most recent) of the intrigue
+            tail = intr[-max_chars:] if len(intr) > max_chars else intr
+            parts.append(f"RESUME :\n{tail}")
+
         persos = self._state.get("personnages", {})
         if persos:
-            lines = [f"  {n}: {json.dumps(v,ensure_ascii=False) if isinstance(v,dict) else v}"
-                     for n, v in persos.items()]
-            parts.append("PERSONNAGES :\n" + "\n".join(lines))
+            lines = []
+            for n, v in persos.items():
+                small = json.dumps(v, ensure_ascii=False) if isinstance(v, dict) else str(v)
+                lines.append(f"  {n}: {small}")
+            parts.append("PERSONNAGES :\n" + "\n".join(lines[:30]))
+
         tuto = self._state.get("tutoiement", {})
         if tuto:
-            parts.append("TU/VOUS :\n" + "\n".join(f"  {k}: {v}" for k,v in tuto.items()))
-        return "\n\n".join(parts) if parts else ""
+            parts.append("TU/VOUS :\n" + "\n".join(f"  {k}: {v}" for k, v in list(tuto.items())[:30]))
+
+        ctx = "\n\n".join(parts)
+        return ctx[:max_chars]
 
     # ── API CALL ──────────────────────────────────────────────────────────
 
@@ -215,7 +271,7 @@ class GeminiTranslator:
                 model=self.model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM,
+                    system_instruction=PromptBank.BASE_SYSTEM,
                     temperature=0.3,
                     top_p=0.95,
                     max_output_tokens=16384,
@@ -359,36 +415,70 @@ class GeminiTranslator:
 
         prompt = (
             f"{ctx}\n\n"
-            f"TEXTES A TRADUIRE (id: texte anglais) :\n{numbered}\n\n"
-            f"Traduis chaque texte en francais. Renvoie le JSON avec les memes id.\n"
-            f"Ajoute un resume court (2 phrases) dans nouveau_resume.\n"
-            f"Identifie les personnages, organisations et tutoiement dans nouvelles_entites."
+            f"{PromptBank.LANG_RULES.get(self.source_lang, '')}\n\n"
+            f"{PromptBank.TYPO_RULES}\n\n"
+            f"TEXTES A TRADUIRE (id: texte source) :\n{numbered}\n\n"
+            "Pour chaque item, renvoie un objet {id, fr, font_key} où `font_key` est l'une des clés suivantes: "
+            f"{', '.join(FONT_KEYS)}.\n"
+            "Renvoie un JSON au format exact demandé. Inclut aussi un objet `state_update`\n"
+            "contenant `summary_update`, `relationship_changes` et `entity_discovery` si pertinent.\n"
+            "Ne répète pas l'ancien résumé; fournis seulement les faits nouveaux dans `summary_update`.\n"
         )
 
         parsed = self._call(prompt)
 
         if parsed and "traductions" in parsed:
-            trad_map = {str(item.get("id","")): item.get("fr","")
-                        for item in parsed["traductions"] if isinstance(item, dict)}
+            trad_map: Dict[str, str] = {}
+            font_map: Dict[str, str] = {}
+            for item in parsed.get("traductions", []):
+                if not isinstance(item, dict):
+                    continue
+                id_str = str(item.get("id", ""))
+                fr_text = item.get("fr", "")
+                font_key = item.get("font_key", "STANDARD") or "STANDARD"
+                if font_key not in FONT_MAP:
+                    font_key = "STANDARD"
+                trad_map[id_str] = fr_text
+                font_map[id_str] = font_key
 
             for local_idx, (global_idx, orig) in enumerate(to_send):
                 fr = trad_map.get(str(global_idx)) or trad_map.get(str(local_idx), "")
                 result[str(global_idx)] = fr if fr else orig
-                if fr: self._cset(orig, fr)
+                if fr:
+                    self._cset(orig, fr)
+                    # Optionally persist font choice per-translation in state
+                    # store font selection plus color metadata to avoid white-on-white defaults
+                    fk = font_map.get(str(global_idx), "STANDARD")
+                    # Preserve existing color if present (use original color), otherwise do not force a color
+                    prev = self._state.get("fonts", {}).get(str(global_idx))
+                    orig_color = None
+                    if isinstance(prev, dict):
+                        orig_color = prev.get("color")
+                    entry = {"font_key": fk}
+                    if orig_color:
+                        entry["color"] = orig_color
+                    self._state.setdefault("fonts", {})[str(global_idx)] = entry
 
-            # Memoire auto
-            resume = parsed.get("nouveau_resume", "")
-            if resume: self._update_intrigue(resume)
+            # State update handling (differential)
+            state_upd = parsed.get("state_update", {}) or {}
+            summary_update = state_upd.get("summary_update")
+            if summary_update:
+                self._update_intrigue(summary_update)
 
-            ents = parsed.get("nouvelles_entites", {})
-            if ents:
-                for cat in ("personnages", "organisations", "tutoiement"):
-                    inc = ents.get(cat, {})
-                    if isinstance(inc, dict):
-                        self._state.setdefault(cat, {}).update(inc)
-                self._save_state()
+            rel_changes = state_upd.get("relationship_changes") or []
+            if rel_changes:
+                lst = self._state.setdefault("relationship_changes", [])
+                if isinstance(rel_changes, list):
+                    lst.extend(rc for rc in rel_changes if isinstance(rc, str))
 
-            ok = sum(1 for it in parsed["traductions"] if it.get("fr"))
+            entity_disc = state_upd.get("entity_discovery") or {}
+            if isinstance(entity_disc, dict):
+                for k, v in entity_disc.items():
+                    if isinstance(v, dict):
+                        self._state.setdefault(k, {}).update(v)
+            self._save_state()
+
+            ok = sum(1 for it in parsed.get("traductions", []) if it.get("fr"))
             print(f"      {ok}/{len(to_send)} traduits")
         else:
             print("      Echec Gemini - textes laisses en anglais")
@@ -431,7 +521,7 @@ class GeminiTranslator:
         }
 
     def get_last_page_payload_debug(self) -> dict:
-        return {"system_prompt": SYSTEM, "user_prompt": "", "payload_lines": []}
+        return {"system_prompt": PromptBank.BASE_SYSTEM, "user_prompt": "", "payload_lines": []}
 
     def __del__(self):
         try:

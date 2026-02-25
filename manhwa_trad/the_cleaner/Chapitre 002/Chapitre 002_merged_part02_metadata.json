@@ -1,0 +1,261 @@
+{
+  "source": "manhwa\\the_cleaner\\Chapitre 002\\Chapitre 002_merged_part02.jpg",
+  "output": "manhwa_trad\\the_cleaner\\Chapitre 002\\Chapitre 002_merged_part02_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 37120
+  },
+  "stats": {
+    "detections": 21,
+    "translated": 19
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        72.8972880045573,
+        4027,
+        626.3429260253906,
+        4389
+      ],
+      "original": "ISu! GET INSIDE!!",
+      "translated": "Isu ! Rentre !!",
+      "confidence": 0.892392486333847,
+      "detection_confidence": 0.8855823278427124
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        71.58162434895834,
+        5684,
+        516.5423583984375,
+        5991
+      ],
+      "original": "QUICKLY!!!",
+      "translated": "VITE !!!",
+      "confidence": 0.9744971990585327,
+      "detection_confidence": 0.8759678602218628
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        273.5231018066406,
+        13247,
+        644.1689554850261,
+        13588
+      ],
+      "original": ".IS IT OVER?",
+      "translated": "...C'est fini ?",
+      "confidence": 0.9226135313510895,
+      "detection_confidence": 0.8944974541664124
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        167.4278564453125,
+        17135,
+        526.8544311523438,
+        17325
+      ],
+      "original": "SON.",
+      "translated": "Mon fils.",
+      "confidence": 0.9843369722366333,
+      "detection_confidence": 0.899124264717102
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        85.56060791015625,
+        18890,
+        342.5634765625,
+        19129
+      ],
+      "original": "D-DAD?",
+      "translated": "P-Papa ?",
+      "confidence": 0.9812089800834656,
+      "detection_confidence": 0.9005506634712219
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        362.959228515625,
+        19176,
+        643.2938232421875,
+        19439
+      ],
+      "original": "ARE YOU HURT?",
+      "translated": "T'es blessé ?",
+      "confidence": 0.9432872235774994,
+      "detection_confidence": 0.9107062220573425
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        83.72712453206381,
+        20698,
+        383.2049560546875,
+        20970
+      ],
+      "original": "N-NO... I'M FINE.",
+      "translated": "N-Non... Ça va.",
+      "confidence": 0.9690448641777039,
+      "detection_confidence": 0.8916193246841431
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        219.24115498860678,
+        21734,
+        687.7644856770834,
+        22121
+      ],
+      "original": "GOOD. I KNOWYOU'RE CONFUSED,BUTWE HAVE TO MOVE.",
+      "translated": "Bien. Je sais que t'es perdu, mais on doit bouger.",
+      "confidence": 0.9663148373365402,
+      "detection_confidence": 0.9117305874824524
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        71.14439646402995,
+        22078,
+        471.065673828125,
+        22445
+      ],
+      "original": "THEY'LL BE AFTER US BEFORE LONG.",
+      "translated": "Ils seront à nos trousses d'ici peu.",
+      "confidence": 0.9706404805183411,
+      "detection_confidence": 0.9022496938705444
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        288.2632954915365,
+        22955,
+        640.9145609537761,
+        23238
+      ],
+      "original": "SEE THAT DOOR OVER THERE?",
+      "translated": "Tu vois cette porte là-bas ?",
+      "confidence": 0.9755696654319763,
+      "detection_confidence": 0.8795035481452942
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        10.689188639322918,
+        23185,
+        541.3753255208334,
+        23643
+      ],
+      "original": "ON THE OTHER SIDE IS A STAIRCASE. A CAR WILL BE WAITING ATTHEBOTTOM.",
+      "translated": "De l'autre côté, y a un escalier. Une voiture t'attend en bas.",
+      "confidence": 0.9472213238477707,
+      "detection_confidence": 0.9072283506393433
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        37.65787760416667,
+        24900,
+        474.3730672200521,
+        25287
+      ],
+      "original": "THE CAR CAN DRIVE ITSELF, SO JUST TURN IT ON AND WAIT.",
+      "translated": "La voiture est autonome, tu n'as qu'à la démarrer et attendre.",
+      "confidence": 0.9429717808961868,
+      "detection_confidence": 0.9183815121650696
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        218.63052368164062,
+        25216,
+        658.7074279785156,
+        25615
+      ],
+      "original": "I'LL BUY SOME TIME HERE AND HEAD DOWN SO ON.",
+      "translated": "Je vais gagner du temps ici et je te rejoins vite.",
+      "confidence": 0.9466866850852966,
+      "detection_confidence": 0.902536153793335
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        206.54827880859375,
+        26966,
+        485.856201171875,
+        27158
+      ],
+      "original": "B-BUT--",
+      "translated": "M-Mais--",
+      "confidence": 0.8472856283187866,
+      "detection_confidence": 0.9111456274986267
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        18.791778564453125,
+        28172,
+        324.4520263671875,
+        28457
+      ],
+      "original": "NO BUTS.",
+      "translated": "Pas de mais.",
+      "confidence": 0.9447036981582642,
+      "detection_confidence": 0.902776300907135
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        175.429931640625,
+        33320,
+        517.2832641601562,
+        33642
+      ],
+      "original": "OLD RAT...",
+      "translated": "Vieille ordure...",
+      "confidence": 0.8796470761299133,
+      "detection_confidence": 0.8743258118629456
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        19.390767415364586,
+        34568,
+        486.30401611328125,
+        34976
+      ],
+      "original": "YOU HAVING FUN WITH YOUR LITTLE TRICKS?",
+      "translated": "Tu t'amuses bien avec tes petits tours de passe-passe ?",
+      "confidence": 0.967182457447052,
+      "detection_confidence": 0.8972920775413513
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        223.71795654296875,
+        34928,
+        672.0908610026042,
+        35308
+      ],
+      "original": "I WAS GOING TO TREAT YOU WITH SOME RESPECT..",
+      "translated": "J'allais te traiter avec un peu de respect...",
+      "confidence": 0.9314281741778055,
+      "detection_confidence": 0.8755549788475037
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        29.44085693359375,
+        36669,
+        400.135009765625,
+        36991
+      ],
+      "original": "...BUT I'VE CHANGED MY MIND.",
+      "translated": "...Mais j'ai changé d'avis.",
+      "confidence": 0.8920226891835531,
+      "detection_confidence": 0.8962313532829285
+    }
+  ]
+}

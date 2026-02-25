@@ -19,7 +19,7 @@
         878
       ],
       "original": "EVERY PARENT CARRIES AT LEAST ONE SECRET FROM THEIR CHILDREN.",
-      "translated": "Chaque parent porte au moins un secret vis-à-vis de ses enfants.",
+      "translated": "CHAQUE PARENT PORTE AU MOINS UN SECRET POUR SES ENFANTS.",
       "confidence": 0.9652028530836105,
       "detection_confidence": 0.9095691442489624
     },
@@ -32,7 +32,7 @@
         2480
       ],
       "original": "I HOPED I'D BE ABLE TO EXPLAIN IT TO YOU SOME DAY...",
-      "translated": "J'espérais pouvoir te l'expliquer un jour...",
+      "translated": "J'ESPÉRAIS POUVOIR TE L'EXPLIQUER UN JOUR...",
       "confidence": 0.9485996812582016,
       "detection_confidence": 0.9133521318435669
     },
@@ -45,7 +45,7 @@
         4130
       ],
       "original": "NOTSUREI'LL BE ABLE TO NOW. DUN",
-      "translated": "Je ne suis pas sûr de pouvoir le faire maintenant. DUN",
+      "translated": "PAS SÛR QUE JE POURRAI LE FAIRE MAINTENANT. DUN",
       "confidence": 0.9381192127863566,
       "detection_confidence": 0.44424277544021606
     },
@@ -58,7 +58,7 @@
         3983
       ],
       "original": "â€¦BUT I'M NOT SURe I'LL BE abLe TO noW.",
-      "translated": "...Mais je ne suis pas sûr de pouvoir le faire maintenant.",
+      "translated": "...MAIS JE NE SUIS PAS SÛR DE POUVOIR LE FAIRE MAINTENANT.",
       "confidence": 0.7685783704121908,
       "detection_confidence": 0.8498793244361877
     },
@@ -84,7 +84,7 @@
         9748
       ],
       "original": "WH-WHO ARE THESE GUYS?!",
-      "translated": "Q-qui sont ces types ?!",
+      "translated": "Q-QUI SONT CES GENS ?!",
       "confidence": 0.9536306262016296,
       "detection_confidence": 0.905771017074585
     },
@@ -97,7 +97,7 @@
         11004
       ],
       "original": "DID THE YOUNG CHAIRMAN JINSENDYOU ALL...",
-      "translated": "Le jeune président Jin vous a-t-il tous envoyés...",
+      "translated": "C'EST LE JEUNE PRÉSIDENT JIN QUI VOUS A TOUS ENVOYÉS...",
       "confidence": 0.9598008096218109,
       "detection_confidence": 0.9009754657745361
     },
@@ -110,7 +110,7 @@
         11861
       ],
       "original": "..TO KILL ME?",
-      "translated": "...pour me tuer ?",
+      "translated": "...POUR ME TUER ?",
       "confidence": 0.8715535402297974,
       "detection_confidence": 0.9062330722808838
     },
@@ -123,7 +123,7 @@
         15274
       ],
       "original": "...THINGS MOVED MORE QUICKLY THAN WE'D PLANNED, YOU SEE.",
-      "translated": "...Les choses ont évolué plus vite que prévu, voyez-vous.",
+      "translated": "...LES CHOSES SE SONT ACCÉLÉRÉES PLUS VITE QUE PRÉVU, VOUS VOYEZ.",
       "confidence": 0.9239442497491837,
       "detection_confidence": 0.9041922092437744
     },
@@ -136,7 +136,7 @@
         16881
       ],
       "original": "SINCE CHAIRMAN DAEHO IS FINALLY DEAD,",
-      "translated": "Puisque le président Daeho est enfin mort,",
+      "translated": "PUISQUE LE PRÉSIDENT DAEHO EST ENFIN MORT,",
       "confidence": 0.9685596625010172,
       "detection_confidence": 0.8923555612564087
     },
@@ -149,7 +149,7 @@
         17237
       ],
       "original": "THE DIRECTORS NEED YOUR HEAD TO PROVE THEIR LOYALTY.",
-      "translated": "Les directeurs ont besoin de votre tête pour prouver leur loyauté.",
+      "translated": "LES DIRECTEURS ONT BESOIN DE TA TÊTE POUR PROUVER LEUR LOYAUTÉ.",
       "confidence": 0.9725336730480194,
       "detection_confidence": 0.8989689350128174
     },
@@ -162,7 +162,7 @@
         19266
       ],
       "original": "YOu KNOW VERY WELL..",
-      "translated": "Vous savez très bien...",
+      "translated": "TU SAIS TRÈS BIEN...",
       "confidence": 0.8413729071617126,
       "detection_confidence": 0.8811531662940979
     },
@@ -175,7 +175,7 @@
         19588
       ],
       "original": "THAT THOSE IN POWER NEVER FORGET â–³ GRUDGE.",
-      "translated": "Que ceux au pouvoir n'oublient jamais une rancune.",
+      "translated": "QUE CEUX AU POUVOIR N'OUBLIENT JAMAIS UNE RANCUNE.",
       "confidence": 0.9586263597011566,
       "detection_confidence": 0.9006777405738831
     },
@@ -188,7 +188,7 @@
         21621
       ],
       "original": "ESPECIALLY..",
-      "translated": "Surtout...",
+      "translated": "SURTOUT...",
       "confidence": 0.9327638745307922,
       "detection_confidence": 0.8965469598770142
     },
@@ -201,7 +201,7 @@
         22953
       ],
       "original": "...WHEN FAMILY IS INVOLVED.",
-      "translated": "...Quand la famille est impliquée.",
+      "translated": "...QUAND LA FAMILLE EST IMPLIQUÉE.",
       "confidence": 0.9164297580718994,
       "detection_confidence": 0.909295380115509
     },
@@ -214,7 +214,7 @@
         26269
       ],
       "original": "DAD!!",
-      "translated": "Papa !!",
+      "translated": "PAPA !!",
       "confidence": 0.9595283269882202,
       "detection_confidence": 0.8686413764953613
     },
@@ -227,7 +227,7 @@
         37919
       ],
       "original": "SO IT'S TRUE..",
-      "translated": "Alors c'est vrai...",
+      "translated": "ALORS C'EST VRAI...",
       "confidence": 0.8593184351921082,
       "detection_confidence": 0.8843030333518982
     },
@@ -240,7 +240,7 @@
         39671
       ],
       "original": "...AGENT 1 O 1.",
-      "translated": "...Agent 101.",
+      "translated": "...AGENT 101.",
       "confidence": 0.8505845665931702,
       "detection_confidence": 0.9073511958122253
     },
@@ -253,7 +253,7 @@
         41177
       ],
       "original": "ALL THE STORIES ABOUT YOU WERE REAL.",
-      "translated": "Toutes les histoires à votre sujet étaient vraies.",
+      "translated": "TOUTES LES HISTOIRES À TON SUJET ÉTAIENT RÉELLES.",
       "confidence": 0.9542388617992401,
       "detection_confidence": 0.8974261283874512
     },
@@ -266,7 +266,7 @@
         42079
       ],
       "original": "WHAT THEHELL IS HAPPENING RIGHT NOW?!",
-      "translated": "Qu'est-ce qui se passe bordel ?!",
+      "translated": "MAIS QU'EST-CE QUI SE PASSE BORDEL ?!",
       "confidence": 0.9672637979189554,
       "detection_confidence": 0.9074118733406067
     },
@@ -279,7 +279,7 @@
         43339
       ],
       "original": "DAD CUT A GUY IN TWO WITH ONE SWING OF THAT AXE...!!",
-      "translated": "Papa a coupé un gars en deux d'un seul coup de hache...!!",
+      "translated": "PAPA A COUPÉ UN GARS EN DEUX D'UN SEUL COUP DE HACHE... !!",
       "confidence": 0.9393230676651001,
       "detection_confidence": 0.882860004901886
     },
@@ -292,7 +292,7 @@
         44126
       ],
       "original": "I WASN'T HAPPY ABOUT THE WHOLE LOT OF US BEING SENT OUT...",
-      "translated": "Je n'étais pas content que nous soyons tous envoyés...",
+      "translated": "J'ÉTAIS PAS RAVI QU'ON SOIT TOUS ENVOYÉS...",
       "confidence": 0.9446213006973266,
       "detection_confidence": 0.91265469789505
     },
@@ -305,7 +305,7 @@
         45667
       ],
       "original": "...TO TAKE OUT A SINGLE TRAITOR..",
-      "translated": "...pour éliminer un seul traître...",
+      "translated": "...POUR ÉLIMINER UN SEUL TRAÎTRE...",
       "confidence": 0.8978686928749084,
       "detection_confidence": 0.8962547779083252
     },
@@ -318,7 +318,7 @@
         46488
       ],
       "original": "...BUT THIS MakeS IT aLL WORTH THE TROUBLE.",
-      "translated": "...Mais ça en vaut la peine.",
+      "translated": "...MAIS ÇA EN VALAIT LA PEINE.",
       "confidence": 0.8534618814786276,
       "detection_confidence": 0.907836377620697
     },
@@ -331,7 +331,7 @@
         48808
       ],
       "original": "..YOU'RE GOING TO NEED MORE THAN THAT.",
-      "translated": "...Il vous faudra plus que ça.",
+      "translated": "...IL VOUS FAUDRA PLUS QUE ÇA.",
       "confidence": 0.933878168463707,
       "detection_confidence": 0.8977077007293701
     },
@@ -344,7 +344,7 @@
         50186
       ],
       "original": "SOYOU'RE AFTER MY HEAD, ARE YOU?",
-      "translated": "Alors vous en avez après ma tête, n'est-ce pas ?",
+      "translated": "ALORS VOUS EN VOULEZ À MA TÊTE, C'EST ÇA ?",
       "confidence": 0.9091712633768717,
       "detection_confidence": 0.8829911351203918
     },
@@ -357,7 +357,7 @@
         53734
       ],
       "original": "AND YOU THOUGHT THIS WOULD BE ENOUGH?",
-      "translated": "Et vous pensiez que ce serait suffisant ?",
+      "translated": "ET VOUS PENSIEZ QUE CE SERAIT SUFFISANT ?",
       "confidence": 0.948101356625557,
       "detection_confidence": 0.8954268097877502
     },
@@ -370,7 +370,7 @@
         55176
       ],
       "original": "I'LL SHOW YOU AMATEURS...",
-      "translated": "Je vais vous montrer, amateurs...",
+      "translated": "JE VAIS VOUS MONTRER, AMATEURS...",
       "confidence": 0.922052413225174,
       "detection_confidence": 0.883686900138855
     },
@@ -383,7 +383,7 @@
         57279
       ],
       "original": "...WHAT REAL STRENGTH LOOKS LIKE.",
-      "translated": "...à quoi ressemble la vraie force.",
+      "translated": "...À QUOI RESSEMBLE LA VRAIE FORCE.",
       "confidence": 0.9616642594337463,
       "detection_confidence": 0.8997793793678284
     }

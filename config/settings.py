@@ -403,6 +403,10 @@ class RenderingConfig:
     luminosity_threshold: int = 128
     default_text_color: Tuple[int, int, int] = (0, 0, 0)
     default_outline_color: Tuple[int, int, int] = (255, 255, 255)
+    # Seuils et options pour la détection de couleurs de texte
+    luma_contrast_threshold: int = 40
+    colored_saturation_threshold: float = 0.15
+    use_border_outline: bool = True
     enable_outline: bool = True
     outline_width: int = 2
     outline_method: str = "stroke"

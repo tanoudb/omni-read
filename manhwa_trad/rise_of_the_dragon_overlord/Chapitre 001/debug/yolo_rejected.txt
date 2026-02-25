@@ -1,0 +1,98 @@
+YOLO Reject Report for Chapitre 001_merged_part04
+================================================================================
+
+Image shape: 690x36442
+
+[Scale stats]
+- scale 0.60: raw=17 kept=15 reject_conf=2 reject_border=0
+  reject_conf_by_class={'sfx': 1, 'bulle': 1}
+- scale 1.00: raw=24 kept=17 reject_conf=7 reject_border=0
+  reject_conf_by_class={'sfx': 4, 'bulle': 2, 'out_text': 1}
+
+[Raw detections] count=32
+0001. {'class_name': 'sfx', 'score': 0.3086, 'scale': 1.0, 'bbox': [87, 1496, 348, 1978]}
+0002. {'class_name': 'bulle', 'score': 0.8016, 'scale': 1.0, 'bbox': [427, 3508, 619, 3684]}
+0003. {'class_name': 'bulle', 'score': 0.8707, 'scale': 1.0, 'bbox': [381, 3810, 563, 3988]}
+0004. {'class_name': 'bulle', 'score': 0.8323, 'scale': 1.0, 'bbox': [436, 3519, 613, 3680]}
+0005. {'class_name': 'bulle', 'score': 0.794, 'scale': 1.0, 'bbox': [0, 3692, 278, 3925]}
+0006. {'class_name': 'sfx', 'score': 0.6099, 'scale': 1.0, 'bbox': [36, 4933, 385, 5087]}
+0007. {'class_name': 'bulle', 'score': 0.8187, 'scale': 1.0, 'bbox': [10, 5490, 401, 5757]}
+0008. {'class_name': 'bulle', 'score': 0.8098, 'scale': 1.0, 'bbox': [85, 6890, 429, 6964]}
+0009. {'class_name': 'bulle', 'score': 0.6799, 'scale': 1.0, 'bbox': [311, 5594, 660, 5885]}
+0010. {'class_name': 'sfx', 'score': 0.6779, 'scale': 1.0, 'bbox': [21, 4919, 385, 5095]}
+0011. {'class_name': 'bulle', 'score': 0.895, 'scale': 1.0, 'bbox': [166, 8369, 582, 8601]}
+0012. {'class_name': 'bulle', 'score': 0.8883, 'scale': 1.0, 'bbox': [69, 6890, 429, 7152]}
+0013. {'class_name': 'bulle', 'score': 0.8758, 'scale': 1.0, 'bbox': [162, 8362, 584, 8677]}
+0014. {'class_name': 'bulle', 'score': 0.8518, 'scale': 1.0, 'bbox': [262, 11007, 672, 11319]}
+0015. {'class_name': 'bulle', 'score': 0.7695, 'scale': 1.0, 'bbox': [13, 13110, 673, 13521]}
+0016. {'class_name': 'bulle', 'score': 0.5772, 'scale': 1.0, 'bbox': [30, 13190, 671, 13777]}
+0017. {'class_name': 'bulle', 'score': 0.452, 'scale': 1.0, 'bbox': [7, 13112, 669, 13627]}
+0018. {'class_name': 'sfx', 'score': 0.8145, 'scale': 0.6, 'bbox': [32, 1494, 511, 2118]}
+0019. {'class_name': 'bulle', 'score': 0.8523, 'scale': 0.6, 'bbox': [380, 3810, 562, 3990]}
+0020. {'class_name': 'bulle', 'score': 0.8242, 'scale': 0.6, 'bbox': [8, 5483, 403, 5754]}
+0021. {'class_name': 'bulle', 'score': 0.7938, 'scale': 0.6, 'bbox': [306, 5588, 672, 5882]}
+0022. {'class_name': 'bulle', 'score': 0.7783, 'scale': 0.6, 'bbox': [8, 3689, 278, 3913]}
+0023. {'class_name': 'bulle', 'score': 0.6769, 'scale': 0.6, 'bbox': [433, 3518, 616, 3684]}
+0024. {'class_name': 'bulle', 'score': 0.8969, 'scale': 0.6, 'bbox': [162, 8362, 584, 8675]}
+0025. {'class_name': 'bulle', 'score': 0.879, 'scale': 0.6, 'bbox': [66, 6887, 432, 7157]}
+0026. {'class_name': 'bulle', 'score': 0.7971, 'scale': 0.6, 'bbox': [3, 5471, 408, 5764]}
+0027. {'class_name': 'bulle', 'score': 0.7838, 'scale': 0.6, 'bbox': [312, 5583, 674, 5885]}
+0028. {'class_name': 'bulle', 'score': 0.9087, 'scale': 0.6, 'bbox': [259, 11006, 671, 11323]}
+0029. {'class_name': 'bulle', 'score': 0.8744, 'scale': 0.6, 'bbox': [153, 8354, 591, 8683]}
+0030. {'class_name': 'bulle', 'score': 0.7969, 'scale': 0.6, 'bbox': [59, 9544, 615, 9973]}
+0031. {'class_name': 'bulle', 'score': 0.8996, 'scale': 0.6, 'bbox': [256, 11004, 676, 11326]}
+0032. {'class_name': 'bulle', 'score': 0.866, 'scale': 0.6, 'bbox': [4, 13090, 689, 13757]}
+
+[Confidence rejects] count=9
+0001. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.1795, 'threshold': 0.3, 'bbox': [129, 1470, 690, 2048]}
+0002. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2709, 'threshold': 0.3, 'bbox': [90, 1639, 498, 2115]}
+0003. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.171, 'threshold': 0.3, 'bbox': [73, 1639, 641, 2157]}
+0004. {'stage': 'confidence', 'class_name': 'bulle', 'scale': 1.0, 'score': 0.1905, 'threshold': 0.3, 'bbox': [71, 9582, 556, 9932]}
+0005. {'stage': 'confidence', 'class_name': 'bulle', 'scale': 1.0, 'score': 0.212, 'threshold': 0.3, 'bbox': [13, 13113, 675, 13192]}
+0006. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 1.0, 'score': 0.2823, 'threshold': 0.3, 'bbox': [85, 29195, 638, 29715]}
+0007. {'stage': 'confidence', 'class_name': 'out_text', 'scale': 1.0, 'score': 0.1554, 'threshold': 0.3, 'bbox': [89, 31962, 614, 32197]}
+0008. {'stage': 'confidence', 'class_name': 'sfx', 'scale': 0.6, 'score': 0.2082, 'threshold': 0.3, 'bbox': [46, 4933, 388, 5081]}
+0009. {'stage': 'confidence', 'class_name': 'bulle', 'scale': 0.6, 'score': 0.2248, 'threshold': 0.3, 'bbox': [10, 13659, 690, 13732]}
+
+[NMS per class rejects] count=18
+0001. {'stage': 'nms_per_class', 'class_name': 'sfx', 'iou': 0.837, 'threshold': 0.5, 'kept_score': 0.678, 'removed_score': 0.61, 'removed_bbox': [36, 4933, 385, 5087]}
+0002. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.962, 'threshold': 0.4, 'kept_score': 0.909, 'removed_score': 0.9, 'removed_bbox': [256, 11004, 676, 11326]}
+0003. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.975, 'threshold': 0.4, 'kept_score': 0.909, 'removed_score': 0.852, 'removed_bbox': [262, 11007, 672, 11319]}
+0004. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.731, 'threshold': 0.4, 'kept_score': 0.897, 'removed_score': 0.895, 'removed_bbox': [166, 8369, 582, 8601]}
+0005. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.99, 'threshold': 0.4, 'kept_score': 0.897, 'removed_score': 0.876, 'removed_bbox': [162, 8362, 584, 8677]}
+0006. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.916, 'threshold': 0.4, 'kept_score': 0.897, 'removed_score': 0.874, 'removed_bbox': [153, 8354, 591, 8683]}
+0007. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.955, 'threshold': 0.4, 'kept_score': 0.888, 'removed_score': 0.879, 'removed_bbox': [66, 6887, 432, 7157]}
+0008. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.981, 'threshold': 0.4, 'kept_score': 0.871, 'removed_score': 0.852, 'removed_bbox': [380, 3810, 562, 3990]}
+0009. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.593, 'threshold': 0.4, 'kept_score': 0.866, 'removed_score': 0.77, 'removed_bbox': [13, 13110, 673, 13521]}
+0010. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.773, 'threshold': 0.4, 'kept_score': 0.866, 'removed_score': 0.577, 'removed_bbox': [30, 13190, 671, 13777]}
+0011. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.747, 'threshold': 0.4, 'kept_score': 0.866, 'removed_score': 0.452, 'removed_bbox': [7, 13112, 669, 13627]}
+0012. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.838, 'threshold': 0.4, 'kept_score': 0.832, 'removed_score': 0.802, 'removed_bbox': [427, 3508, 619, 3684]}
+0013. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.931, 'threshold': 0.4, 'kept_score': 0.832, 'removed_score': 0.677, 'removed_bbox': [433, 3518, 616, 3684]}
+0014. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.958, 'threshold': 0.4, 'kept_score': 0.824, 'removed_score': 0.819, 'removed_bbox': [10, 5490, 401, 5757]}
+0015. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.901, 'threshold': 0.4, 'kept_score': 0.824, 'removed_score': 0.797, 'removed_bbox': [3, 5471, 408, 5764]}
+0016. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.906, 'threshold': 0.4, 'kept_score': 0.794, 'removed_score': 0.778, 'removed_bbox': [8, 3689, 278, 3913]}
+0017. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.948, 'threshold': 0.4, 'kept_score': 0.794, 'removed_score': 0.784, 'removed_bbox': [312, 5583, 674, 5885]}
+0018. {'stage': 'nms_per_class', 'class_name': 'bulle', 'iou': 0.928, 'threshold': 0.4, 'kept_score': 0.794, 'removed_score': 0.68, 'removed_bbox': [311, 5594, 660, 5885]}
+
+[NMS multi-scale rejects] count=0
+
+[Containment rejects] count=2
+0001. {'stage': 'containment', 'ratio': 1.0, 'keeper_class': 'bulle', 'keeper_score': 0.888, 'removed_class': 'bulle', 'removed_score': 0.81, 'removed_bbox': [85, 6890, 429, 6964]}
+0002. {'stage': 'containment', 'ratio': 1.0, 'keeper_class': 'sfx', 'keeper_score': 0.815, 'removed_class': 'sfx', 'removed_score': 0.309, 'removed_bbox': [87, 1496, 348, 1978]}
+
+[Geometry rejects] count=0
+
+[Final detections] count=12
+0001. {'class_name': 'bulle', 'score': 0.9087, 'scale': 0.6, 'bbox': [259, 11006, 671, 11323]}
+0002. {'class_name': 'bulle', 'score': 0.8969, 'scale': 0.6, 'bbox': [162, 8362, 584, 8675]}
+0003. {'class_name': 'bulle', 'score': 0.8883, 'scale': 1.0, 'bbox': [69, 6890, 429, 7152]}
+0004. {'class_name': 'bulle', 'score': 0.8707, 'scale': 1.0, 'bbox': [381, 3810, 563, 3988]}
+0005. {'class_name': 'bulle', 'score': 0.866, 'scale': 0.6, 'bbox': [4, 13090, 689, 13757]}
+0006. {'class_name': 'bulle', 'score': 0.8323, 'scale': 1.0, 'bbox': [436, 3519, 613, 3680]}
+0007. {'class_name': 'bulle', 'score': 0.8242, 'scale': 0.6, 'bbox': [8, 5483, 403, 5754]}
+0008. {'class_name': 'sfx', 'score': 0.8145, 'scale': 0.6, 'bbox': [32, 1494, 511, 2118]}
+0009. {'class_name': 'bulle', 'score': 0.7969, 'scale': 0.6, 'bbox': [59, 9544, 615, 9973]}
+0010. {'class_name': 'bulle', 'score': 0.794, 'scale': 1.0, 'bbox': [0, 3692, 278, 3925]}
+0011. {'class_name': 'bulle', 'score': 0.7938, 'scale': 0.6, 'bbox': [306, 5588, 672, 5882]}
+0012. {'class_name': 'sfx', 'score': 0.6779, 'scale': 1.0, 'bbox': [21, 4919, 385, 5095]}
+

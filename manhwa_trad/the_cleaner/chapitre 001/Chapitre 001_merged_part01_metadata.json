@@ -58,7 +58,7 @@
         11947
       ],
       "original": "HONEY!!",
-      "translated": "Chéri(e) !!",
+      "translated": "CHÉRIE !!",
       "confidence": 0.9816874265670776,
       "detection_confidence": 0.8735690712928772
     },
@@ -71,7 +71,7 @@
         14122
       ],
       "original": "HONEY, ARE YOU OKAY?!",
-      "translated": "Chéri(e), ça va ?!",
+      "translated": "CHÉRIE, TU VAS BIEN ?!",
       "confidence": 0.9500258763631185,
       "detection_confidence": 0.8756123781204224
     },
@@ -84,7 +84,7 @@
         15879
       ],
       "original": "WH-WHAT ABOUT OUR SON??",
-      "translated": "E-et notre fils ??",
+      "translated": "QU-QU'EN EST-IL DE NOTRE FILS ??",
       "confidence": 0.9424031178156534,
       "detection_confidence": 0.9107113480567932
     },
@@ -97,7 +97,7 @@
         16932
       ],
       "original": "HE'S... OKAY.",
-      "translated": "Il va... bien.",
+      "translated": "IL VA... BIEN.",
       "confidence": 0.9511577188968658,
       "detection_confidence": 0.893132746219635
     },
@@ -110,7 +110,7 @@
         17902
       ],
       "original": "THERE'S SOMETHING... I WANT TO... TELL YOU.",
-      "translated": "Il y a quelque chose... que je veux... te dire.",
+      "translated": "IL Y A QUELQUE CHOSE... QUE JE VEUX... TE DIRE.",
       "confidence": 0.9337373673915863,
       "detection_confidence": 0.9125534296035767
     },
@@ -123,7 +123,7 @@
         19733
       ],
       "original": "Y-YOU'RE BLEEDING..!!",
-      "translated": "T-tu saignes...!!",
+      "translated": "T-TU SAIGNES... !!",
       "confidence": 0.929656594991684,
       "detection_confidence": 0.8326370716094971
     },
@@ -136,7 +136,7 @@
         19949
       ],
       "original": "HOLD STILL, I'LL PATCH THE WOUND UP, OKAY?",
-      "translated": "Ne bouge pas, je vais soigner ta blessure, d'accord ?",
+      "translated": "NE BOUGE PAS, JE VAIS SOIGNER LA BLESSURE, D'ACCORD ?",
       "confidence": 0.9659594744443893,
       "detection_confidence": 0.8470585346221924
     },
@@ -149,7 +149,7 @@
         21520
       ],
       "original": "IT'S TOO LATE... I CAN FEEL MYSELF FADING.",
-      "translated": "C'est trop tard... Je sens que je m'éteins.",
+      "translated": "C'EST TROP TARD... JE SENS QUE JE M'ÉTEINS.",
       "confidence": 0.9531459410985311,
       "detection_confidence": 0.9005626440048218
     },
@@ -162,7 +162,7 @@
         22407
       ],
       "original": "BUT STILL... I HAD MY WEDDING. I HAVE NO REGRETS.",
-      "translated": "Mais quand même... J'ai eu mon mariage. Je n'ai aucun regret.",
+      "translated": "MAIS QUAND MÊME... J'AI EU MON MARIAGE. JE N'AI AUCUN REGRET.",
       "confidence": 0.9700707942247391,
       "detection_confidence": 0.8963770270347595
     },
@@ -175,7 +175,7 @@
         23925
       ],
       "original": "WE KNEW THIS WOULD HAPPEN, DIDN'T WE?",
-      "translated": "Nous savions que ça arriverait, n'est-ce pas ?",
+      "translated": "NOUS SAVIONS QUE CELA ARRIVERAIT, N'EST-CE PAS ?",
       "confidence": 0.9669468998908997,
       "detection_confidence": 0.8994637131690979
     },
@@ -188,7 +188,7 @@
         25108
       ],
       "original": "SO PLEASE...",
-      "translated": "Alors s'il te plaît...",
+      "translated": "ALORS S'IL TE PLAÎT...",
       "confidence": 0.9479448199272156,
       "detection_confidence": 0.8931244611740112
     },
@@ -201,7 +201,7 @@
         26095
       ],
       "original": "THIS IS MY FIRST... AND LAST REQUEST AS YOUR WIFE.",
-      "translated": "C'est ma première... et dernière requête en tant que ta femme.",
+      "translated": "C'EST MA PREMIÈRE... ET DERNIÈRE REQUÊTE EN TANT QUE TA FEMME.",
       "confidence": 0.9462824463844299,
       "detection_confidence": 0.8949711918830872
     },
@@ -214,7 +214,7 @@
         26473
       ],
       "original": "PLEASE HELP OUR SON. SO HE CAN LIVE THE LIFE THAT HE WANTS.",
-      "translated": "S'il te plaît, aide notre fils. Pour qu'il puisse vivre la vie qu'il désire.",
+      "translated": "S'IL TE PLAÎT, AIDE NOTRE FILS. POUR QU'IL PUISSE VIVRE LA VIE QU'IL DÉSIRE.",
       "confidence": 0.9546642899513245,
       "detection_confidence": 0.9086905121803284
     },
@@ -227,7 +227,7 @@
         28739
       ],
       "original": "...AND ALSO, I'M SO HAPPY I GOT TO BE... YOUR WIFE...",
-      "translated": "...Et aussi, je suis si heureuse d'avoir été... ta femme...",
+      "translated": "...ET AUSSI, JE SUIS SI HEUREUSE D'AVOIR PU ÊTRE... TA FEMME...",
       "confidence": 0.9057019054889679,
       "detection_confidence": 0.9243254065513611
     },
@@ -253,7 +253,7 @@
         34238
       ],
       "original": "HEH, HE HE... USING A WEDDING AS A TRAP?",
-      "translated": "Hé, hé hé... Utiliser un mariage comme piège ?",
+      "translated": "HEH, HE HE... UTILISER UN MARIAGE COMME PIÈGE ?",
       "confidence": 0.9094394246737162,
       "detection_confidence": 0.9097205996513367
     },
@@ -266,7 +266,7 @@
         35679
       ],
       "original": "ONLY BASTARDS LIKE YOU COULD COME UP WITH A DIRTY PLAN LIKE THAT...",
-      "translated": "Seuls des salauds comme vous pourraient concevoir un plan aussi ignoble...",
+      "translated": "SEULS DES SALAUDS COMME TOI POUVAIENT CONCEVOIR UN PLAN AUSSI DÉGOÛTANT...",
       "confidence": 0.950660914182663,
       "detection_confidence": 0.8501079678535461
     },
@@ -279,7 +279,7 @@
         36068
       ],
       "original": "IS THAT HOW BAD YOU WANTED TO TAKE ME DOWN? KHOF",
-      "translated": "C'est à ce point que vous vouliez me faire tomber ? KHOF",
+      "translated": "C'EST À CE POINT QUE TU VOULAIS ME FAIRE TOMBER ? KHOF",
       "confidence": 0.9677355289459229,
       "detection_confidence": 0.8559889793395996
     },
@@ -292,7 +292,7 @@
         38037
       ],
       "original": "BUT YOU KNOW THAT CHEONGDO NEVER FORGETS A TRAITOR.",
-      "translated": "Mais tu sais que Cheongdo n'oublie jamais un traître.",
+      "translated": "MAIS TU SAIS QUE CHEONGDO N'OUBLIE JAMAIS UN TRAÎTRE.",
       "confidence": 0.9603463411331177,
       "detection_confidence": 0.9054328203201294
     },
@@ -305,7 +305,7 @@
         38445
       ],
       "original": "JUST YOU WAIT. WHEN MY SON TAKES HOLD OF THE GROUP...",
-      "translated": "Attendez un peu. Quand mon fils prendra le contrôle du groupe...",
+      "translated": "ATTENDS UN PEU. QUAND MON FILS PRENDRA LE CONTRÔLE DU GROUPE...",
       "confidence": 0.9436457604169846,
       "detection_confidence": 0.9027007818222046
     },
@@ -318,7 +318,7 @@
         39391
       ],
       "original": "...HE'LL KILL YOUR SON.",
-      "translated": "...Il tuera votre fils.",
+      "translated": "...IL TUERA TON FILS.",
       "confidence": 0.9539794325828552,
       "detection_confidence": 0.8832979202270508
     },
@@ -331,7 +331,7 @@
         40915
       ],
       "original": "ONCE THAT SENILE OLD CHAIRMAN DIES, MY SON WILL TAKE OVER IN HIS PLACE.",
-      "translated": "Une fois que ce vieux président sénile mourra, mon fils prendra sa place.",
+      "translated": "UNE FOIS QUE CE VIEUX PRÉSIDENT SÉNILE MOURRA, MON FILS PRENDRA SA PLACE.",
       "confidence": 0.9601592868566513,
       "detection_confidence": 0.8954822421073914
     },
@@ -344,7 +344,7 @@
         41224
       ],
       "original": "LOOK FORWARD TO IT...",
-      "translated": "Attendez-vous-y...",
+      "translated": "RÉJOUIS-TOI...",
       "confidence": 0.9365310370922089,
       "detection_confidence": 0.8800818920135498
     },
@@ -357,7 +357,7 @@
         42329
       ],
       "original": "...AGENT 101.",
-      "translated": "...Agent 101.",
+      "translated": "...AGENT 101.",
       "confidence": 0.877342700958252,
       "detection_confidence": 0.9040424227714539
     },
@@ -370,7 +370,7 @@
         43094
       ],
       "original": "...OKAY.",
-      "translated": "...D'accord.",
+      "translated": "...D'ACCORD.",
       "confidence": 0.9273965358734131,
       "detection_confidence": 0.8902916312217712
     },
@@ -383,7 +383,7 @@
         45353
       ],
       "original": "I WILL.",
-      "translated": "C'est promis.",
+      "translated": "JE LE FERAI.",
       "confidence": 0.9213821291923523,
       "detection_confidence": 0.8444619178771973
     },
@@ -396,7 +396,7 @@
         52233
       ],
       "original": "UUUUGH!! I'M TOO TIRED!!!",
-      "translated": "UUUUGH !! Je suis trop fatigué !!!",
+      "translated": "UUUUGH !! JE SUIS TROP FATIGUÉ !!!",
       "confidence": 0.7897294163703918,
       "detection_confidence": 0.8804472088813782
     },
@@ -409,7 +409,7 @@
         53576
       ],
       "original": "WHAT DO YOU ME AN? WE JUST STARTED.",
-      "translated": "Que veux-tu dire ? On vient juste de commencer.",
+      "translated": "COMMENT ÇA ? ON VIENT JUSTE DE COMMENCER.",
       "confidence": 0.9211335629224777,
       "detection_confidence": 0.9053343534469604
     },
@@ -422,7 +422,7 @@
         54849
       ],
       "original": "BUT DAAAD!!!",
-      "translated": "Mais Papa !!!",
+      "translated": "MAIS PAAAAPA !!!",
       "confidence": 0.8517305254936218,
       "detection_confidence": 0.8929775357246399
     },
@@ -435,7 +435,7 @@
         55563
       ],
       "original": "I RAN IN THE MORNING AND DID SQUATS AT LUNCHTIME!!",
-      "translated": "J'ai couru le matin et j'ai fait des squats à midi !!",
+      "translated": "J'AI COURU CE MATIN ET J'AI FAIT DES SQUATS À MIDI !!",
       "confidence": 0.9572056978940964,
       "detection_confidence": 0.876406192779541
     },
@@ -448,7 +448,7 @@
         55961
       ],
       "original": "AND I EVEN SWAM! I'M ONLY 8 YEARS OLD! THIS IS CHILD ABUSE!!",
-      "translated": "Et j'ai même nagé ! J'ai seulement 8 ans ! C'est de la maltraitance !!",
+      "translated": "ET J'AI MÊME NAGÉ ! JE N'AI QUE 8 ANS ! C'EST DE LA MALTRAITANCE ENFANTINE !!",
       "confidence": 0.9306917985280355,
       "detection_confidence": 0.9120497703552246
     },
@@ -461,7 +461,7 @@
         58130
       ],
       "original": "WELL, THAT'S WHAT YOU GET FOR HITTING YOUR CLASSMATES.",
-      "translated": "Eh bien, c'est ce qui arrive quand tu frappes tes camarades de classe.",
+      "translated": "EH BIEN, C'EST CE QUI ARRIVE QUAND TU FRAPPES TES CAMARADES DE CLASSE.",
       "confidence": 0.9232155481974283,
       "detection_confidence": 0.9185826778411865
     }
