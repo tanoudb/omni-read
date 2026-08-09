@@ -78,6 +78,7 @@ class TranslationPipeline:
             pass
         self.segmenter = None
         self.detector = None  # Added YOLO persistent detector
+        self.detector_secondary = None  # Ensemble v3+v4
         
         self.logger.info(f"🖥️  Device: {self.device}")
         
@@ -117,19 +118,38 @@ class TranslationPipeline:
             return False
 
     def _ensure_detector(self):
-        """Load YOLO once and keep it in memory."""
+        """Load YOLO once and keep it in memory (+ modèle secondaire pour ensemble)."""
         if self.detector is not None:
             return True
         try:
             from core import YOLODetector
             from config import config
             self.detector = YOLODetector(config.YOLO_MODEL_PATH, self.device)
-            self.logger.info(f"   🎯 YOLO loaded (persistent)")
+            self.logger.info(f"   🎯 YOLO loaded (persistent): {config.YOLO_MODEL_PATH.name}")
+
+            self.detector_secondary = None
+            sec_path = getattr(config, 'YOLO_MODEL_PATH_SECONDARY', None)
+            if sec_path and Path(sec_path).exists() and Path(sec_path) != Path(config.YOLO_MODEL_PATH):
+                try:
+                    self.detector_secondary = YOLODetector(sec_path, self.device)
+                    self.logger.info(f"   🎯 YOLO secondaire (ensemble): {Path(sec_path).name}")
+                except Exception as e:
+                    self.logger.warning(f"   ⚠️ YOLO secondaire indisponible: {e}")
+                    self.detector_secondary = None
             return True
         except Exception as e:
             self.logger.error(f"Failed to load YOLO: {e}")
             self.detector = None
+            self.detector_secondary = None
             return False
+
+    def _detect_ensemble(self, image, logger=None) -> List[Detection]:
+        """Détection avec les 2 modèles (v3+v4) fusionnées + dédoublonnées par IoU."""
+        dets = self.detector.detect(image, logger=logger)
+        if getattr(self, 'detector_secondary', None) is not None:
+            dets_secondary = self.detector_secondary.detect(image, logger=logger)
+            dets = self._dedupe_overlap_detections(dets + dets_secondary)
+        return dets
 
     def _release_ocr_engine(self):
         if self.shared_ocr_engine is not None:
@@ -466,7 +486,7 @@ class TranslationPipeline:
                             img_padded, (resized_w, max_h), interpolation=cv2.INTER_AREA
                         )
 
-                    dets = self.detector.detect(detection_img, logger=self.logger)
+                    dets = self._detect_ensemble(detection_img, logger=self.logger)
 
                     if detection_scale != 1.0:
                         for det in dets:
@@ -1375,7 +1395,7 @@ class TranslationPipeline:
             detection_img = cv2.resize(img_padded, (resized_w, max_h), interpolation=cv2.INTER_AREA)
             self.logger.info(f"   ↕️ Limite hauteur active: {img_padded.shape[0]} -> {max_h}px")
 
-        detections = self.detector.detect(detection_img, logger=self.logger)
+        detections = self._detect_ensemble(detection_img, logger=self.logger)
         yolo_report = self.detector.get_last_debug_report()
 
         if detection_scale != 1.0:

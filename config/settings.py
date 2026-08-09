@@ -21,7 +21,11 @@ INPUT_DIR = BASE_DIR / "input"
 OUTPUT_DIR = BASE_DIR / "output"
 LOGS_DIR = BASE_DIR / "logs"
 
-YOLO_MODEL_PATH = MODEL_DIR / "manhwa_v3.pt"  # Nouveau modèle 4 classes
+YOLO_MODEL_PATH = MODEL_DIR / os.environ.get("WEBTOON_YOLO_MODEL", "manhwa_v4.pt")
+# Second modèle pour ensemble détection (union + dédoublonnage IoU). v4 est
+# encore en cours d'entraînement (checkpoint partiel) ; v3 comble ce que v4
+# rate encore. Vide pour désactiver l'ensemble.
+YOLO_MODEL_PATH_SECONDARY = MODEL_DIR / os.environ.get("WEBTOON_YOLO_MODEL_SECONDARY", "manhwa_v3.pt")
 OCR_CACHE_DIR = CACHE_DIR / "ocr_weights"
 TRANSLATION_CACHE_DIR = CACHE_DIR / "translation_models"
 INPAINTING_CACHE_DIR = CACHE_DIR / "inpainting_models"
@@ -491,7 +495,8 @@ class LoggingConfig:
 
 @dataclass
 class Config:
-    YOLO_MODEL_PATH: Path = YOLO_MODEL_PATH 
+    YOLO_MODEL_PATH: Path = YOLO_MODEL_PATH
+    YOLO_MODEL_PATH_SECONDARY: Path = YOLO_MODEL_PATH_SECONDARY
     INPUT_DIR: Path = INPUT_DIR
     OUTPUT_DIR: Path = OUTPUT_DIR
     LOGS_DIR: Path = LOGS_DIR
