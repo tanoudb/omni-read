@@ -268,27 +268,35 @@ class TextRenderer:
         except Exception:
             return None
 
-    def _load_font_by_key(self, font_key: str, size: int) -> Optional[ImageFont.FreeTypeFont]:
-        """
-        Charge le fichier canonique FONT_MAP[font_key] (même police pour toute
-        la série, choisie par le LLM selon l'émotion de la bulle) plutôt que la
-        recherche heuristique par mots-clés de dossier, qui ne peut pas
-        distinguer deux polices rangées dans le même dossier (ex: STANDARD et
-        THOUGHT vivent toutes deux dans "Bulles classiques").
-        """
-        path = FONT_MAP.get(font_key)
-        if not path or not Path(path).exists():
-            return None
-        try:
-            return ImageFont.truetype(path, size)
-        except Exception:
-            return None
+    def _load_font_from_path(self, path: Optional[str], size: int) -> Optional[ImageFont.FreeTypeFont]:
+        """Charge un chemin de police donné, avec repli sur la police générique."""
+        if path:
+            try:
+                return ImageFont.truetype(path, size)
+            except Exception:
+                pass
+        return self.get_font(size)
 
-    def get_font_for_style(
-        self, size: int, style: str = "dialogue", font_hint: str = "regular",
-    ) -> Optional[ImageFont.FreeTypeFont]:
+    def _resolve_font_path(
+        self, font_key: Optional[str], style: str = "dialogue", font_hint: str = "regular",
+    ) -> Optional[str]:
+        """
+        Détermine QUEL fichier de police utiliser — appelé une fois AVANT le
+        fitting (pas après) pour que la mesure/découpe du texte et le rendu
+        final utilisent exactement les mêmes métriques. Un swap de police
+        après coup, à la même taille, peut faire chevaucher les lignes si les
+        métriques diffèrent (police plus large/haute que celle mesurée).
+
+        Priorité : font_key choisi par le LLM (fichier canonique FONT_MAP,
+        cohérent sur toute la série) > heuristique par mots-clés de dossier.
+        """
+        if font_key:
+            p = FONT_MAP.get(font_key)
+            if p and Path(p).exists():
+                return p
+
         if not self.fonts:
-            return self.get_font(size)
+            return None
 
         style = (style or "dialogue").lower()
         keyword_map = {
@@ -310,12 +318,7 @@ class TextRenderer:
             key=lambda p: 0 if any(k in str(p).lower() for k in preferred) else 1,
         )
 
-        for font_path in ordered_paths:
-            try:
-                return ImageFont.truetype(font_path, size)
-            except Exception:
-                continue
-        return self.get_font(size)
+        return ordered_paths[0] if ordered_paths else None
 
     # ─────────────────────────────────────────────────────────────────────────
     # INNER ZONE
@@ -813,19 +816,102 @@ class TextRenderer:
             font_size = max(self.cfg.min_font_size, min(font_size, self.cfg.max_font_size))
         return font_size
 
+    def _bubble_width_profile(
+        self, bubble_mask: Optional[np.ndarray], box_h: int, n_bins: int = 10,
+    ) -> Optional[List[float]]:
+        """
+        Profil de largeur normalisé (0..1) de la bulle par bande verticale,
+        pour un wrap qui épouse sa forme ronde/ovale au lieu d'un rectangle
+        rigide (lignes courtes en haut/bas, longues au centre).
+        Retourne None si le masque est absent/trop petit (fallback rectangle).
+        """
+        if bubble_mask is None or not isinstance(bubble_mask, np.ndarray) or bubble_mask.size == 0:
+            return None
+        m = bubble_mask
+        if m.ndim == 3:
+            m = m[:, :, 0]
+        h = m.shape[0]
+        if h < n_bins * 2:
+            return None
+
+        widths = []
+        band = max(1, h // n_bins)
+        for i in range(n_bins):
+            y0 = min(h - 1, i * band)
+            y1 = min(h, y0 + band)
+            rows = m[y0:y1, :]
+            xs = np.nonzero(rows > 0)[1]
+            widths.append(float(xs.max() - xs.min()) if xs.size > 0 else 0.0)
+
+        max_w = max(widths) if widths else 0.0
+        if max_w <= 0:
+            return None
+        # Plancher pour ne jamais réduire une ligne à (quasi) rien.
+        return [max(0.45, w / max_w) for w in widths]
+
+    def _wrap_text_shape_aware(
+        self, text: str, font: ImageFont.FreeTypeFont, base_max_width: int, profile: List[float],
+    ) -> List[str]:
+        """Comme wrap_text, mais la largeur dispo varie ligne par ligne selon `profile`."""
+        n_bins = len(profile)
+
+        def _width_for_line(idx: int) -> int:
+            ratio = profile[min(idx, n_bins - 1)]
+            return max(10, int(base_max_width * ratio))
+
+        words = (text or "").split()
+        if not words:
+            return [""]
+
+        lines: List[str] = []
+        current: List[str] = []
+        for word in words:
+            test = ' '.join(current + [word])
+            try:
+                w = font.getbbox(test)[2] - font.getbbox(test)[0]
+            except Exception:
+                w = len(test) * (font.size // 2)
+            if w <= _width_for_line(len(lines)):
+                current.append(word)
+            else:
+                if current:
+                    lines.append(' '.join(current))
+                current = [word]
+        if current:
+            lines.append(' '.join(current))
+        return lines if lines else [""]
+
     def _fit_font_hard(
         self, text: str, font_size: int, inner_w: int, inner_h: int,
+        bubble_mask: Optional[np.ndarray] = None, class_name: str = "",
+        font_path: Optional[str] = None,
     ) -> Tuple[Optional[ImageFont.FreeTypeFont], int, List[str], int, int]:
-        """Ajuste strictement la taille pour éviter tout débordement."""
+        """
+        Ajuste strictement la taille pour éviter tout débordement.
+        Mesure/découpe avec `font_path` (la police RÉELLEMENT utilisée au
+        rendu) — mesurer avec une police puis dessiner avec une autre à la
+        même taille peut faire chevaucher les lignes si les métriques (largeur
+        de glyphe, hauteur de ligne) diffèrent entre les deux polices.
+        """
         fs = max(self.cfg.min_font_size, min(font_size, self.cfg.max_font_size))
 
+        # Wrap "forme de bulle" seulement pour les vraies bulles rondes —
+        # une boîte System/narration est déjà rectangulaire, pas besoin.
+        shape_profile = None
+        if str(class_name).lower().strip() == "bulle":
+            box_h = bubble_mask.shape[0] if isinstance(bubble_mask, np.ndarray) else 0
+            shape_profile = self._bubble_width_profile(bubble_mask, box_h)
+
         while fs >= self.cfg.min_font_size:
-            font = self.get_font(fs)
+            font = self._load_font_from_path(font_path, fs)
             if not font:
                 return None, fs, [], 0, 0
 
             wrap_w = max(10, int(inner_w * self.cfg.word_wrap_ratio))
-            lines = self.wrap_text(text, font, wrap_w)
+            if shape_profile is not None:
+                lines = self._wrap_text_shape_aware(text, font, wrap_w, shape_profile)
+            else:
+                lines = self.wrap_text(text, font, wrap_w)
 
             try:
                 line_h = font.getbbox("Tg")[3] - font.getbbox("Tg")[1]
@@ -849,7 +935,7 @@ class TextRenderer:
 
             fs -= self.cfg.font_size_step
 
-        font = self.get_font(self.cfg.min_font_size)
+        font = self._load_font_from_path(font_path, self.cfg.min_font_size)
         if not font:
             return None, self.cfg.min_font_size, [], 0, 0
         lines = self.wrap_text(text, font, max(10, int(inner_w * self.cfg.word_wrap_ratio)))
@@ -1012,14 +1098,12 @@ class TextRenderer:
 
         inner_w = max(10, tw - 2 * self.cfg.padding_horizontal)
         inner_h = max(10, th - 2 * self.cfg.padding_vertical)
-        font, fs, lines, lh, sp = self._fit_font_hard(text, fs, inner_w, inner_h)
+        resolved_font_path = self._resolve_font_path(font_key, text_style, font_hint)
+        font, fs, lines, lh, sp = self._fit_font_hard(
+            text, fs, inner_w, inner_h, bubble_mask=bubble_mask, class_name=class_name,
+            font_path=resolved_font_path,
+        )
 
-        if font is not None:
-            style_font = self._load_font_by_key(font_key, fs) if font_key else None
-            if style_font is None:
-                style_font = self.get_font_for_style(fs, text_style, font_hint=font_hint)
-            if style_font is not None:
-                font = style_font
         if not font:
             return img
 

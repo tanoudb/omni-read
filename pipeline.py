@@ -144,11 +144,18 @@ class TranslationPipeline:
             return False
 
     def _detect_ensemble(self, image, logger=None) -> List[Detection]:
-        """Détection avec les 2 modèles (v3+v4) fusionnées + dédoublonnées par IoU."""
+        """
+        Détection avec les 2 modèles (v3+v4) fusionnées + dédoublonnées par IoU.
+        Deux modèles différents prédisent rarement des boîtes ~identiques pour
+        la même bulle (contrairement aux passes multi-échelle d'un même
+        modèle) — un IoU 0.55 (pensé pour du mono-modèle) laisse passer des
+        doublons visibles (même bulle rendue deux fois, texte superposé).
+        Seuil plus permissif spécifiquement pour cette fusion inter-modèles.
+        """
         dets = self.detector.detect(image, logger=logger)
         if getattr(self, 'detector_secondary', None) is not None:
             dets_secondary = self.detector_secondary.detect(image, logger=logger)
-            dets = self._dedupe_overlap_detections(dets + dets_secondary)
+            dets = self._dedupe_overlap_detections(dets + dets_secondary, iou_threshold=0.35)
         return dets
 
     def _release_ocr_engine(self):
