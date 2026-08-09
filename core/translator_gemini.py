@@ -100,7 +100,39 @@ RESPONSE_SCHEMA = {
             "properties": {
                 "summary_update":       {"type": "string"},
                 "relationship_changes": {"type": "array", "items": {"type": "string"}},
-                "entity_discovery":     {"type": "object"},
+                "entity_discovery": {
+                    "type": "object",
+                    "properties": {
+                        # Listes d'objets à champs fixes plutôt qu'un dict à clés
+                        # libres : "additionalProperties" n'est pas supporté par le
+                        # schéma structuré Gemini, et en pratique un "object" libre
+                        # reste vide (le modèle ne le remplit pas de façon fiable).
+                        # Le pattern array-of-objects-à-champs-requis est celui qui
+                        # marche déjà très bien pour "traductions".
+                        "glossary": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "source": {"type": "string"},
+                                    "fr": {"type": "string"},
+                                },
+                                "required": ["source", "fr"],
+                            },
+                        },
+                        "personnages": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "nom": {"type": "string"},
+                                    "description": {"type": "string"},
+                                },
+                                "required": ["nom", "description"],
+                            },
+                        },
+                    },
+                },
             },
         },
     },
@@ -222,7 +254,11 @@ class GeminiTranslator:
                     config = self._genai_types.GenerateContentConfig(
                         temperature=0.15,
                         top_p=0.95,
-                        max_output_tokens=16_384,
+                        # 5-10 chapitres/appel (~250-1500 bulles) peuvent facilement
+                        # dépasser 16K tokens en sortie et tronquer le JSON, ce qui
+                        # laissait des bulles entières sans traduction. Gemini 2.5
+                        # Flash supporte jusqu'à 65536 tokens de sortie.
+                        max_output_tokens=65_536,
                         system_instruction=SYSTEM,
                         response_mime_type="application/json",
                         response_schema=RESPONSE_SCHEMA,
@@ -626,26 +662,16 @@ class GeminiTranslator:
         # Appel API
         parsed = self._call(prompt)
 
+        trad_map: Dict[str, str] = {}
+        font_map: Dict[str, str] = {}
+
         if parsed and "traductions" in parsed:
-            trad_map = {}
-            font_map = {}
             for item in parsed.get("traductions", []):
                 if not isinstance(item, dict):
                     continue
                 id_str = str(item.get("id", ""))
                 trad_map[id_str] = item.get("fr", "")
                 font_map[id_str] = item.get("font_key", "STANDARD")
-
-            for ch_id, idx, orig, cls in all_to_send:
-                composite_id = f"{ch_id}_{idx:03d}"
-                fr = trad_map.get(composite_id, "")
-
-                if cls.lower() in ("system", "system_card", "sys") and fr:
-                    fr = self._format_system_text(fr)
-
-                results[ch_id][str(idx)] = fr if fr else orig
-                if fr:
-                    self._cset(orig, fr)
 
             # State update
             su = parsed.get("state_update") or {}
@@ -654,10 +680,69 @@ class GeminiTranslator:
                 self._update_intrigue(summary)
             entities = su.get("entity_discovery") or {}
             if isinstance(entities, dict):
-                for k, v in entities.items():
-                    if isinstance(v, dict):
-                        self._state.setdefault(k, {}).update(v)
+                glossary_items = entities.get("glossary") or []
+                if isinstance(glossary_items, list):
+                    glossary = self._state.setdefault("glossary", {})
+                    for item in glossary_items:
+                        if isinstance(item, dict) and item.get("source") and item.get("fr"):
+                            glossary[str(item["source"])] = str(item["fr"])
+
+                perso_items = entities.get("personnages") or []
+                if isinstance(perso_items, list):
+                    personnages = self._state.setdefault("personnages", {})
+                    for item in perso_items:
+                        if isinstance(item, dict) and item.get("nom") and item.get("description"):
+                            personnages[str(item["nom"])] = str(item["description"])
             self._save_state()
+
+        # ── Retry ciblé pour les bulles manquées (LLM qui dévie de l'ID
+        # attendu, ou JSON tronqué sur un batch trop gros). Sans ça, une
+        # bulle manquante se traduisait par le texte anglais original
+        # simplement redessiné — "bulle pas traduite". On ne retente que
+        # si le 1er appel a au moins partiellement réussi (sinon la cascade
+        # de modèles est déjà épuisée, retenter identique ne sert à rien).
+        missing = [
+            (ch_id, idx, orig, cls)
+            for (ch_id, idx, orig, cls) in all_to_send
+            if not trad_map.get(f"{ch_id}_{idx:03d}", "")
+        ]
+        if missing and parsed:
+            print(f"      ⚠️  {len(missing)}/{len(all_to_send)} bulles manquantes dans la réponse — retry ciblé")
+            retry_numbered = "\n".join(
+                f"{ch_id}_{idx:03d}: {txt}" for ch_id, idx, txt, _ in missing
+            )
+            retry_prompt = PromptBank.build_full_prompt(
+                numbered_texts=retry_numbered,
+                context=ctx,
+                source_lang=self.source_lang,
+                is_mega_batch=True,
+            )
+            retry_parsed = self._call(retry_prompt)
+            if retry_parsed and "traductions" in retry_parsed:
+                for item in retry_parsed.get("traductions", []):
+                    if not isinstance(item, dict):
+                        continue
+                    id_str = str(item.get("id", ""))
+                    if item.get("fr"):
+                        trad_map[id_str] = item.get("fr", "")
+                        font_map[id_str] = item.get("font_key", "STANDARD")
+
+        still_missing = 0
+        for ch_id, idx, orig, cls in all_to_send:
+            composite_id = f"{ch_id}_{idx:03d}"
+            fr = trad_map.get(composite_id, "")
+
+            if cls.lower() in ("system", "system_card", "sys") and fr:
+                fr = self._format_system_text(fr)
+
+            if not fr:
+                still_missing += 1
+            results[ch_id][str(idx)] = fr if fr else orig
+            if fr:
+                self._cset(orig, fr)
+
+        if still_missing:
+            print(f"      ❌ {still_missing} bulle(s) restées non traduites après retry (texte original conservé)")
 
         self._save_cache()
         return results

@@ -3,5 +3,42 @@
     "109": {
       "font_key": "FEAR"
     }
+  },
+  "glossary": {
+    "Dragon Nation": "Nation Dragon",
+    "Herbalist": "Herboriste",
+    "Fireball": "Boule de Feu",
+    "Dragon Taming": "Domptage de Dragons",
+    "Dragon Tamer": "Dompteur de dragons",
+    "Summoner": "Invocateur",
+    "God-Tier Treasure Map": "Carte au trésor de rang divin",
+    "Rocky Plain": "Plaine Rocheuse",
+    "Eastshore City": "Ville d'Eastshore",
+    "Dragon Egg": "Œuf de dragon",
+    "Experience Points": "Points d'expérience",
+    "Equipment": "Équipement",
+    "Weapons": "Armes",
+    "Secret Realms": "Royaumes secrets",
+    "Life Professions": "Professions de vie",
+    "Chefs": "Chefs",
+    "Miners": "Mineurs",
+    "Attributes": "Attributs",
+    "Mage": "Mage",
+    "Combat Job": "Métier de combat",
+    "Enhancement Job": "Métier d'amélioration",
+    "Dragon": "Dragon",
+    "Dragon-like creatures": "Créatures draconiques",
+    "Hidden Class": "Classe cachée",
+    "First-day exclusive": "Exclusivité du premier jour",
+    "Random level": "Niveau aléatoire",
+    "Random location": "Emplacement aléatoire",
+    "Weakest profession": "Profession la plus faible",
+    "Soot Ball": "Boule de suie",
+    "Black King Kong": "King Kong noir"
+  },
+  "personnages": {
+    "Heidi Keller": "Tante de Luke, chef, gère une boutique de brioches à la vapeur.",
+    "Luke Foster": "Jeune homme transmigré, protagoniste, devient Dompteur de dragons.",
+    "Zac": "Personnage ayant obtenu un métier de combat."
   }
 }

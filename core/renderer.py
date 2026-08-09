@@ -298,6 +298,7 @@ class TextRenderer:
 
     def _get_inner_zone(
         self, x1: int, y1: int, x2: int, y2: int, img_shape: Tuple[int, ...],
+        bubble_mask: Optional[np.ndarray] = None,
     ) -> Tuple[int, int, int, int]:
         h_img, w_img = img_shape[:2]
         x1, y1 = max(0, int(x1)), max(0, int(y1))
@@ -306,8 +307,49 @@ class TextRenderer:
         box_w, box_h = x2 - x1, y2 - y1
         sx = max(5, int(box_w * self.SHRINK_RATIO))
         sy = max(5, int(box_h * self.SHRINK_RATIO))
+        inner_w = max(1, box_w - 2 * sx)
+        inner_h = max(1, box_h - 2 * sy)
 
-        return (x1 + sx, y1 + sy, x2 - sx, y2 - sy)
+        # Par défaut : centré sur le centre géométrique de la bbox.
+        cx, cy = x1 + box_w / 2.0, y1 + box_h / 2.0
+
+        # Si un masque de bulle précis est dispo, recentrer sur son centre de
+        # masse plutôt que sur le centre de la bbox : une bulle avec une queue
+        # (pointeur vers le personnage) a une bbox asymétrique, donc un
+        # centrage bbox tire visuellement le texte du côté de la queue.
+        if bubble_mask is not None and isinstance(bubble_mask, np.ndarray) and bubble_mask.size > 0:
+            m = bubble_mask
+            if m.ndim == 3:
+                m = m[:, :, 0]
+            if m.shape[:2] != (box_h, box_w) and box_w > 0 and box_h > 0:
+                try:
+                    m = cv2.resize(m, (box_w, box_h), interpolation=cv2.INTER_NEAREST)
+                except Exception:
+                    m = None
+            if m is not None:
+                ys, xs = np.nonzero(m > 0)
+                if xs.size > 200:
+                    cx = x1 + float(np.mean(xs))
+                    cy = y1 + float(np.mean(ys))
+
+        ix1 = cx - inner_w / 2.0
+        iy1 = cy - inner_h / 2.0
+        ix2 = ix1 + inner_w
+        iy2 = iy1 + inner_h
+
+        # Clamp pour rester dans la bbox d'origine
+        if ix1 < x1:
+            ix2 += (x1 - ix1); ix1 = x1
+        if iy1 < y1:
+            iy2 += (y1 - iy1); iy1 = y1
+        if ix2 > x2:
+            ix1 -= (ix2 - x2); ix2 = x2
+        if iy2 > y2:
+            iy1 -= (iy2 - y2); iy2 = y2
+        ix1, iy1 = max(x1, ix1), max(y1, iy1)
+        ix2, iy2 = min(x2, ix2), min(y2, iy2)
+
+        return (int(ix1), int(iy1), int(ix2), int(iy2))
 
     # ─────────────────────────────────────────────────────────────────────────
     # INPAINTING LOCAL
@@ -547,6 +589,15 @@ class TextRenderer:
         if pixels.size == 0:
             return None
 
+        # Référence de fond : pixels du crop EN DEHORS du masque de texte
+        # (le remplissage de la bulle/boîte), pour savoir quel cluster de
+        # k-means est vraiment "le texte" plutôt que de trancher au hasard.
+        outside_pixels = crop[local_mask == 0]
+        if outside_pixels.size > 0:
+            bg_ref = outside_pixels.reshape(-1, 3).astype(np.float32).mean(axis=0)
+        else:
+            bg_ref = None
+
         sample = pixels.astype(np.float32)
         if sample.shape[0] > 4000:
             idx = np.random.choice(sample.shape[0], 4000, replace=False)
@@ -558,17 +609,28 @@ class TextRenderer:
             labels = labels.flatten()
 
             counts = [np.sum(labels == i) for i in range(2)]
-            sat_scores = []
-            for i in range(2):
-                b, g, r = centers[i]
-                mx = max(float(r), float(g), float(b))
-                mn = min(float(r), float(g), float(b))
-                sat = (mx - mn) / max(1.0, mx)
-                sat_scores.append(sat)
 
-            pick = int(np.argmax(
-                np.array(sat_scores) + 0.15 * (np.array(counts) / max(1, sum(counts)))
-            ))
+            if bg_ref is not None:
+                # Le texte est le cluster le plus DIFFÉRENT du fond réel de la
+                # bulle (fiable même pour du texte noir/blanc peu saturé, où
+                # l'ancien départage par saturation était quasi aléatoire).
+                dists = [float(np.linalg.norm(centers[i] - bg_ref)) for i in range(2)]
+                pick = int(np.argmax(dists))
+            else:
+                # Pas de référence de fond dispo : retombe sur l'heuristique
+                # saturation + minorité de pixels (le texte est en général
+                # une minorité de pixels dans un masque de région élargi).
+                sat_scores = []
+                for i in range(2):
+                    b, g, r = centers[i]
+                    mx = max(float(r), float(g), float(b))
+                    mn = min(float(r), float(g), float(b))
+                    sat = (mx - mn) / max(1.0, mx)
+                    sat_scores.append(sat)
+                minority_bonus = [1.0 - (c / max(1, sum(counts))) for c in counts]
+                pick = int(np.argmax(
+                    np.array(sat_scores) + 0.15 * np.array(minority_bonus)
+                ))
             bgr = centers[pick]
         except Exception:
             bgr = np.median(sample, axis=0)
@@ -870,6 +932,7 @@ class TextRenderer:
         text_style: str = "dialogue",
         font_hint: str = "regular",
         class_name: str = "",
+        bubble_mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         if not text:
             return img
@@ -886,9 +949,9 @@ class TextRenderer:
             if anchor_box is not None:
                 ix1, iy1, ix2, iy2 = anchor_box
             else:
-                ix1, iy1, ix2, iy2 = self._get_inner_zone(x1, y1, x2, y2, img.shape)
+                ix1, iy1, ix2, iy2 = self._get_inner_zone(x1, y1, x2, y2, img.shape, bubble_mask=bubble_mask)
         else:
-            ix1, iy1, ix2, iy2 = self._get_inner_zone(x1, y1, x2, y2, img.shape)
+            ix1, iy1, ix2, iy2 = self._get_inner_zone(x1, y1, x2, y2, img.shape, bubble_mask=bubble_mask)
 
         tw, th = ix2 - ix1, iy2 - iy1
         if tw <= 0 or th <= 0:

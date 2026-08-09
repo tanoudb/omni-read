@@ -759,6 +759,7 @@ class TranslationPipeline:
                         text_style=getattr(det, 'text_style', 'dialogue'),
                         font_hint=getattr(det, 'font_hint', 'regular'),
                         class_name=getattr(det, 'class_name', ''),
+                        bubble_mask=getattr(det, 'mask_binary', None),
                     )
 
                 output_path = out_ch_dir / f"{img_path.stem}_translated.png"
@@ -1865,6 +1866,7 @@ class TranslationPipeline:
                 text_style=getattr(det, 'text_style', 'dialogue'),
                 font_hint=getattr(det, 'font_hint', 'regular'),
                 class_name=getattr(det, 'class_name', ''),
+                bubble_mask=getattr(det, 'mask_binary', None),
             )
             timings['text_render_seconds'] += max(0.0, time.perf_counter() - render_t0)
 
