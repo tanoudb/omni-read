@@ -1,6 +1,0 @@
-class: out_text
-bbox: [159.49595133463544, 55460, 522.7633666992188, 55650]
-ocr: HE GETS HIS SMILE FROM YOU, HONEY.
-translation: Chéri !
-style: dialogue
-mask_regions: 3

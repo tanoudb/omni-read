@@ -1,6 +1,0 @@
-class: bulle
-bbox: [104.73897298177084, 36159, 585.5159505208334, 36606]
-ocr: ...IF WE'RE STILL HERE BY THEN.
-translation: ...Si nous sommes encore ici à ce moment-là.
-style: dialogue
-mask_regions: 1

@@ -1,6 +1,0 @@
-class: bulle
-bbox: [6.57135009765625, 47266, 541.6685994466146, 47624]
-ocr: DAD!! I HEARDON TV THAT AI CANDRIVE NOW!!!
-translation: Papa!! J'ai entendu à la télé qu'AI peut maintenant conduire!!!
-style: dialogue
-mask_regions: 1

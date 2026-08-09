@@ -1,6 +1,0 @@
-class: bulle
-bbox: [101.30579630533855, 18949, 586.0831197102865, 19294]
-ocr: HARDER!!
-translation: HARDER!!
-style: scream
-mask_regions: 1

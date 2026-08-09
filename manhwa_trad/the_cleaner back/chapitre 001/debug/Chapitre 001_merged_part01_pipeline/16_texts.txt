@@ -1,6 +1,0 @@
-class: bulle
-bbox: [63.031005859375, 26053, 508.004150390625, 26473]
-ocr: PLEASE HELP OUR SON. SO HE CAN LIVE THE LIFE THAT HE WANTS.
-translation: S'il vous plaît, aidez notre fils. Pour qu'il puisse vivre la vie qu'il souhaite.
-style: dialogue
-mask_regions: 1

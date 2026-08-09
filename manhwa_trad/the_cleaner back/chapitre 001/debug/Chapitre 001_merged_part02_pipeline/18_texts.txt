@@ -1,6 +1,0 @@
-class: bulle
-bbox: [83.14036051432292, 23772, 609.253896077474, 24150]
-ocr: I'M SO TIRED!!!!!
-translation: Je suis si fatigué!!!!!!
-style: dialogue
-mask_regions: 1

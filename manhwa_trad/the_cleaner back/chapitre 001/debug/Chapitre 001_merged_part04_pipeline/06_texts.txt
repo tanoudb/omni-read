@@ -1,6 +1,0 @@
-class: bulle
-bbox: [269.6378580729167, 9410, 638.4318033854167, 9748]
-ocr: WH-WHO ARE THESE GUYS?!
-translation: Qui diable sont ces types ? !
-style: dialogue
-mask_regions: 1

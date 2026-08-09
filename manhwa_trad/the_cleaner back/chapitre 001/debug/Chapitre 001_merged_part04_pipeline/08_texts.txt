@@ -1,6 +1,0 @@
-class: bulle
-bbox: [132.40690867106122, 11472, 558.5079956054688, 11861]
-ocr: TO KILL ME?
-translation: Me tuer ?
-style: dialogue
-mask_regions: 1

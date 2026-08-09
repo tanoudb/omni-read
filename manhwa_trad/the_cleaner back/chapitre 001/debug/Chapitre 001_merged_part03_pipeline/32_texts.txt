@@ -1,6 +1,0 @@
-class: bulle
-bbox: [206.58276875813803, 53797, 606.237284342448, 54036]
-ocr: DAD!!
-translation: DAD!!
-style: scream
-mask_regions: 1

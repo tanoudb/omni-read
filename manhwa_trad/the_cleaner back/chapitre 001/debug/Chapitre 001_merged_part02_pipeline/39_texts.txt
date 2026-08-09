@@ -1,6 +1,0 @@
-class: bulle
-bbox: [123.71302286783855, 51883, 567.8999328613281, 52288]
-ocr: HAVE A GOOD DAYATWORK!
-translation: HAVE A GOOD DAYATWORK!
-style: scream
-mask_regions: 1

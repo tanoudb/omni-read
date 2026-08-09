@@ -1,6 +1,0 @@
-class: bulle
-bbox: [89.90758260091147, 15568, 432.26445515950525, 15879]
-ocr: WH-WHAT ABOUT OUR SON??
-translation: Qu-quoi de notre fils ??
-style: dialogue
-mask_regions: 1

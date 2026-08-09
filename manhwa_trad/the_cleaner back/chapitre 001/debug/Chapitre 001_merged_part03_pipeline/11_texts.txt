@@ -1,6 +1,0 @@
-class: bulle
-bbox: [162.25677490234375, 17714, 646.3162231445312, 18034]
-ocr: CHAIRMAN DAESEONG JINIS THE GRANDSON...
-translation: Le président Daeseong jinis est le petit-fils...
-style: dialogue
-mask_regions: 1

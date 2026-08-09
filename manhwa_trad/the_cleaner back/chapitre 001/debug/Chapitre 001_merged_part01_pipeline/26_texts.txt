@@ -1,6 +1,0 @@
-class: bulle
-bbox: [232.61057535807294, 40850, 644.6993001302084, 41224]
-ocr: LOOK FORWARD TO IT...
-translation: Attends-le avec impatience...
-style: dialogue
-mask_regions: 1

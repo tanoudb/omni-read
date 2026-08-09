@@ -1,6 +1,0 @@
-class: bulle
-bbox: [85.29429117838542, 48325, 605.961405436198, 48808]
-ocr: ….YOU'RE GOING TO NEED MORE THAN THAT.
-translation: ….YOU'RE GOING TO NEED MORE THAN THAT.
-style: dialogue
-mask_regions: 1

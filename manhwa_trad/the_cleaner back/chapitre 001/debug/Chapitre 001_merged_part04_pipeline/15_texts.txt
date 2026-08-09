@@ -1,6 +1,0 @@
-class: bulle
-bbox: [225.52220662434897, 22608, 606.9149271647136, 22953]
-ocr: .WHEN FAMILY IS INVOLVED.
-translation: Quand la famille est impliquée.
-style: dialogue
-mask_regions: 1

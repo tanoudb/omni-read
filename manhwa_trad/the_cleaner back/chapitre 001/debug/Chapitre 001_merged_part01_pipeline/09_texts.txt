@@ -1,6 +1,0 @@
-class: bulle
-bbox: [41.02455139160156, 19433, 468.81591796875, 19733]
-ocr: Y-YOU'RE BLEEDING..!!
-translation: T-Tu saignes... !!
-style: dialogue
-mask_regions: 1

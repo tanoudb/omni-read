@@ -1,6 +1,0 @@
-class: bulle
-bbox: [140.8890380859375, 19619, 686.026611328125, 19949]
-ocr: HOLD STILL, I'LL PATCH THE WOUND UP, OKAY?
-translation: Reste tranquille, je vais soigner ta blessure, d'accord ?
-style: dialogue
-mask_regions: 1

@@ -1,6 +1,0 @@
-class: bulle
-bbox: [82.90659586588542, 35611, 585.1186116536459, 36068]
-ocr: IS THAT HOW BAD YOU WANTED TO TAKE ME DOWN? KHOF
-translation: C'est donc à ce point que tu voulais m'avoir ? Khof
-style: dialogue
-mask_regions: 2

@@ -1,6 +1,0 @@
-class: bulle
-bbox: [158.66622924804688, 9984, 646.0430399576824, 10438]
-ocr: YET YOU USED WHATITAUGHT YOU FORSOMETHING AS PETTYAS THAT?
-translation: Encore vous utilisez-vous ce que j’ai enseigné pour quelque chose d’aussi futile que ça ?
-style: dialogue
-mask_regions: 1

@@ -1,6 +1,0 @@
-class: bulle
-bbox: [30.236307779947918, 40729, 514.4954935709636, 41177]
-ocr: ALL THE STORIES ABOUT YOU WERE REAL.
-translation: Toutes les histoires sur toi étaient réelles.
-style: dialogue
-mask_regions: 1

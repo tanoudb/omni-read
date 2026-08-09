@@ -1,6 +1,0 @@
-class: bulle
-bbox: [91.95327758789062, 38913, 599.3577067057292, 39391]
-ocr: ...HE'LL KILL YOUR SON.
-translation: Il tuerait ton fils.
-style: dialogue
-mask_regions: 4

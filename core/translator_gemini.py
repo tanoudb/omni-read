@@ -175,6 +175,7 @@ class GeminiTranslator:
         self._state = self._load_state()
         self._cache = self._load_cache()
         self._cache_dirty = False
+        self._last_font_map: Dict[str, str] = {}  # composite_id -> font_key (dernier appel mega-batch)
 
         # Init SDK
         self._client = None
@@ -744,8 +745,18 @@ class GeminiTranslator:
         if still_missing:
             print(f"      ❌ {still_missing} bulle(s) restées non traduites après retry (texte original conservé)")
 
+        # Exposé pour le rendu : font_key choisi par le LLM, par ID composite.
+        # (Le résultat "results" garde son contrat existant — juste le texte —
+        # pour ne rien casser côté appelants qui ne s'intéressent qu'à ça.)
+        self._last_font_map.update(font_map)
+
         self._save_cache()
         return results
+
+    def get_font_key(self, composite_id: str) -> Optional[str]:
+        """font_key choisi par le LLM pour cet ID (dernier mega-batch), ou None."""
+        fk = self._last_font_map.get(composite_id)
+        return fk if fk in FONT_MAP else None
 
     # ── STATS ─────────────────────────────────────────────────────────────
 

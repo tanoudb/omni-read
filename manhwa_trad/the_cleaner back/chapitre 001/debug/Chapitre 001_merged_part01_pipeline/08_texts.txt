@@ -1,6 +1,0 @@
-class: bulle
-bbox: [72.04629262288412, 17568, 435.3232828776042, 17902]
-ocr: THERE'S SOMETHING... I WANT TO... TELL YOU.
-translation: Il y a quelque chose... je veux te le dire.
-style: dialogue
-mask_regions: 2

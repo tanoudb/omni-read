@@ -1,6 +1,0 @@
-class: bulle
-bbox: [406.5299377441406, 26893, 650.8028564453125, 27121]
-ocr: HUH?
-translation: HUH?
-style: dialogue
-mask_regions: 1

@@ -1,6 +1,0 @@
-class: bulle
-bbox: [31.075032552083336, 13926, 627.739969889323, 14284]
-ocr: I'M GONNA END UP AN OLD UNMARRIEDMAN AT THIS RATE!
-translation: Je vais finir par être un vieux garçon à ce rythme !
-style: dialogue
-mask_regions: 1

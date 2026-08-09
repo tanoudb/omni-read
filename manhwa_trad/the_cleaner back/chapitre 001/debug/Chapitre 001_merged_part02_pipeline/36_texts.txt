@@ -1,6 +1,0 @@
-class: bulle
-bbox: [229.07185872395834, 47541, 677.6579793294271, 47832]
-ocr: BUT YOU'RE A DRIVER!
-translation: BUT YOU'RE A DRIVER!
-style: scream
-mask_regions: 1

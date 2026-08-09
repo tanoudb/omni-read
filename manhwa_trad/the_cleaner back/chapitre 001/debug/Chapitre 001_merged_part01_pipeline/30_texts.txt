@@ -1,6 +1,0 @@
-class: bulle
-bbox: [82.03903198242188, 51861, 619.736073811849, 52233]
-ocr: UUUUGH!! I'M TOO TIRED!!!
-translation: Uuuugh !! Je suis trop fatigué !!!
-style: dialogue
-mask_regions: 1

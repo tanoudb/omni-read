@@ -1,6 +1,0 @@
-class: bulle
-bbox: [27.734375, 56672, 660.3548177083334, 57279]
-ocr: ...WHAT REAL STRENGTH LOOKS LIKE.
-translation: ...Ce que la véritable force ressemble à.
-style: dialogue
-mask_regions: 2

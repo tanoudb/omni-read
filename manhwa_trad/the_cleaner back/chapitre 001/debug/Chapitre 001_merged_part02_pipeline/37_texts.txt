@@ -1,6 +1,0 @@
-class: bulle
-bbox: [69.39778645833334, 48313, 615.5113728841146, 48665]
-ocr: YOU'RE GONNA HAVE TO FINDANOTHER JOB SOON!
-translation: Tu vas devoir trouver un autre emploi bientôt !
-style: dialogue
-mask_regions: 1

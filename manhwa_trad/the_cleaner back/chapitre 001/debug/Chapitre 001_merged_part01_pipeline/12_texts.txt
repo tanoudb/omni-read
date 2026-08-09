@@ -1,6 +1,0 @@
-class: bulle
-bbox: [133.4911600748698, 22016, 557.3230997721355, 22407]
-ocr: BUT STILL... I HAD MY WEDDING. I HAVE NO REGRETS.
-translation: Mais quand même... j'ai eu mon mariage. Je n'ai aucun regret.
-style: dialogue
-mask_regions: 1

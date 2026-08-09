@@ -1,6 +1,0 @@
-class: bulle
-bbox: [17.255961100260418, 10593, 465.062255859375, 11004]
-ocr: DID THE YOLNGCHAIRMAN JINSEND YOU ALL.
-translation: Le jeune chairman Jin vous a-t-il tous convaincus.
-style: dialogue
-mask_regions: 1

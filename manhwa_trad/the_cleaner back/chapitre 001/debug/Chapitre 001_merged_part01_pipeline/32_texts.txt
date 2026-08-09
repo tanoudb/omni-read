@@ -1,6 +1,0 @@
-class: bulle
-bbox: [48.922322591145836, 54531, 395.1677958170573, 54849]
-ocr: BUT DAAAD!!!
-translation: Mais papa !!!
-style: dialogue
-mask_regions: 1

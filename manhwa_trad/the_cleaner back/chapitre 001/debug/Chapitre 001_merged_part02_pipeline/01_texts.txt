@@ -1,6 +1,0 @@
-class: bulle
-bbox: [61.54693603515625, 116, 460.0725301106771, 486]
-ocr: AWEEKOF SPARTANTRAINING AS PUNISHMENT.
-translation: Une semaine de formation spartiate en punition.
-style: dialogue
-mask_regions: 1

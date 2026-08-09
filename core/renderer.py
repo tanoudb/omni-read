@@ -36,6 +36,7 @@ from utils.mask_builder import (
     build_inpainting_mask_bbox_fallback,
     regions_to_crop_coords,
 )
+from utils.gemini_prompt import FONT_MAP
 
 # ── ColorResolver (inline pour éviter import circulaire) ──────────────────
 
@@ -78,9 +79,10 @@ def _resolve_colors(
     """
     cls = (class_name or "").lower().strip()
 
-    # ── System → holographique ──
-    if cls in ("system", "system_card", "sys"):
-        return _SYSTEM_TEXT, _SYSTEM_OUTLINE, _SYSTEM_WIDTH
+    # NB: le style "System" se distingue déjà par sa police dédiée (font_key
+    # "SYSTEM" -> FONT_MAP), pas besoin d'un gimmick couleur cyan holographique
+    # en plus — jugé peu lisible/moche. On laisse tomber dans la même logique
+    # de contraste auto que le reste (noir/blanc selon le fond réel).
 
     # ── Détection fond ──
     h, w = img_bgr.shape[:2]
@@ -112,6 +114,13 @@ def _resolve_colors(
 
     # ── Contraste réel WCAG ──
     cr = _contrast_ratio(text_color, bg)
+
+    # Cas standard "texte noir sur bulle blanche" : jamais d'outline, même si
+    # le bruit d'échantillonnage du fond fait légèrement chuter le ratio sous
+    # le seuil "Contraste Pro" — un contour sur ce combo classique donne un
+    # effet "texte à intérieur blanc" indésirable.
+    if _simple_luma(bg) > 200 and _simple_luma(text_color) < 60:
+        return text_color, None, 0
 
     # Contraste Pro : si ratio > 12 → PAS d'outline
     if cr >= _CONTRAST_PRO_THRESHOLD:
@@ -256,6 +265,22 @@ class TextRenderer:
                 continue
         try:
             return ImageFont.load_default()
+        except Exception:
+            return None
+
+    def _load_font_by_key(self, font_key: str, size: int) -> Optional[ImageFont.FreeTypeFont]:
+        """
+        Charge le fichier canonique FONT_MAP[font_key] (même police pour toute
+        la série, choisie par le LLM selon l'émotion de la bulle) plutôt que la
+        recherche heuristique par mots-clés de dossier, qui ne peut pas
+        distinguer deux polices rangées dans le même dossier (ex: STANDARD et
+        THOUGHT vivent toutes deux dans "Bulles classiques").
+        """
+        path = FONT_MAP.get(font_key)
+        if not path or not Path(path).exists():
+            return None
+        try:
+            return ImageFont.truetype(path, size)
         except Exception:
             return None
 
@@ -933,6 +958,7 @@ class TextRenderer:
         font_hint: str = "regular",
         class_name: str = "",
         bubble_mask: Optional[np.ndarray] = None,
+        font_key: Optional[str] = None,
     ) -> np.ndarray:
         if not text:
             return img
@@ -989,7 +1015,9 @@ class TextRenderer:
         font, fs, lines, lh, sp = self._fit_font_hard(text, fs, inner_w, inner_h)
 
         if font is not None:
-            style_font = self.get_font_for_style(fs, text_style, font_hint=font_hint)
+            style_font = self._load_font_by_key(font_key, fs) if font_key else None
+            if style_font is None:
+                style_font = self.get_font_for_style(fs, text_style, font_hint=font_hint)
             if style_font is not None:
                 font = style_font
         if not font:

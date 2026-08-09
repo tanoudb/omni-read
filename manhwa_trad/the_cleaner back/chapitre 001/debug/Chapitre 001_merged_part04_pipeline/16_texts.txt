@@ -1,6 +1,0 @@
-class: bulle
-bbox: [117.57471720377605, 26005, 573.0648803710938, 26269]
-ocr: iiavo
-translation: iiavo
-style: dialogue
-mask_regions: 1

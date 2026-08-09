@@ -1,6 +1,0 @@
-class: bulle
-bbox: [87.19014485677084, 31988, 620.6358846028646, 32369]
-ocr: WAAAH! WAAAH!
-translation: WAAAH! WAAAH!
-style: scream
-mask_regions: 1

@@ -1,6 +1,0 @@
-class: bulle
-bbox: [204.60731506347656, 41009, 577.12939453125, 41343]
-ocr: THIS ISN'T THE WAY TO THE RESTAURANT!
-translation: Ce n'est pas la voie menant au restaurant !
-style: dialogue
-mask_regions: 1

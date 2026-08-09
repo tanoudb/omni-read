@@ -1,6 +1,0 @@
-class: bulle
-bbox: [47.491099039713546, 40484, 535.3816223144531, 40915]
-ocr: ONCE THAT SENILE OLD CHAIRMAN DIES, MY SON WILL TAKE OVER IN HIS PLACE.
-translation: Une fois que ce vieux président sénile sera mort, mon fils prendra sa place.
-style: dialogue
-mask_regions: 1

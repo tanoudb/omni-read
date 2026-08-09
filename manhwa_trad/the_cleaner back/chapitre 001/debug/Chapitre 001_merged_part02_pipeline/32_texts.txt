@@ -1,6 +1,0 @@
-class: bulle
-bbox: [335.47388712565106, 44126, 666.0101826985677, 44429]
-ocr: HUP! BETTER GET GOING.
-translation: Hup ! Il faut vraiment que je parte.
-style: dialogue
-mask_regions: 1

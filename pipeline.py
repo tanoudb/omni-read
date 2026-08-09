@@ -655,6 +655,8 @@ class TranslationPipeline:
                         for out_idx, (img_path, det_idx, orig, _cls) in enumerate(valid_texts):
                             det = dets_map.get(img_path, [])[det_idx]
                             tr = ch_results.get(str(out_idx), "")
+                            if hasattr(translator, 'get_font_key'):
+                                det.font_key = translator.get_font_key(f"{ch_name}_{out_idx:03d}")
                             if tr:
                                 det.text_nllb_raw = tr
                                 det.text_translated = tr
@@ -760,6 +762,7 @@ class TranslationPipeline:
                         font_hint=getattr(det, 'font_hint', 'regular'),
                         class_name=getattr(det, 'class_name', ''),
                         bubble_mask=getattr(det, 'mask_binary', None),
+                        font_key=getattr(det, 'font_key', None),
                     )
 
                 output_path = out_ch_dir / f"{img_path.stem}_translated.png"

@@ -1,6 +1,0 @@
-class: bulle
-bbox: [56.3836669921875, 14744, 634.8054504394531, 15274]
-ocr: .THINGS MOVED MORE QLICKLY THAN WE'D PLANNED, YOU SEE.
-translation: Les choses se sont mises en mouvement plus rapidement que prévu, tu vois.
-style: dialogue
-mask_regions: 2

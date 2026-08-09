@@ -1,6 +1,0 @@
-class: bulle
-bbox: [210.9326934814453, 2062, 663.4986368815105, 2480]
-ocr: I'D BE ABLE TO EXPLAIN IT TO YOU SOMEDAY...
-translation: Un jour, je pourrai te l'expliquer...
-style: dialogue
-mask_regions: 1

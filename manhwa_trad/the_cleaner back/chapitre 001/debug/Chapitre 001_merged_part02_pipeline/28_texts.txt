@@ -1,6 +1,0 @@
-class: bulle
-bbox: [59.46573893229167, 38870, 498.9756266276042, 39250]
-ocr: AND SHE WAS DROP DEAD GORGEOUS.
-translation: Elle était absolument stupéfiante.
-style: dialogue
-mask_regions: 1

@@ -1,6 +1,0 @@
-class: out_text
-bbox: [79.99917602539062, 5921, 366.3413391113281, 6082]
-ocr: GLUNK
-translation: GLUNK
-style: dialogue
-mask_regions: 1

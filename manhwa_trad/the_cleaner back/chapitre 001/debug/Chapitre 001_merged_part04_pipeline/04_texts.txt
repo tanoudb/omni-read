@@ -1,6 +1,0 @@
-class: bulle
-bbox: [84.36589558919272, 3502, 607.7544148763021, 3983]
-ocr: ...BUT I'M NOT SURE I'LL BE ABLE TO NOW.
-translation: ...Mais je ne suis pas sûr de pouvoir le faire maintenant.
-style: dialogue
-mask_regions: 1

@@ -1,6 +1,0 @@
-class: bulle
-bbox: [168.68998209635419, 29277, 519.7102864583334, 29594]
-ocr: WHAT WAS MOMLIKE?
-translation: Qu'est-ce que momlike ?
-style: dialogue
-mask_regions: 1

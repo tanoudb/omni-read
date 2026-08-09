@@ -1,6 +1,0 @@
-class: bulle
-bbox: [160.8257039388021, 37996, 657.698465983073, 38445]
-ocr: JUST YOU WAIT. WHEN MY SON TAKES HOLD OF THE GROUP...
-translation: Attends un peu... Quand mon fils prendra le contrôle du groupe...
-style: dialogue
-mask_regions: 1

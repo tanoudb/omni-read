@@ -1,6 +1,0 @@
-class: bulle
-bbox: [59.801025390625, 19596, 633.4779866536459, 20009]
-ocr: FASTER!! STRONGER!!
-translation: FASTER!! STRONGER!!
-style: scream
-mask_regions: 1

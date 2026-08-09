@@ -1,6 +1,0 @@
-class: bulle
-bbox: [111.33061726888022, 45827, 579.6253967285156, 46253]
-ocr: OF COURSE! THE WEEKENDS ARE WHEN I GET THE MOST CUSTOMERS.
-translation: Bien sûr ! C'est pendant les week-ends que j'ai le plus de clients.
-style: dialogue
-mask_regions: 1

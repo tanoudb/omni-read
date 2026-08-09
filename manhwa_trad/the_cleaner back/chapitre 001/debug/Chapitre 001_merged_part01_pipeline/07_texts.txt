@@ -1,6 +1,0 @@
-class: bulle
-bbox: [317.1742248535156, 16661, 608.8401794433594, 16932]
-ocr: HE'S... OKAY.
-translation: HE'S... OKAY.
-style: dialogue
-mask_regions: 1

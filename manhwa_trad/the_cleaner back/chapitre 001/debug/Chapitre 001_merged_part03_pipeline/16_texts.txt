@@ -1,6 +1,0 @@
-class: bulle
-bbox: [108.3470458984375, 23695, 361.1723937988281, 23928]
-ocr: SON...
-translation: SON...
-style: dialogue
-mask_regions: 1

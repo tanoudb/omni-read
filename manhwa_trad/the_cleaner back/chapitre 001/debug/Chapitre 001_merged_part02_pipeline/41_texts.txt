@@ -1,6 +1,0 @@
-class: out_text
-bbox: [8.39752197265625, 58121, 658.8018188476562, 58229]
-ocr: 12 YEARS LATER
-translation: 12 YEARS LATER
-style: dialogue
-mask_regions: 2

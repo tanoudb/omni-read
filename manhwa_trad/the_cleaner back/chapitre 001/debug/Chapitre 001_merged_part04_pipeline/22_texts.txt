@@ -1,6 +1,0 @@
-class: bulle
-bbox: [10.6878662109375, 43684, 486.69769287109375, 44126]
-ocr: IWASN'T HAPPY ABOUT THE WHOLE LOT OF US BEING SENT OUT...
-translation: Je n'étais pas content du tout de voir tous nous être envoyés...
-style: dialogue
-mask_regions: 1

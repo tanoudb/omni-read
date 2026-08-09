@@ -1,6 +1,0 @@
-class: bulle
-bbox: [61.68463134765625, 18952, 403.1454772949219, 19266]
-ocr: YOU KNOW VERY WELL..
-translation: Vous le savez parfaitement..
-style: dialogue
-mask_regions: 1

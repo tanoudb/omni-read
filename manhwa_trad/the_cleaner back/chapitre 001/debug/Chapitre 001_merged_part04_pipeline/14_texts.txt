@@ -1,6 +1,0 @@
-class: bulle
-bbox: [74.26657104492188, 21309, 411.71807861328125, 21621]
-ocr: ESPECIALLY.
-translation: ESPECIALLY.
-style: dialogue
-mask_regions: 1

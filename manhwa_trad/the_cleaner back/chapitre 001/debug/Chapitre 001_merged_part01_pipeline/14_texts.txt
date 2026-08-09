@@ -1,6 +1,0 @@
-class: bulle
-bbox: [40.17340087890625, 24821, 345.391357421875, 25108]
-ocr: SO PLEASE...
-translation: SO PLEASE...
-style: dialogue
-mask_regions: 1

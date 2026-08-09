@@ -1,6 +1,0 @@
-class: bulle
-bbox: [216.93954467773438, 30247, 662.5386047363281, 30596]
-ocr: HA,ICAN'T EVEN REMEMBER THE LAST TIME WE WENT OUT LIKE THIS!
-translation: Hé, je ne me souviens même plus de la dernière fois où nous sommes sortis comme ça !
-style: dialogue
-mask_regions: 1

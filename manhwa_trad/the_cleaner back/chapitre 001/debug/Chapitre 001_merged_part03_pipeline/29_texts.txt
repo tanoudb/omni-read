@@ -1,6 +1,0 @@
-class: bulle
-bbox: [269.11516825358075, 42265, 637.0975748697917, 42605]
-ocr: WHY AREN'T YOU SAYING ANYTHING--
-translation: Pourquoi tu ne dis rien--
-style: dialogue
-mask_regions: 1

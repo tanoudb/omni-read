@@ -1,6 +1,0 @@
-class: bulle
-bbox: [298.97650146484375, 14313, 625.3257446289062, 14613]
-ocr: A-ANYTHING BUT THAT...
-translation: A-ANYTHING BUT THAT...
-style: dialogue
-mask_regions: 1

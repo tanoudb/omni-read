@@ -1,6 +1,0 @@
-class: bulle
-bbox: [220.3112284342448, 8434, 687.2229512532552, 8841]
-ocr: GET SOME REST BEFORE YOUR EVENING WEIGHT TRAINING.
-translation: Prends ta réplique avant ton entraînement de poids cet evening.
-style: dialogue
-mask_regions: 1

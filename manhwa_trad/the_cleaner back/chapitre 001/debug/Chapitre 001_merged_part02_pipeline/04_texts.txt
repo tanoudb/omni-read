@@ -1,6 +1,0 @@
-class: bulle
-bbox: [214.06537373860678, 2383, 667.4102783203125, 2797]
-ocr: AND THEY MADE FUNOFMEFORNOT HAVINGAMOM!
-translation: Et ils se moquaient de moi pour ne pas avoir de mère !
-style: dialogue
-mask_regions: 1

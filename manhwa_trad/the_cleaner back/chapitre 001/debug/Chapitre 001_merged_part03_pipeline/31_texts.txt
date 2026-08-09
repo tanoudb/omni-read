@@ -1,6 +1,0 @@
-class: bulle
-bbox: [100.9271240234375, 43725, 588.9543660481771, 44174]
-ocr: WHAT THE... WHY ARE THERE A WHOLE BUNCH OFBLACK CARS FOLLOWING US..?
-translation: Qu'est-ce que... pourquoi on est suivis par une dizaine de voitures noires..?
-style: dialogue
-mask_regions: 1

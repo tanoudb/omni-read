@@ -1,6 +1,0 @@
-class: bulle
-bbox: [127.18373616536459, 13816, 566.1029052734375, 14122]
-ocr: HONEY, ARE YOU OKAY?!
-translation: Chérie, ça va ?!
-style: dialogue
-mask_regions: 1

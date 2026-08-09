@@ -1,6 +1,0 @@
-class: bulle
-bbox: [165.8080291748047, 38457, 651.9776407877605, 38885]
-ocr: SHE LOVED YOu uNTIL HER DYING MOMENTS, ISu.
-translation: Elle t'a aimé jusqu'à sa dernière seconde, isu.
-style: dialogue
-mask_regions: 1

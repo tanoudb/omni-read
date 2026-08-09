@@ -1,6 +1,0 @@
-class: bulle
-bbox: [49.454854329427086, 55599, 567.9783121744792, 55961]
-ocr: AND I EVEN SWAM! I'M ONLY 8 YEARS OLD! THIS IS CHILD ABUSE!!
-translation: Et j'ai même nagé ! J'ai seulement 8 ans ! C'est de la négligence envers un enfant !!
-style: dialogue
-mask_regions: 1

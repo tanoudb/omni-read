@@ -1,6 +1,0 @@
-class: bulle
-bbox: [131.8352762858073, 32459, 557.8782653808594, 32851]
-ocr: MYFRIENDS GO EVERY WHERE WITH THEIR MOMS...
-translation: Mes amis vont partout avec leurs mamans...
-style: dialogue
-mask_regions: 1

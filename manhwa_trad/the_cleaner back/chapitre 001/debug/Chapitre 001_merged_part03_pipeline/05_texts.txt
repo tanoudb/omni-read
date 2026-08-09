@@ -1,6 +1,0 @@
-class: bulle
-bbox: [23.065155029296875, 11470, 500.9418029785156, 11753]
-ocr: IFYOU'RE GOING TO WORK ME SO HARD,CAN'T YOU ATLEASTTELLME
-translation: Si tu me travailles si dur, ne pouvais-tu au moins me le dire?
-style: dialogue
-mask_regions: 1

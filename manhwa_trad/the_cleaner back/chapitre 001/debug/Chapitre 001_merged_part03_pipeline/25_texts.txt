@@ -1,6 +1,0 @@
-class: bulle
-bbox: [83.5496826171875, 34406, 352.391357421875, 34655]
-ocr: SURE...
-translation: SURE...
-style: dialogue
-mask_regions: 1

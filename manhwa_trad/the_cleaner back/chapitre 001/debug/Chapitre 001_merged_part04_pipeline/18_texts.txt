@@ -1,6 +1,0 @@
-class: bulle
-bbox: [280.5295817057292, 39343, 649.26513671875, 39671]
-ocr: ….AGENT I O 1.
-translation: …Agent I o 1.
-style: dialogue
-mask_regions: 1
