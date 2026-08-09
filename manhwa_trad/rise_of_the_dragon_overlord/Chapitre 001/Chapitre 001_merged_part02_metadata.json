@@ -1,0 +1,508 @@
+{
+  "source": "manhwa\\rise_of_the_dragon_overlord\\Chapitre 001\\Chapitre 001_merged_part02.jpg",
+  "output": "manhwa_trad\\rise_of_the_dragon_overlord\\Chapitre 001\\Chapitre 001_merged_part02_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 43164
+  },
+  "stats": {
+    "detections": 39,
+    "translated": 38
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        93.28591918945312,
+        591,
+        357.9328918457031,
+        750
+      ],
+      "original": "LUKE, WHAT'S",
+      "translated": "Luke, qu'est-ce que...",
+      "confidence": 0.98544,
+      "detection_confidence": 0.8827878832817078
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        225.4351298014323,
+        1758,
+        622.2589619954427,
+        2150
+      ],
+      "original": "YOU'RE AT THE TOP OF YOUR CLASS, SO DON'T WORRY TOO MUCH...",
+      "translated": "TU ES PREMIER DE TA CLASSE, ALORS NE T'INQUIÈTE PAS TROP...",
+      "confidence": 0.9465039999999998,
+      "detection_confidence": 0.9151789546012878
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        72.8446044921875,
+        2593,
+        317.4368896484375,
+        2835
+      ],
+      "original": "THIS...",
+      "translated": "Ça...",
+      "confidence": 0.83252,
+      "detection_confidence": 0.8778067231178284
+    },
+    {
+      "class": "System",
+      "bbox": [
+        28.688608805338543,
+        3121,
+        674.3354797363281,
+        3624
+      ],
+      "original": "CONGRATULATIONS LUKE FOSTER! THE SUPER TREASURE MAP SYSTEM HAS BEEN SUCCESSFULLY ACTIVATED!",
+      "translated": "FÉLICITATIONS LUKE FOSTER ! LE SYSTÈME DE CARTE AU TRÉSOR SUPÉRIEURE A ÉTÉ ACTIVÉ AVEC SUCCÈS !",
+      "confidence": 0.9679549999999999,
+      "detection_confidence": 0.691107451915741
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        90.91791534423828,
+        3899,
+        342.55279541015625,
+        4141
+      ],
+      "original": "SIHL 15...",
+      "translated": "SIHL 15...",
+      "confidence": 0.73576,
+      "detection_confidence": 0.8770049214363098
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        237.21539815266928,
+        4169,
+        609.03076171875,
+        4477
+      ],
+      "original": "LUKE? LUKE! DID YOU HEAR WHAT I SAID?",
+      "translated": "LUKE ? LUKE ! TU AS ENTENDU CE QUE J'AI DIT ?",
+      "confidence": 0.9525225,
+      "detection_confidence": 0.8894760012626648
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        125.94168090820312,
+        4526,
+        439.3163146972656,
+        4743
+      ],
+      "original": "HUH? OH!",
+      "translated": "HEIN ? OH !",
+      "confidence": 0.90858,
+      "detection_confidence": 0.87049400806427
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        34.46453857421875,
+        5994,
+        349.40594482421875,
+        6243
+      ],
+      "original": "SORRY. SIR, I'LL BE OFF NOW!",
+      "translated": "PARDON. MONSIEUR, JE M'EN VAIS MAINTENANT !",
+      "confidence": 0.9603866666666666,
+      "detection_confidence": 0.8872724175453186
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        14.523264567057293,
+        6996,
+        466.4220682779948,
+        7415
+      ],
+      "original": "FINALLY!THERE'S NO WAY I WOULDN'T GET A SYSTEM AFTER TRANSMIGRATING TO A WORLD LIKE THIS!",
+      "translated": "ENFIN ! IL N'Y AVAIT AUCUNE CHANCE QUE JE N'AIE PAS UN SYSTÈME APRÈS AVOIR TRANSITÉ DANS UN MONDE COMME CELUI-CI !",
+      "confidence": 0.959408,
+      "detection_confidence": 0.887597918510437
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        11.51922607421875,
+        7851,
+        330.8900146484375,
+        8143
+      ],
+      "original": "BUT...",
+      "translated": "Mais...",
+      "confidence": 0.77129,
+      "detection_confidence": 0.7866233587265015
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        225.73323567708334,
+        8661,
+        653.9222208658855,
+        9089
+      ],
+      "original": "WHAT'S THE USE OF THIS SYSTEM?",
+      "translated": "À quoi il sert, ce Système ?",
+      "confidence": 0.9686966666666667,
+      "detection_confidence": 0.8472318649291992
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        86.53462727864584,
+        9373,
+        538.0716959635417,
+        9770
+      ],
+      "original": "I'LL THINK ABOUT IT LATER...",
+      "translated": "J'y penserai plus tard...",
+      "confidence": 0.9258833333333333,
+      "detection_confidence": 0.8382123708724976
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        39.1534423828125,
+        10813,
+        601.3599650065105,
+        11292
+      ],
+      "original": "THE MOST IMPORTANT THING NOW IS THE JOB CHANGE CEREMONY!",
+      "translated": "Le plus important, c'est la cérémonie de changement de classe !",
+      "confidence": 0.984824,
+      "detection_confidence": 0.8661125302314758
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        57.492523193359375,
+        12792,
+        509.7686767578125,
+        13236
+      ],
+      "original": "IS THAT CHANGE CRYSTAL? THIS IS THE FIRST TIME I'VE SEEN IT!",
+      "translated": "C'EST UN CRISTAL DE CHANGEMENT ? C'EST LA PREMIÈRE FOIS QUE JE LE VOIS !",
+      "confidence": 0.9430400000000001,
+      "detection_confidence": 0.9060341715812683
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        253.74165852864584,
+        13277,
+        634.9624633789062,
+        13649
+      ],
+      "original": "I'M SO NERVOUS!",
+      "translated": "Je stresse à mort !",
+      "confidence": 0.92708,
+      "detection_confidence": 0.8861644268035889
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        194.70316569010419,
+        14512,
+        645.8373006184896,
+        14791
+      ],
+      "original": "ALRIGHT, STUDENTS, SETTLE DOWN!",
+      "translated": "Bien, les élèves, calmez-vous !",
+      "confidence": 0.9644266666666667,
+      "detection_confidence": 0.8587046265602112
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        52.308909098307296,
+        14895,
+        501.04522705078125,
+        15327
+      ],
+      "original": "HOW GREAT WOULD IT BE TO BE COME A HIDDEN COMBAT PROFESSION! POWERFUL AND ADMIRED BY ALL!",
+      "translated": "COMME CE SERAIT GÉNIAL DE DEVENIR UNE PROFESSION DE COMBAT CACHÉE ! PUISSANT ET ADMIRÉ DE TOUS !",
+      "confidence": 0.9678614285714285,
+      "detection_confidence": 0.9241243004798889
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        181.75191243489584,
+        16003,
+        678.8043212890625,
+        16491
+      ],
+      "original": "DUDE, YOU'RE DAYDREAMING. THERE ARE ONLY A FEW HIDDEN COMBAT PROFESSIONALS IN THE WHOLE SCHOOL. AS LONG AS IT ISN'T A LIFE PROFESSION, I'LL BE GIVING THANKS TO MY ANCESTORS!",
+      "translated": "MÉC, TU RÊVES. IL N'Y A QUE QUELQUES PROFESSIONNELS DE COMBAT CACHÉS DANS TOUTE L'ÉCOLE. TANT QUE CE N'EST PAS UNE PROFESSION DE VIE, JE REMERCIERAI MES ANCÊTRES !",
+      "confidence": 0.95557,
+      "detection_confidence": 0.9240216016769409
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        252.84873962402344,
+        16788,
+        646.1273193359375,
+        17172
+      ],
+      "original": "JOB CHANGE CEREMONY IS ABOUT TO BEGIN!",
+      "translated": "LA CÉRÉMONIE DE CHANGEMENT DE MÉTIER VA COMMENCER !",
+      "confidence": 0.970915,
+      "detection_confidence": 0.9149273037910461
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        78.19620768229167,
+        17893,
+        583.13232421875,
+        18404
+      ],
+      "original": "PRIEST WHO PRESIDES OVER THIS JOB CHANGE CEREMONY!",
+      "translated": "PRÊTRE QUI PRÉSIDE CETTE CÉRÉMONIE DE CHANGEMENT DE MÉTIER !",
+      "confidence": 0.97594,
+      "detection_confidence": 0.8695462942123413
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        195.84309895833334,
+        18860,
+        667.6443481445312,
+        19316
+      ],
+      "original": "IS THAT RESPONSIBLE FOR JOB CHANGES?",
+      "translated": "C'EST LUI QUI EST RESPONSABLE DES CHANGEMENTS DE MÉTIER ?",
+      "confidence": 0.973685,
+      "detection_confidence": 0.9110133051872253
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        66.9787089029948,
+        19336,
+        503.3880106608073,
+        19755
+      ],
+      "original": "PRIEST? THE AURA OF A COMBAT PROFESSIONAL IS REALLY DIFFERENT...",
+      "translated": "UN PRÊTRE ? L'AURA D'UN PROFESSIONNEL DE COMBAT EST VRAIMENT DIFFÉRENTE...",
+      "confidence": 0.94138,
+      "detection_confidence": 0.8492481112480164
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        48.172454833984375,
+        20297,
+        534.5709228515625,
+        20772
+      ],
+      "original": "WHAT A STRONG AURA! I WISH I COULD AWAKEN SUCH AN AURA!",
+      "translated": "QUELLE AURA PUISSANTE ! J'AIMERAIS TELLEMENT DÉVEILLER UNE TELLE AURA !",
+      "confidence": 0.9428259999999999,
+      "detection_confidence": 0.8997254371643066
+    },
+    {
+      "class": "System",
+      "bbox": [
+        75.05513509114584,
+        21099,
+        627.2571818033855,
+        21473
+      ],
+      "original": "NEW SKILL ACQUIRED \"EYEOFAPPRAISAL\"",
+      "translated": "NOUVELLE COMPÉTENCE ACQUISE \"ŒIL D'ÉVALUATION\"",
+      "confidence": 0.94607,
+      "detection_confidence": 0.8392916917800903
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        85.01580810546875,
+        21652,
+        448.88043212890625,
+        21962
+      ],
+      "original": "APPRAISAL?",
+      "translated": "Évaluation ?",
+      "confidence": 0.99354,
+      "detection_confidence": 0.8763381242752075
+    },
+    {
+      "class": "System",
+      "bbox": [
+        74.89308675130209,
+        24722,
+        690.0,
+        25204
+      ],
+      "original": "JOB:PRIEST LEVEL:29 SKILL:JOB CHANGE AWAKENING NET WORTH:5,000,000 DRAGON COINS",
+      "translated": "MÉTIER : PRÊTRE NIVEAU : 29 COMPÉTENCE : ÉVEIL DU CHANGEMENT DE MÉTIER VALEUR NETTE : 5 000 000 DE PIÈCES DE DRAGON",
+      "confidence": 0.9593425,
+      "detection_confidence": 0.746372401714325
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        286.48272705078125,
+        25312,
+        591.2027587890625,
+        25613
+      ],
+      "original": "I CAN SEE THE PRIEST'S INFORMATION..",
+      "translated": "JE PEUX VOIR LES INFORMATIONS DU PRÊTRE...",
+      "confidence": 0.94932,
+      "detection_confidence": 0.9010974168777466
+    },
+    {
+      "class": "System",
+      "bbox": [
+        136.25864664713544,
+        26023,
+        672.9408772786459,
+        26297
+      ],
+      "original": "677777 SKILL:JOB CHANGE AWAKENING NET WORTH:5,000,000 DRAGON COINS",
+      "translated": "677777 COMPÉTENCE : ÉVEIL DU CHANGEMENT DE MÉTIER VALEUR NETTE : 5 000 000 DE PIÈCES DE DRAGON",
+      "confidence": 0.8148400000000001,
+      "detection_confidence": 0.7204436659812927
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        20.464630126953125,
+        26357,
+        550.9925333658855,
+        26828
+      ],
+      "original": "FIVE",
+      "translated": "CINQ",
+      "confidence": 0.99827,
+      "detection_confidence": 0.8328769207000732
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        221.31129455566406,
+        27712,
+        482.3583984375,
+        27944
+      ],
+      "original": "SETTLE DOWN!",
+      "translated": "CALMEZ-VOUS !",
+      "confidence": 0.9929749999999999,
+      "detection_confidence": 0.8939609527587891
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        35.29792785644531,
+        30176,
+        386.82858784993493,
+        30518
+      ],
+      "original": "STUDENT WHOSE NAME IS CALLED, PLEASE COME TO THE STAGE!",
+      "translated": "ÉTUDIANT DONT LE NOM EST APPELÉ, VEUILLEZ VENIR SUR SCÈNE !",
+      "confidence": 0.9761783333333334,
+      "detection_confidence": 0.9100027084350586
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        214.66512044270834,
+        31638,
+        593.0918375651042,
+        31977
+      ],
+      "original": "AUNT HEIDI COULD MAKE STEAMED BUNS HER WHOLE LIFE AND STILL NOT EARN THIS MUCH!",
+      "translated": "TANTE HEIDI POURRAIT FAIRE DES BRIOCHES À LA VAPEUR TOUTE SA VIE ET NE PAS GAGNER AUTANT !",
+      "confidence": 0.9636649999999999,
+      "detection_confidence": 0.8825697302818298
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        272.33299255371094,
+        34110,
+        638.6029052734375,
+        34454
+      ],
+      "original": "ZAC TAYLOR!",
+      "translated": "Zac Taylor !",
+      "confidence": 0.99169,
+      "detection_confidence": 0.8747000694274902
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        202.315185546875,
+        35157,
+        542.5205078125,
+        35494
+      ],
+      "original": "ZAC TAYLOR... THE TOP STUDENT IN HIS YEAR. I WONDER IF HE'S GOT WHAT IT TAKES TO BE COME A COMBAT CLASS?",
+      "translated": "ZAC TAYLOR... LE MEILLEUR ÉTUDIANT DE SA PROMOTION. JE ME DEMANDE S'IL A CE QU'IL FAUT POUR DEVENIR UNE CLASSE DE COMBAT ?",
+      "confidence": 0.9596028571428571,
+      "detection_confidence": 0.908704936504364
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        118.15418243408203,
+        35792,
+        431.50533040364587,
+        36097
+      ],
+      "original": "HE DEFINITELY CAN!HIS ATTRIBUTES ARE VERY HIGH,",
+      "translated": "IL LE PEUT ABSOLUMENT ! SES ATTRIBUTS SONT TRÈS ÉLEVÉS,",
+      "confidence": 0.9777275,
+      "detection_confidence": 0.9044813513755798
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        333.41534423828125,
+        36079,
+        682.9981079101562,
+        36425
+      ],
+      "original": "ALTHOUGH JOB TRANSFERS ARE BASICALLY RANDOM, HIGHER THE ATTRIBUTES, THE MORE LIKELY IT IS TO ATTAIN A COMBAT JOB!",
+      "translated": "BIEN QUE LES TRANSFERTS DE MÉTIER SOIENT FONDAMENTALEMENT ALEATOIRES, PLUS LES ATTRIBUTS SONT ÉLEVÉS, PLUS LA PROBABILITÉ D'OBTENIR UN MÉTIER DE COMBAT EST GRANDE !",
+      "confidence": 0.9530757142857144,
+      "detection_confidence": 0.9187939167022705
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        415.4938659667969,
+        37373,
+        671.5693359375,
+        37613
+      ],
+      "original": "YOU'RE SO HAND SOME!",
+      "translated": "Tu es tellement beau !",
+      "confidence": 0.9826900000000001,
+      "detection_confidence": 0.8926718831062317
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        201.9541473388672,
+        37775,
+        571.1683959960938,
+        38124
+      ],
+      "original": "YOU GOT SIHL",
+      "translated": "TU AS EU SIHL",
+      "confidence": 0.9295766666666667,
+      "detection_confidence": 0.8994912505149841
+    }
+  ]
+}

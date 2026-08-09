@@ -1,0 +1,482 @@
+{
+  "source": "manhwa\\rise_of_the_dragon_overlord\\Chapitre 003\\Chapitre 003_merged_part02.jpg",
+  "output": "manhwa_trad\\rise_of_the_dragon_overlord\\Chapitre 003\\Chapitre 003_merged_part02_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 34335
+  },
+  "stats": {
+    "detections": 38,
+    "translated": 36
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        143.55511474609375,
+        0,
+        572.9940185546875,
+        107
+      ],
+      "original": "MARKED ON THE TREASURE MAP!",
+      "translated": "Indiqué sur la carte au trésor !",
+      "confidence": 0.96205,
+      "detection_confidence": 0.8501875996589661
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.0,
+        2449,
+        315.1949768066406,
+        2655
+      ],
+      "original": "THIS IS...",
+      "translated": "C'est...",
+      "confidence": 0.83841,
+      "detection_confidence": 0.8549619317054749
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        360.7653299967448,
+        2662,
+        690.0,
+        2983
+      ],
+      "original": "THE TREASURE THAT CAN CHANGE MY DESTINY AS A DRAGON TAMER.",
+      "translated": "Le trésor qui peut changer mon destin de Dompteur de dragons.",
+      "confidence": 0.9543275,
+      "detection_confidence": 0.8897504210472107
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        126.94920857747397,
+        3710,
+        576.6104634602865,
+        4086
+      ],
+      "original": "A DRAGON EGG!",
+      "translated": "Un œuf de dragon !",
+      "confidence": 0.9578850000000001,
+      "detection_confidence": 0.8580659627914429
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        466.50799560546875,
+        4085,
+        658.8795776367188,
+        4227
+      ],
+      "original": "CRACK",
+      "translated": "CRAC",
+      "confidence": 0.99535,
+      "detection_confidence": 0.8294209241867065
+    },
+    {
+      "class": "System",
+      "bbox": [
+        239.33795166015625,
+        4591,
+        653.2265625,
+        4811
+      ],
+      "original": "BLACK DRAGON EGG LV.??",
+      "translated": "Œuf de Dragon Noir NV.??",
+      "confidence": 0.93636,
+      "detection_confidence": 0.5174400210380554
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        275.40748596191406,
+        4901,
+        640.6752522786459,
+        5115
+      ],
+      "original": "IT'S HATCHING.. THE DRAGON IS ABOUT TO BE BORN..",
+      "translated": "Il éclot... Le dragon va naître...",
+      "confidence": 0.9487266666666666,
+      "detection_confidence": 0.8662314414978027
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        278.87245178222656,
+        6504,
+        609.4966634114584,
+        6804
+      ],
+      "original": "EVERYTHING WENT SO SMOOTHLY ALONG THE WAY....",
+      "translated": "Tout s'est déroulé si facilement en chemin...",
+      "confidence": 0.9332674999999999,
+      "detection_confidence": 0.8858397006988525
+    },
+    {
+      "class": "System",
+      "bbox": [
+        358.052734375,
+        7041,
+        646.4268798828125,
+        7262
+      ],
+      "original": "BEGINNER'S MACHETE NORMAL GRADE BASIC MELEE WEAPON OF THE DRAGON NATION ACADEMY",
+      "translated": "Machette de débutant Grade Normal Arme de mêlée basique de l'Académie de la Nation Dragon",
+      "confidence": 0.969715,
+      "detection_confidence": 0.7542531490325928
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        22.84613037109375,
+        7292,
+        404.9176025390625,
+        7573
+      ],
+      "original": "COULDN'T ESCAPE A BEAST'S NOSE!",
+      "translated": "Impossible d'échapper au flair d'une bête !",
+      "confidence": 0.9704266666666667,
+      "detection_confidence": 0.8789436221122742
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        210.23109436035156,
+        8745,
+        640.2164713541667,
+        9070
+      ],
+      "original": "IT'S A BLOODTHIRSTY GRAY FOX!",
+      "translated": "C'est un Renard Gris assoiffé de sang !",
+      "confidence": 0.96055,
+      "detection_confidence": 0.8610019683837891
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        25.991160074869793,
+        9431,
+        307.45244344075525,
+        9673
+      ],
+      "original": "Wooo!",
+      "translated": "Wooo!",
+      "confidence": 0.96621,
+      "detection_confidence": 0.7929107546806335
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        33.75040690104167,
+        10045,
+        465.89487711588544,
+        10450
+      ],
+      "original": "Awooo!",
+      "translated": "Awooo!",
+      "confidence": 0.95336,
+      "detection_confidence": 0.8122367262840271
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        274.81561279296875,
+        11262,
+        624.0797729492188,
+        11489
+      ],
+      "original": "HGN!",
+      "translated": "HGN !",
+      "confidence": 0.99024,
+      "detection_confidence": 0.848213255405426
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        170.8779296875,
+        11719,
+        639.1962890625,
+        11962
+      ],
+      "original": "HAA!",
+      "translated": "HAA !",
+      "confidence": 0.94385,
+      "detection_confidence": 0.7962999939918518
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        47.6112060546875,
+        13476,
+        358.22418212890625,
+        13752
+      ],
+      "original": "YELP!",
+      "translated": "Aïe !",
+      "confidence": 0.96575,
+      "detection_confidence": 0.8057549595832825
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        261.15106201171875,
+        13863,
+        467.36016845703125,
+        14056
+      ],
+      "original": "HAA.... HAA...",
+      "translated": "Haa... Haa...",
+      "confidence": 0.86103,
+      "detection_confidence": 0.9064851403236389
+    },
+    {
+      "class": "System",
+      "bbox": [
+        293.33599853515625,
+        14280,
+        666.5895385742188,
+        14586
+      ],
+      "original": "Or.VJ XO 7 YAROYT 2 IHTO 00 J 8 BF 00 DT 022) EXbEBIEMCE bOIML 2:JSO （21100000 A 8008）9 U I X 07:2 JA 193 TAM",
+      "translated": "Or.VJ XO 7 YAROYT 2 IHTO 00 J 8 BF 00 DT 022) EXbEBIEMCE bOIML 2:JSO （21100000 A 8008）9 U I X 07:2 JA 193 TAM",
+      "confidence": 0.702672,
+      "detection_confidence": 0.5026634931564331
+    },
+    {
+      "class": "System",
+      "bbox": [
+        13.8970947265625,
+        15369,
+        686.7338053385417,
+        15788
+      ],
+      "original": "BLOODTHIRSTY GRAY FOX LV.10 SKILLS: TRIPLE CLAW STRIKE (SWIFT TRIPLE STRIKE) BLOODLOSS) EXPERIENCE P 0 INTS: 120 MATERIALS:FOX FUR(8 O DRAGON COINS)",
+      "translated": "Renard Gris assoiffé de sang NV.10 Compétences : Frappe Triple Griffe (Frappe Triple Rapide) Perte de Sang) Points d'expérience : 120 Matériaux : Fourrure de renard (8 Pièces d'or de dragon)",
+      "confidence": 0.952922,
+      "detection_confidence": 0.6642986536026001
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        19.474283854166668,
+        15770,
+        352.34860738118493,
+        16041
+      ],
+      "original": "TRIPLE CLAW STRIKE AND BLOODTHIRSTY RECOVERY....",
+      "translated": "Frappe Triple Griffe et Récupération Sanguinaire...",
+      "confidence": 0.96587,
+      "detection_confidence": 0.8747690916061401
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        338.6044921875,
+        15844,
+        690.0,
+        16161
+      ],
+      "original": "THAT MEANS IT CAN USE TRIPLE CLAW STRIKE TO DRAW BLOOD, THEN USE BLOODTHIRSTY RECOVERY TO HEAL ITSELF!",
+      "translated": "Ça veut dire qu'il peut utiliser Frappe Triple Griffe pour faire saigner, puis utiliser Récupération Sanguinaire pour se soigner !",
+      "confidence": 0.9618920000000001,
+      "detection_confidence": 0.8230378031730652
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        186.55040740966797,
+        16562,
+        533.372802734375,
+        16768
+      ],
+      "original": "Growwwl!",
+      "translated": "Growwwl!",
+      "confidence": 0.99738,
+      "detection_confidence": 0.813748836517334
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        340.35211181640625,
+        17316,
+        690.0,
+        17670
+      ],
+      "original": "DAMNIT! I DON'T HAVE ANY SKILLS TO COUNTER THAT!",
+      "translated": "Putain ! J'ai aucune compétence pour contrer ça !",
+      "confidence": 0.9742075,
+      "detection_confidence": 0.8735557198524475
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        143.90380859375,
+        17914,
+        609.3608601888021,
+        18313
+      ],
+      "original": "OR MAYBE I CAN STALL UNTIL THE DRAGON HATCHES AND USE DRAGON TAMING..",
+      "translated": "Ou peut-être que je peux gagner du temps jusqu'à ce que le dragon éclose et utiliser la Taiming de Dragon.",
+      "confidence": 0.9361200000000001,
+      "detection_confidence": 0.8501219153404236
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        239.2009480794271,
+        19208,
+        690.0,
+        19644
+      ],
+      "original": "IT'S TOO FAST!I CAN'T STALL FOR THAT LONG!",
+      "translated": "Il est trop rapide ! Je peux pas tenir aussi longtemps !",
+      "confidence": 0.96828,
+      "detection_confidence": 0.8634889721870422
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        63.05016835530599,
+        19898,
+        448.3662414550781,
+        20150
+      ],
+      "original": "ARGH!",
+      "translated": "ARGH!",
+      "confidence": 0.98735,
+      "detection_confidence": 0.7824872732162476
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        121.6607157389323,
+        20718,
+        555.7405090332031,
+        21088
+      ],
+      "original": "I CAN'T LET IT USE BLOODTHIRSTY RECOVERY. I HAVE TO FINISHIT OFF DURING ITS TRIPLE CLAW STRIKE!",
+      "translated": "Je peux pas le laisser utiliser Récupération Sanguinaire. Faut que je le finisse pendant sa Frappe Triple Griffe !",
+      "confidence": 0.951028,
+      "detection_confidence": 0.8871312737464905
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        17.175689697265625,
+        22601,
+        314.0389099121094,
+        22865
+      ],
+      "original": "TWO....",
+      "translated": "Deux...",
+      "confidence": 0.8449,
+      "detection_confidence": 0.8665487766265869
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        388.6778767903646,
+        24281,
+        606.9397989908855,
+        24507
+      ],
+      "original": "THREE...",
+      "translated": "Trois...",
+      "confidence": 0.84613,
+      "detection_confidence": 0.856009304523468
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        117.47807820638022,
+        25620,
+        565.2213033040365,
+        26040
+      ],
+      "original": "NOW!",
+      "translated": "Maintenant !",
+      "confidence": 0.97753,
+      "detection_confidence": 0.8395053148269653
+    },
+    {
+      "class": "System",
+      "bbox": [
+        18.297831217447918,
+        28762,
+        678.8651529947917,
+        29258
+      ],
+      "original": "BLOODTHIRSTY GRAY FOX LV. 10 BLOODTHIRSTY GRAY FOX DEFEATED! LUKE FOSTER GAINS 120 EXPERIENCE POINTS LVIO",
+      "translated": "Renard Gris assoiffé de sang NV. 10 RENARD GRIS ASSOIFFÉ DE SANG VAINCU ! LUKE FOSTER OBTIENT 120 POINTS D'EXPÉRIENCE NV.10",
+      "confidence": 0.932495,
+      "detection_confidence": 0.7488768100738525
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        79.76796468098959,
+        29305,
+        371.6198221842448,
+        29573
+      ],
+      "original": "WHEW.... I TOOK IT DOWN.",
+      "translated": "Ouf.... Je l'ai eu.",
+      "confidence": 0.9431799999999999,
+      "detection_confidence": 0.8895553350448608
+    },
+    {
+      "class": "System",
+      "bbox": [
+        378.9422607421875,
+        29776,
+        593.1859130859375,
+        29951
+      ],
+      "original": "BLOODTHIRSTY GRAY FOX W.10 BLOODTHIRSTY GRAY FOX DEFEATED! LUKE FOSTER GAINS 120 EXPERIENCE POINTS LVID",
+      "translated": "Renard Gris assoiffé de sang NV.10 RENARD GRIS ASSOIFFÉ DE SANG VAINCU ! LUKE FOSTER OBTIENT 120 POINTS D'EXPÉRIENCE NV.10",
+      "confidence": 0.9403375,
+      "detection_confidence": 0.6249481439590454
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        55.276458740234375,
+        31129,
+        332.9976501464844,
+        31405
+      ],
+      "original": "ACTUALLY KILLED IT.",
+      "translated": "Je l'ai vraiment tué.",
+      "confidence": 0.954145,
+      "detection_confidence": 0.901333749294281
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        380.0308837890625,
+        32279,
+        656.7288818359375,
+        32551
+      ],
+      "original": "YOU'RE PRETTY GOOD, KID!",
+      "translated": "T'es plutôt doué, gamin !",
+      "confidence": 0.97365,
+      "detection_confidence": 0.8923868536949158
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        61.229713439941406,
+        33485,
+        368.8848876953125,
+        33799
+      ],
+      "original": "YOU WERE FOLLOWING ME!I TOLD YOU I WOULDN'T nONIOr",
+      "translated": "Tu me suivais ! Je t'avais dit que je ne te laisserais pas tranquille",
+      "confidence": 0.9009539999999999,
+      "detection_confidence": 0.9104421138763428
+    }
+  ]
+}

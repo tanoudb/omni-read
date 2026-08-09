@@ -1,0 +1,83 @@
+{
+  "total_images": 12,
+  "processed": 12,
+  "failed": 0,
+  "total_detections": 357,
+  "total_translated": 335,
+  "total_skipped": 0,
+  "total_time_seconds": 282.9264440536499,
+  "results": [
+    {
+      "image": "Chapitre 001_merged_part01.jpg",
+      "success": true,
+      "detections": 37,
+      "translated": 35
+    },
+    {
+      "image": "Chapitre 001_merged_part02.jpg",
+      "success": true,
+      "detections": 39,
+      "translated": 38
+    },
+    {
+      "image": "Chapitre 001_merged_part03.jpg",
+      "success": true,
+      "detections": 38,
+      "translated": 35
+    },
+    {
+      "image": "Chapitre 001_merged_part04.jpg",
+      "success": true,
+      "detections": 10,
+      "translated": 9
+    },
+    {
+      "image": "Chapitre 002_merged_part01.jpg",
+      "success": true,
+      "detections": 26,
+      "translated": 24
+    },
+    {
+      "image": "Chapitre 002_merged_part02.jpg",
+      "success": true,
+      "detections": 24,
+      "translated": 22
+    },
+    {
+      "image": "Chapitre 002_merged_part03.jpg",
+      "success": true,
+      "detections": 17,
+      "translated": 16
+    },
+    {
+      "image": "Chapitre 002_merged_part04.jpg",
+      "success": true,
+      "detections": 20,
+      "translated": 17
+    },
+    {
+      "image": "Chapitre 003_merged_part01.jpg",
+      "success": true,
+      "detections": 35,
+      "translated": 33
+    },
+    {
+      "image": "Chapitre 003_merged_part02.jpg",
+      "success": true,
+      "detections": 38,
+      "translated": 36
+    },
+    {
+      "image": "Chapitre 003_merged_part03.jpg",
+      "success": true,
+      "detections": 30,
+      "translated": 28
+    },
+    {
+      "image": "Chapitre 003_merged_part04.jpg",
+      "success": true,
+      "detections": 43,
+      "translated": 42
+    }
+  ]
+}

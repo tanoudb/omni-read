@@ -1,0 +1,497 @@
+{
+  "personnages": {},
+  "organisations": {},
+  "tutoiement": {},
+  "fonts": {
+    "0": {
+      "font_key": "STANDARD"
+    },
+    "1": {
+      "font_key": "STANDARD"
+    },
+    "2": {
+      "font_key": "STANDARD"
+    },
+    "3": {
+      "font_key": "STANDARD"
+    },
+    "4": {
+      "font_key": "THOUGHT"
+    },
+    "5": {
+      "font_key": "STANDARD"
+    },
+    "6": {
+      "font_key": "THOUGHT"
+    },
+    "7": {
+      "font_key": "ANGRY"
+    },
+    "8": {
+      "font_key": "STANDARD"
+    },
+    "9": {
+      "font_key": "THOUGHT"
+    },
+    "10": {
+      "font_key": "STANDARD"
+    },
+    "11": {
+      "font_key": "STANDARD"
+    },
+    "12": {
+      "font_key": "ANGRY"
+    },
+    "13": {
+      "font_key": "THOUGHT"
+    },
+    "14": {
+      "font_key": "THOUGHT"
+    },
+    "15": {
+      "font_key": "SYSTEM"
+    },
+    "16": {
+      "font_key": "THOUGHT"
+    },
+    "17": {
+      "font_key": "SYSTEM"
+    },
+    "18": {
+      "font_key": "THOUGHT"
+    },
+    "19": {
+      "font_key": "THOUGHT"
+    },
+    "20": {
+      "font_key": "ANGRY"
+    },
+    "21": {
+      "font_key": "SYSTEM"
+    },
+    "22": {
+      "font_key": "FEAR"
+    },
+    "23": {
+      "font_key": "COMBAT"
+    },
+    "24": {
+      "font_key": "FEAR"
+    },
+    "25": {
+      "font_key": "STANDARD"
+    },
+    "26": {
+      "font_key": "COMBAT"
+    },
+    "27": {
+      "font_key": "THOUGHT"
+    },
+    "28": {
+      "font_key": "THOUGHT"
+    },
+    "29": {
+      "font_key": "THOUGHT"
+    },
+    "30": {
+      "font_key": "STANDARD"
+    },
+    "31": {
+      "font_key": "STANDARD"
+    },
+    "32": {
+      "font_key": "STANDARD"
+    },
+    "33": {
+      "font_key": "STANDARD"
+    },
+    "34": {
+      "font_key": "STANDARD"
+    },
+    "36": {
+      "font_key": "STANDARD"
+    },
+    "38": {
+      "font_key": "SYSTEM"
+    },
+    "39": {
+      "font_key": "THOUGHT"
+    },
+    "40": {
+      "font_key": "THOUGHT"
+    },
+    "41": {
+      "font_key": "SYSTEM"
+    },
+    "42": {
+      "font_key": "ANGRY"
+    },
+    "43": {
+      "font_key": "STANDARD"
+    },
+    "48": {
+      "font_key": "COMBAT"
+    },
+    "51": {
+      "font_key": "SYSTEM"
+    },
+    "52": {
+      "font_key": "THOUGHT"
+    },
+    "53": {
+      "font_key": "THOUGHT"
+    },
+    "54": {
+      "font_key": "THOUGHT"
+    },
+    "55": {
+      "font_key": "ANGRY"
+    },
+    "56": {
+      "font_key": "THOUGHT"
+    },
+    "57": {
+      "font_key": "FEAR"
+    },
+    "58": {
+      "font_key": "THOUGHT"
+    },
+    "60": {
+      "font_key": "COMBAT"
+    },
+    "61": {
+      "font_key": "COMBAT"
+    },
+    "62": {
+      "font_key": "COMBAT"
+    },
+    "63": {
+      "font_key": "SYSTEM"
+    },
+    "64": {
+      "font_key": "STANDARD"
+    },
+    "65": {
+      "font_key": "SYSTEM"
+    },
+    "66": {
+      "font_key": "STANDARD"
+    },
+    "68": {
+      "font_key": "ANGRY"
+    },
+    "69": {
+      "font_key": "STANDARD"
+    },
+    "70": {
+      "font_key": "STANDARD"
+    },
+    "72": {
+      "font_key": "STANDARD"
+    },
+    "73": {
+      "font_key": "ANGRY"
+    },
+    "74": {
+      "font_key": "STANDARD"
+    },
+    "75": {
+      "font_key": "STANDARD"
+    },
+    "76": {
+      "font_key": "STANDARD"
+    },
+    "77": {
+      "font_key": "STANDARD"
+    },
+    "78": {
+      "font_key": "STANDARD"
+    },
+    "79": {
+      "font_key": "STANDARD"
+    },
+    "80": {
+      "font_key": "FEAR"
+    },
+    "81": {
+      "font_key": "ANGRY"
+    },
+    "82": {
+      "font_key": "THOUGHT"
+    },
+    "83": {
+      "font_key": "FEAR"
+    },
+    "84": {
+      "font_key": "STANDARD"
+    },
+    "85": {
+      "font_key": "STANDARD"
+    },
+    "86": {
+      "font_key": "FEAR"
+    },
+    "87": {
+      "font_key": "ANGRY"
+    },
+    "88": {
+      "font_key": "STANDARD"
+    },
+    "89": {
+      "font_key": "STANDARD"
+    },
+    "90": {
+      "font_key": "THOUGHT"
+    },
+    "91": {
+      "font_key": "ANGRY"
+    },
+    "92": {
+      "font_key": "STANDARD"
+    },
+    "93": {
+      "font_key": "FEAR"
+    },
+    "94": {
+      "font_key": "STANDARD"
+    },
+    "95": {
+      "font_key": "COMBAT"
+    },
+    "96": {
+      "font_key": "COMBAT"
+    },
+    "97": {
+      "font_key": "FEAR"
+    },
+    "98": {
+      "font_key": "FEAR"
+    },
+    "99": {
+      "font_key": "FEAR"
+    },
+    "100": {
+      "font_key": "FEAR"
+    },
+    "101": {
+      "font_key": "THOUGHT"
+    },
+    "102": {
+      "font_key": "THOUGHT"
+    },
+    "103": {
+      "font_key": "THOUGHT"
+    },
+    "104": {
+      "font_key": "FEAR"
+    },
+    "105": {
+      "font_key": "FEAR"
+    },
+    "106": {
+      "font_key": "FEAR"
+    },
+    "107": {
+      "font_key": "THOUGHT"
+    },
+    "108": {
+      "font_key": "ANGRY"
+    },
+    "111": {
+      "font_key": "ANGRY"
+    },
+    "112": {
+      "font_key": "FEAR"
+    },
+    "113": {
+      "font_key": "FEAR"
+    },
+    "114": {
+      "font_key": "STANDARD"
+    },
+    "115": {
+      "font_key": "STANDARD"
+    },
+    "116": {
+      "font_key": "STANDARD"
+    },
+    "35": {
+      "font_key": "STANDARD"
+    },
+    "37": {
+      "font_key": "COMBAT"
+    },
+    "44": {
+      "font_key": "THOUGHT"
+    },
+    "45": {
+      "font_key": "THOUGHT"
+    },
+    "46": {
+      "font_key": "COMBAT"
+    },
+    "47": {
+      "font_key": "COMBAT"
+    },
+    "49": {
+      "font_key": "FEAR"
+    },
+    "50": {
+      "font_key": "SYSTEM"
+    },
+    "59": {
+      "font_key": "THOUGHT"
+    },
+    "67": {
+      "font_key": "STANDARD"
+    },
+    "71": {
+      "font_key": "STANDARD"
+    },
+    "109": {
+      "font_key": "ANGRY"
+    },
+    "117": {
+      "font_key": "COMBAT"
+    },
+    "118": {
+      "font_key": "SYSTEM"
+    },
+    "119": {
+      "font_key": "FEAR"
+    },
+    "120": {
+      "font_key": "ANGRY"
+    },
+    "121": {
+      "font_key": "FEAR"
+    },
+    "122": {
+      "font_key": "ANGRY"
+    },
+    "123": {
+      "font_key": "FEAR"
+    },
+    "125": {
+      "font_key": "STANDARD"
+    },
+    "126": {
+      "font_key": "THOUGHT"
+    },
+    "127": {
+      "font_key": "STANDARD"
+    },
+    "128": {
+      "font_key": "STANDARD"
+    },
+    "129": {
+      "font_key": "THOUGHT"
+    },
+    "130": {
+      "font_key": "THOUGHT"
+    },
+    "131": {
+      "font_key": "THOUGHT"
+    },
+    "132": {
+      "font_key": "STANDARD"
+    },
+    "133": {
+      "font_key": "THOUGHT"
+    },
+    "134": {
+      "font_key": "THOUGHT"
+    },
+    "135": {
+      "font_key": "FEAR"
+    },
+    "137": {
+      "font_key": "FEAR"
+    },
+    "138": {
+      "font_key": "FEAR"
+    }
+  },
+  "relationship_changes": [
+    "Luke Foster est un transmigré de Blue Star.",
+    "Heidi Keller est la tante de Luke et la soutient financièrement.",
+    "Zac Taylor est le meilleur étudiant de la promotion de Luke et obtient le métier de Mage.",
+    "Mr. Lewis est le professeur de Luke et est félicité pour l'apparition d'un métier caché dans sa classe.",
+    "Luke Foster et Heidi Keller ont une relation de type familial (oncle/neveu).",
+    "Luke Foster a établi un contrat avec le Dragon Noir.",
+    "Les chasseurs de matériaux sont maintenant des ennemis de Luke Foster."
+  ],
+  "Luke Foster": {
+    "type": "Personnage",
+    "description": "Protagoniste, transmigré de Blue Star, cherche à obtenir un métier de combat, obtient le métier de Dragon Tamer.",
+    "class": "Dompteur de dragons",
+    "abilities": [
+      "Système de Super Carte au Trésor",
+      "Fonction d'évaluation"
+    ],
+    "goal": "Trouver un dragon, offrir une vie meilleure à Tante Heidi"
+  },
+  "Heidi Keller": {
+    "type": "Personnage",
+    "description": "Tante de Luke, soutient financièrement Luke en tenant une boutique de brioches à la vapeur.",
+    "occupation": "Cuisinière",
+    "age": 26
+  },
+  "Zac Taylor": {
+    "type": "Personnage",
+    "description": "Meilleur étudiant de la promotion, obtient le métier de Mage."
+  },
+  "Mr. Lewis": {
+    "type": "Personnage",
+    "description": "Professeur de Luke, sa classe a le premier métier caché de l'école."
+  },
+  "Dragon": {
+    "type": "Créature",
+    "description": "Créature puissante, apparaît pendant la cérémonie de changement de métier de Luke."
+  },
+  "Dragon Tamer": {
+    "type": "Métier",
+    "description": "Métier obtenu par Luke, potentiellement caché."
+  },
+  "Mage": {
+    "type": "Métier",
+    "description": "Métier obtenu par Zac Taylor."
+  },
+  "Super Treasure Map System": {
+    "type": "Système",
+    "description": "Système activé pour Luke."
+  },
+  "Système de Super Carte au Trésor": {
+    "type": "Système de jeu",
+    "functionality": "Délivre une carte au trésor quotidienne menant à des objets liés au métier du joueur."
+  },
+  "Planise Rocheuse": {
+    "type": "Zone",
+    "level_range": "10-20",
+    "location": "Près de la Ville de l'Est"
+  },
+  "Chasseurs de matériaux": {
+    "type": "Humain",
+    "modus operandi": "Meurtre et vol pour obtenir des matériaux",
+    "role": "Antagoniste"
+  },
+  "Dragon Noir": {
+    "type": "Monstre",
+    "level": "Inconnu (bébé)",
+    "skills": [
+      "Griffe de Dragon",
+      "Frappe de Croc de Dragon",
+      "Encouragement du Dragon"
+    ],
+    "status": "Éclos"
+  },
+  "Renard Gris assoiffé de sang": {
+    "type": "Monstre",
+    "level": 10,
+    "skills": [
+      "Frappe Triple Griffe",
+      "Récupération Sanguinaire"
+    ],
+    "status": "Vaincu"
+  }
+}

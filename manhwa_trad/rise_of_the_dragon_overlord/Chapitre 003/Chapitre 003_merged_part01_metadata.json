@@ -1,0 +1,443 @@
+{
+  "source": "manhwa\\rise_of_the_dragon_overlord\\Chapitre 003\\Chapitre 003_merged_part01.jpg",
+  "output": "manhwa_trad\\rise_of_the_dragon_overlord\\Chapitre 003\\Chapitre 003_merged_part01_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 35316
+  },
+  "stats": {
+    "detections": 35,
+    "translated": 33
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        156.52044677734375,
+        67,
+        513.3502807617188,
+        379
+      ],
+      "original": "HOW ABOUT IT? WANT TO COME WITH US?",
+      "translated": "Alors, ça te dit de venir avec nous ?",
+      "confidence": 0.962365,
+      "detection_confidence": 0.901837170124054
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        50.98391215006511,
+        1379,
+        391.3314565022787,
+        1680
+      ],
+      "original": "I ALREADY SAID NO.",
+      "translated": "J'ai déjà dit non.",
+      "confidence": 0.9586250000000001,
+      "detection_confidence": 0.8905353546142578
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        232.9753621419271,
+        2071,
+        570.7376098632812,
+        2396
+      ],
+      "original": "KID, YOU DON'T UNDER STAND THE RULES OF THE WILDERNESS.",
+      "translated": "Mec, tu piges rien aux règles de la nature.",
+      "confidence": 0.97329,
+      "detection_confidence": 0.913540244102478
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        277.9272715250651,
+        2972,
+        662.2650146484375,
+        3350
+      ],
+      "original": "IT'S MORE DANGEROUS OUT HERE AT NIGHT THAN YOU CAN IMAGINE.",
+      "translated": "C'est bien plus dangereux ici la nuit que tu ne l'imagines.",
+      "confidence": 0.9680920000000001,
+      "detection_confidence": 0.9021812677383423
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.5945841471354167,
+        4104,
+        444.1857401529948,
+        4503
+      ],
+      "original": "RIGHT NOW, I HAVE NO US ABLE SKILLS. I HAVE TO AVOID DIRECT CONFRONTATION...",
+      "translated": "Pour l'instant, j'ai aucune compétence utile. Je dois éviter la confrontation directe...",
+      "confidence": 0.9447375,
+      "detection_confidence": 0.8980035781860352
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        355.430908203125,
+        4420,
+        677.7354939778646,
+        4713
+      ],
+      "original": "I'M A SUMMONER. I DON'T NEED COMPANIONS.",
+      "translated": "Je suis un invocateur. J'ai pas besoin de compagnie.",
+      "confidence": 0.9545524999999999,
+      "detection_confidence": 0.8985217213630676
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        14.511184692382812,
+        5719,
+        386.5320587158203,
+        6063
+      ],
+      "original": "IF THERE'S ANY DANGER, I CAN JUST SUMMON AN ELEMENTAL CREATURE TO DEAL WITH IT.",
+      "translated": "S'il y a le moindre danger, j'ai qu'à invoquer une créature élémentaire pour régler ça.",
+      "confidence": 0.9522883333333335,
+      "detection_confidence": 0.9148734211921692
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        17.91583251953125,
+        7136,
+        351.99847412109375,
+        7324
+      ],
+      "original": "CONCERN FOR YOUR SAFETYV WAS UNNECESSARY,KID!",
+      "translated": "Se faire du souci pour ta sécurité, c'était pas la peine, gamin !",
+      "confidence": 0.964155,
+      "detection_confidence": 0.9097105860710144
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        375.8708801269531,
+        7669,
+        650.268310546875,
+        7915
+      ],
+      "original": "LET'S GO!",
+      "translated": "Allez, on y va !",
+      "confidence": 0.964825,
+      "detection_confidence": 0.8945697546005249
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        448.5522766113281,
+        8441,
+        656.337890625,
+        8632
+      ],
+      "original": "PERHAPS...",
+      "translated": "Peut-être...",
+      "confidence": 0.90183,
+      "detection_confidence": 0.8947213888168335
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        79.54324086507162,
+        8813,
+        463.2610066731771,
+        9148
+      ],
+      "original": "WE'LL MEET AGAIN, HAND SOME.",
+      "translated": "On se reverra, beau gosse.",
+      "confidence": 0.9643033333333334,
+      "detection_confidence": 0.9025702476501465
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        80.97216796875,
+        10090,
+        377.992431640625,
+        10353
+      ],
+      "original": "BYE BYE!",
+      "translated": "Bye bye !",
+      "confidence": 0.988825,
+      "detection_confidence": 0.8942612409591675
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.7396952311197917,
+        11101,
+        457.5931803385417,
+        11535
+      ],
+      "original": "DESPICABLE. EVEN IF THE WILDERNESS IS DANGEROUS,IT'S STILL SAFER THAN BEING BACKSTABBED BY MATERIAL HUNTERS!",
+      "translated": "Dégoûtant. Même si la nature est dangereuse, c'est toujours plus sûr que de se faire poignarder dans le dos par des chasseurs de matériaux !",
+      "confidence": 0.963515,
+      "detection_confidence": 0.8970385193824768
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        202.11430867513022,
+        11906,
+        571.9927978515625,
+        12246
+      ],
+      "original": "HAA...I SUPPOSE THIS IS THE RESULT OF HAVING NO STRENGTH.",
+      "translated": "Haa... J'imagine que c'est le résultat de mon manque de force.",
+      "confidence": 0.938214,
+      "detection_confidence": 0.9080346822738647
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        162.5234832763672,
+        12464,
+        479.13385009765625,
+        12775
+      ],
+      "original": "I NEED TO HURRY UP AND GET GOING.",
+      "translated": "Faut que je me dépêche de bouger.",
+      "confidence": 0.9588775,
+      "detection_confidence": 0.9076032042503357
+    },
+    {
+      "class": "System",
+      "bbox": [
+        63.29154968261719,
+        17597,
+        516.7393188476562,
+        17746
+      ],
+      "original": "HORNED HORSE LV. 8",
+      "translated": "Cheval Cornu NV. 8",
+      "confidence": 0.94709,
+      "detection_confidence": 0.7079083919525146
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        285.71863810221356,
+        18072,
+        688.4774271647136,
+        18458
+      ],
+      "original": "THEY GENERALLY DON'T ATTACK UNLESS PROVOKED, BUT IF I DID, I'D BE COMPLETELY OVERWHELMED....",
+      "translated": "Ils attaquent généralement pas sans provocation, mais si je le faisais, je serais complètement dépassé...",
+      "confidence": 0.9512079999999999,
+      "detection_confidence": 0.8943235278129578
+    },
+    {
+      "class": "System",
+      "bbox": [
+        279.090576171875,
+        19101,
+        572.723876953125,
+        19322
+      ],
+      "original": "LV.10 NO SKILLS",
+      "translated": "NV.10 Aucune compétence",
+      "confidence": 0.979255,
+      "detection_confidence": 0.8386387228965759
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        129.9906005859375,
+        19403,
+        461.822021484375,
+        19724
+      ],
+      "original": "FORGET IT...'LL JUST TAKE A DETOUR.",
+      "translated": "Laisse tomber... Je vais juste faire un détour.",
+      "confidence": 0.9368150000000001,
+      "detection_confidence": 0.9035955667495728
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        91.34816487630209,
+        20827,
+        510.4265340169271,
+        21174
+      ],
+      "original": "EVEN THOUGH I TOOK A DETOUR FOR SAFETY...",
+      "translated": "Même si j'ai fait un détour pour être en sécurité...",
+      "confidence": 0.9580375,
+      "detection_confidence": 0.8775236010551453
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        359.8937479654948,
+        21454,
+        671.2809753417969,
+        21753
+      ],
+      "original": "BUT IT'S NOT SAFE AT ALL!",
+      "translated": "Mais c'est pas du tout sûr !",
+      "confidence": 0.95192,
+      "detection_confidence": 0.8554695844650269
+    },
+    {
+      "class": "System",
+      "bbox": [
+        203.9513142903646,
+        22472,
+        666.4241536458334,
+        22635
+      ],
+      "original": "GIANT HORNED ANTELOPE LV. 7",
+      "translated": "Antilope Cornue Géante NV. 7",
+      "confidence": 0.96117,
+      "detection_confidence": 0.34076374769210815
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        313.2658386230469,
+        23223,
+        589.2516581217449,
+        23486
+      ],
+      "original": "I SHOULD BE GETTING CLOSE...PLEASE. DON'T....",
+      "translated": "Je devrais bientôt y être... S'il te plaît... Ne....",
+      "confidence": 0.9043575,
+      "detection_confidence": 0.8850533962249756
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        242.6072947184245,
+        24442,
+        672.608133951823,
+        24916
+      ],
+      "original": "CROAK!",
+      "translated": "Croa !",
+      "confidence": 0.99435,
+      "detection_confidence": 0.7940285801887512
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        7.800445556640625,
+        26809,
+        509.17078653971356,
+        27292
+      ],
+      "original": "Eek!",
+      "translated": "Eek !",
+      "confidence": 0.99322,
+      "detection_confidence": 0.6784448027610779
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        223.77240498860678,
+        27760,
+        629.8140462239584,
+        28034
+      ],
+      "original": "I STARTLED THEM!",
+      "translated": "Je les ai effrayés !",
+      "confidence": 0.970135,
+      "detection_confidence": 0.8474177718162537
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        366.34588623046875,
+        29442,
+        580.171630859375,
+        29616
+      ],
+      "original": "re Rume UGH!",
+      "translated": "Re Rume UGH !",
+      "confidence": 0.8771566666666667,
+      "detection_confidence": 0.8281654715538025
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        506.669189453125,
+        30555,
+        660.9849853515625,
+        30700
+      ],
+      "original": "URGH....",
+      "translated": "URGH....",
+      "confidence": 0.86484,
+      "detection_confidence": 0.8749756217002869
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        9.826711018880209,
+        31756,
+        411.5250142415365,
+        32126
+      ],
+      "original": "IN MY CURRENT STATE, EVEN A TIMID GIANT HORNED ANTELOPE IS MORE THAN I CAN HANDLE...",
+      "translated": "Dans mon état actuel, même une timide Antilope Cornue Géante est trop pour moi...",
+      "confidence": 0.9303466666666668,
+      "detection_confidence": 0.909065842628479
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        222.76875813802084,
+        32754,
+        686.4334106445312,
+        33164
+      ],
+      "original": "SIHISSIWI OPPORTUNITY, I'LL END UP LIKE THAT FROG... HUH?",
+      "translated": "Si j'ai une occasion, je finirai comme cette grenouille... Hein ?",
+      "confidence": 0.8832949999999999,
+      "detection_confidence": 0.8666073083877563
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        41.06402587890625,
+        33164,
+        358.8232727050781,
+        33388
+      ],
+      "original": "THIS..",
+      "translated": "Ceci...",
+      "confidence": 0.87508,
+      "detection_confidence": 0.879554808139801
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        90.43539428710938,
+        34284,
+        345.9767150878906,
+        34456
+      ],
+      "original": "THIS 15.",
+      "translated": "C'est ça.",
+      "confidence": 0.8399300000000001,
+      "detection_confidence": 0.8757472038269043
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        172.09519704182944,
+        35185,
+        598.8081359863281,
+        35314
+      ],
+      "original": "I FOUND IT! THIS IS THE SPOT",
+      "translated": "Je l'ai trouvé ! C'est l'endroit",
+      "confidence": 0.9636300000000001,
+      "detection_confidence": 0.8785731792449951
+    }
+  ]
+}

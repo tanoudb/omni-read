@@ -375,6 +375,428 @@ class TranslationPipeline:
                 bubble_mask=getattr(det, 'mask_binary', None),
             )
         return out, max(0.0, time.perf_counter() - t0)
+
+    MEGA_BATCH_SIZE = 5  # Nombre de chapitres à accumuler avant 1 appel Gemini
+
+    def _process_chapters_mega_batch(self, chapter_map, output_dir):
+        """
+        Traite les chapitres en mode mega-batch :
+        - Détection + OCR par chapitre (local, pas de quota API)
+        - Traduction groupée de N chapitres en 1 appel Gemini
+        - Rendering par chapitre (local)
+        """
+        import time
+        import cv2
+        import numpy as np
+        from pathlib import Path
+        from config import config
+        from core import TextRenderer
+
+        try:
+            from core.translator_gemini import GeminiTranslator
+        except ImportError:
+            GeminiTranslator = None
+
+        all_images_count = sum(len(imgs) for imgs in chapter_map.values())
+
+        global_stats = {
+            'total_images': all_images_count,
+            'processed': 0,
+            'failed': 0,
+            'total_detections': 0,
+            'total_translated': 0,
+            'total_skipped': 0,
+            'total_time_seconds': 0,
+            'results': [],
+        }
+        start_time = time.time()
+
+        # Structure pour stocker tout entre les phases
+        chapter_data = {}
+
+        for ch_name, imgs in sorted(chapter_map.items()):
+            out_ch_dir = output_dir / ch_name
+            out_ch_dir.mkdir(parents=True, exist_ok=True)
+            self.logger.header(f"🚀 PHASE 1 (Detect+OCR): {ch_name} - {len(imgs)} IMAGES")
+
+            ch_info = {
+                'images': [],
+                'detections': {},
+                'valid_texts': [],
+                'out_dir': out_ch_dir,
+            }
+
+            total_dets = 0
+            for img_path in sorted(imgs):
+                try:
+                    img = cv2.imread(str(img_path))
+                    if img is None:
+                        self.logger.error(f"Impossible de charger {img_path}")
+                        ch_info['images'].append((img_path, None, 0, 0))
+                        ch_info['detections'][img_path] = []
+                        continue
+
+                    h, w = img.shape[:2]
+                    ch_info['images'].append((img_path, img, w, h))
+
+                    use_black_padding = bool(
+                        getattr(config.detection, 'black_bars_enabled',
+                                getattr(config.detection, 'use_black_padding', False))
+                    )
+                    pad_h = int(h * max(0.0, float(
+                        getattr(config.detection, 'black_padding_ratio', 0.03)
+                    ))) if use_black_padding else 0
+
+                    if pad_h > 0:
+                        img_padded = np.vstack([
+                            np.zeros((pad_h, w, 3), dtype=np.uint8),
+                            img,
+                            np.zeros((pad_h, w, 3), dtype=np.uint8),
+                        ])
+                    else:
+                        img_padded = img
+
+                    max_h = int(getattr(config.detection, 'max_height', 0) or 0)
+                    detection_img = img_padded
+                    detection_scale = 1.0
+                    if max_h > 0 and img_padded.shape[0] > max_h:
+                        detection_scale = img_padded.shape[0] / float(max_h)
+                        resized_w = max(1, int(img_padded.shape[1] / detection_scale))
+                        detection_img = cv2.resize(
+                            img_padded, (resized_w, max_h), interpolation=cv2.INTER_AREA
+                        )
+
+                    dets = self.detector.detect(detection_img, logger=self.logger)
+
+                    if detection_scale != 1.0:
+                        for det in dets:
+                            det.bbox = [
+                                float(det.bbox[0] * detection_scale),
+                                float(det.bbox[1] * detection_scale),
+                                float(det.bbox[2] * detection_scale),
+                                float(det.bbox[3] * detection_scale),
+                            ]
+
+                    if pad_h > 0:
+                        for det in dets:
+                            new_y1 = max(0, int(det.bbox[1]) - pad_h)
+                            new_y2 = min(h, int(det.bbox[3]) - pad_h)
+                            det.bbox = [det.bbox[0], new_y1, det.bbox[2], new_y2]
+
+                    dets = [d for d in dets if d.y2 > 0 and d.y1 < h]
+                    translatable = self.detector.get_translatable_detections(dets)
+                    translatable = [
+                        d for d in translatable
+                        if str(getattr(d, 'class_name', '')).lower() != 'sfx'
+                    ]
+                    translatable = self._sort_detections_reading_order(translatable)
+
+                    ch_info['detections'][img_path] = translatable
+                    total_dets += len(translatable)
+
+                    if self.debug:
+                        self.save_debug_detections(img, dets, translatable, out_ch_dir, img_path.stem)
+
+                except Exception as e:
+                    self.logger.error(f"Erreur detection {img_path}: {e}")
+                    ch_info['images'].append((img_path, None, 0, 0))
+                    ch_info['detections'][img_path] = []
+
+            self.logger.info(f"✅ Détection: {total_dets} zones")
+            global_stats['total_detections'] += total_dets
+
+            if total_dets == 0:
+                chapter_data[ch_name] = ch_info
+                continue
+
+            if not self._ensure_ocr_engine():
+                self.logger.error("OCR engine non initialisé")
+                chapter_data[ch_name] = ch_info
+                continue
+
+            crops = []
+            crops_map = []
+            for img_path, img, w, h in ch_info['images']:
+                dets = ch_info['detections'].get(img_path, [])
+                for di, det in enumerate(dets):
+                    if img is None:
+                        continue
+                    crop = img[det.y1:det.y2, det.x1:det.x2]
+                    if crop.size == 0:
+                        continue
+                    crops.append(crop)
+                    crops_map.append((img_path, di))
+
+            self.logger.info(f"   📦 OCR: {len(crops)} crops")
+
+            ocr_results = []
+            CHUNK = 300
+            def _ocr_debug_log(message):
+                self.logger.info(f"      {message}")
+
+            for i in range(0, len(crops), CHUNK):
+                chunk = crops[i:i + CHUNK]
+                try:
+                    res = self.ocr_engine.extract_batch(chunk, debug_hook=_ocr_debug_log)
+                except Exception as e:
+                    self.logger.error(f"OCR chunk failed: {e}")
+                    res = [("", 0.0, False, 'ocr_error', [], 1.0)] * len(chunk)
+                ocr_results.extend(res)
+
+            for (img_path, det_idx), ocr_res in zip(crops_map, ocr_results):
+                det = ch_info['detections'].get(img_path, [])[det_idx]
+                text, confidence, is_valid, skip_reason, text_regions, upscale_factor = ocr_res
+                det.ocr_upscale_factor = upscale_factor
+                det.ocr_confidence = confidence
+                if not is_valid or not text:
+                    det.text_original = ""
+                    continue
+                if float(confidence) < 0.85 and len((text or "").strip()) < 4:
+                    det.text_original = ""
+                    continue
+                det.text_original = text
+                det.text_regions = text_regions or []
+                cls = getattr(det, 'class_name', '') or ''
+                ch_info['valid_texts'].append((img_path, det_idx, text, cls))
+
+            self.logger.info(f"✅ OCR: {len(ch_info['valid_texts'])} textes valides")
+            chapter_data[ch_name] = ch_info
+
+        try:
+            self._release_ocr_engine()
+        except Exception:
+            pass
+
+        # PHASE 2 : TRADUCTION MEGA-BATCH
+        self.logger.header("🌐 PHASE 2 : TRADUCTION MEGA-BATCH")
+
+        translator = self.shared_translator
+        translator_cm = None
+
+        if translator is None:
+            backend = str(getattr(config.translation, 'backend', 'local_llm')).lower()
+            if backend == "gemini" and GeminiTranslator is not None:
+                series_name = None
+                try:
+                    if getattr(self, 'input_dir', None):
+                        p = Path(self.input_dir)
+                        if re.match(r'^(chap|chapter|chapitre)\b', p.name.lower()):
+                            series_name = p.parent.name
+                        else:
+                            series_name = p.name
+                except Exception:
+                    pass
+                if not series_name and self.series_db is not None:
+                    try:
+                        series_name = (
+                            getattr(self.series_db, 'name', None)
+                            or getattr(self.series_db, 'title', None)
+                            or (self.series_db.get('name') if isinstance(self.series_db, dict) else None)
+                            or "default"
+                        )
+                    except Exception:
+                        series_name = "default"
+                series_name = series_name or "default"
+                translator = GeminiTranslator(
+                    self.device, series_db=self.series_db, series_name=series_name,
+                )
+            else:
+                from utils import model_context
+                from core import NLLBTranslator
+
+                def _create_trans():
+                    t = NLLBTranslator(self.device)
+                    try:
+                        setattr(t, 'series_db', self.series_db)
+                    except Exception:
+                        pass
+                    return t
+
+                translator_cm = model_context(_create_trans)
+                translator = translator_cm.__enter__()
+
+        try:
+            is_gemini = hasattr(translator, 'translate_mega_batch')
+
+            if is_gemini:
+                ch_names = [
+                    ch for ch in sorted(chapter_data.keys())
+                    if chapter_data[ch]['valid_texts']
+                ]
+
+                for batch_start in range(0, len(ch_names), self.MEGA_BATCH_SIZE):
+                    batch_chs = ch_names[batch_start:batch_start + self.MEGA_BATCH_SIZE]
+
+                    chapters_payload = {}
+                    class_map_payload = {}
+
+                    for ch_name in batch_chs:
+                        texts = [entry[2] for entry in chapter_data[ch_name]['valid_texts']]
+                        classes = [entry[3] for entry in chapter_data[ch_name]['valid_texts']]
+                        chapters_payload[ch_name] = texts
+                        class_map_payload[ch_name] = classes
+
+                    total_texts = sum(len(t) for t in chapters_payload.values())
+                    self.logger.info(
+                        f"   🌐 MEGA-BATCH: {len(batch_chs)} chapitres, "
+                        f"{total_texts} textes → 1 appel API"
+                    )
+                    self.logger.info(f"      Chapitres: {', '.join(batch_chs)}")
+
+                    results = translator.translate_mega_batch(
+                        chapters_payload, class_map=class_map_payload,
+                    )
+
+                    for ch_name in batch_chs:
+                        ch_results = results.get(ch_name, {})
+                        valid_texts = chapter_data[ch_name]['valid_texts']
+                        dets_map = chapter_data[ch_name]['detections']
+
+                        for out_idx, (img_path, det_idx, orig, _cls) in enumerate(valid_texts):
+                            det = dets_map.get(img_path, [])[det_idx]
+                            tr = ch_results.get(str(out_idx), "")
+                            if tr:
+                                det.text_nllb_raw = tr
+                                det.text_translated = tr
+                                global_stats['total_translated'] += 1
+                            else:
+                                det.text_nllb_raw = orig
+                                det.text_translated = orig
+
+            else:
+                for ch_name in sorted(chapter_data.keys()):
+                    valid_texts = chapter_data[ch_name]['valid_texts']
+                    if not valid_texts:
+                        continue
+
+                    payload = [entry[2] for entry in valid_texts]
+                    self.logger.info(f"   📝 {ch_name}: {len(payload)} textes (local)")
+
+                    translations_map = {}
+                    TCH = 1000
+                    offset = 0
+                    while offset < len(payload):
+                        block = payload[offset:offset + TCH]
+                        res = translator.translate_page_json(block)
+                        for k, v in res.items():
+                            try:
+                                idx = int(k) + offset
+                            except Exception:
+                                continue
+                            translations_map[idx] = v
+                        offset += TCH
+
+                    dets_map = chapter_data[ch_name]['detections']
+                    for out_idx, (img_path, det_idx, orig, _cls) in enumerate(valid_texts):
+                        det = dets_map.get(img_path, [])[det_idx]
+                        tr = translations_map.get(out_idx, "")
+                        if tr:
+                            det.text_nllb_raw = tr
+                            det.text_translated = tr
+                            global_stats['total_translated'] += 1
+                        else:
+                            det.text_nllb_raw = orig
+                            det.text_translated = orig
+
+            try:
+                if hasattr(translator, '_save_cache'):
+                    translator._save_cache()
+            except Exception:
+                pass
+
+        finally:
+            if translator_cm is not None:
+                translator_cm.__exit__(None, None, None)
+
+        # PHASE 3 : RENDERING (par chapitre, local)
+        self.logger.header("🎨 PHASE 3 : RENDERING")
+        renderer = TextRenderer()
+
+        for ch_name in sorted(chapter_data.keys()):
+            ch_info = chapter_data[ch_name]
+            out_ch_dir = ch_info['out_dir']
+
+            self.logger.info(f"   🎨 Rendering: {ch_name}")
+
+            for img_path, img, w, h in ch_info['images']:
+                dets = ch_info['detections'].get(img_path, [])
+                if img is None:
+                    global_stats['failed'] += 1
+                    global_stats['results'].append({
+                        'image': img_path.name, 'success': False, 'error': 'load_failed',
+                    })
+                    continue
+
+                try:
+                    img_translated, inpaint_sec = self._run_pre_inpainting(img, dets, renderer)
+                except Exception:
+                    img_translated = img.copy()
+
+                for det in dets:
+                    if not getattr(det, 'text_translated', None):
+                        continue
+
+                    det.text_style = renderer.infer_text_style(
+                        det.text_translated,
+                        det.x2 - det.x1, det.y2 - det.y1,
+                        class_name=det.class_name,
+                    )
+                    det.text_color_rgb = renderer.extract_original_text_color(
+                        img, det.x1, det.y1, det.x2, det.y2,
+                        getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
+                    )
+                    det.font_hint = renderer.detect_font_hint(
+                        img, det.x1, det.y1, det.x2, det.y2,
+                        getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
+                    )
+
+                    img_translated = renderer.insert_text(
+                        img_translated,
+                        det.text_translated,
+                        det.x1, det.y1, det.x2, det.y2,
+                        text_regions=getattr(det, 'text_regions', None),
+                        text_color_rgb=getattr(det, 'text_color_rgb', None),
+                        text_style=getattr(det, 'text_style', 'dialogue'),
+                        font_hint=getattr(det, 'font_hint', 'regular'),
+                        class_name=getattr(det, 'class_name', ''),
+                    )
+
+                output_path = out_ch_dir / f"{img_path.stem}_translated.png"
+                cv2.imwrite(str(output_path), img_translated)
+                global_stats['processed'] += 1
+                global_stats['results'].append({
+                    'image': img_path.name,
+                    'success': True,
+                    'detections': len(dets),
+                    'translated': sum(1 for d in dets if getattr(d, 'text_translated', None)),
+                })
+
+        global_stats['total_time_seconds'] = time.time() - start_time
+
+        if is_gemini and hasattr(translator, 'stats'):
+            gemini_stats = translator.stats()
+            self.logger.info(f"\n   📊 Gemini Stats:")
+            self.logger.info(f"      API calls: {gemini_stats.get('api_calls', 0)}")
+            self.logger.info(f"      Cache hits: {gemini_stats.get('cache_hits', 0)}")
+            self.logger.info(f"      Fallbacks: {gemini_stats.get('fallback_count', 0)}")
+
+        self.logger.header("🎉 TRAITEMENT TERMINÉ")
+        self.logger.summary({
+            'Chapitres': len(chapter_data),
+            'Images traitées': f"{global_stats['processed']}/{global_stats['total_images']}",
+            'Détections': global_stats['total_detections'],
+            'Traductions': global_stats['total_translated'],
+            'Échecs': global_stats['failed'],
+            'Temps total': f"{global_stats['total_time_seconds']:.1f}s",
+            'Appels API Gemini': gemini_stats.get('api_calls', '?') if is_gemini else 'N/A (local)',
+        })
+
+        import json
+        summary_path = output_dir / "summary.json"
+        with open(summary_path, 'w', encoding='utf-8') as f:
+            json.dump(global_stats, f, ensure_ascii=False, indent=2)
+
+        return global_stats
     
     # ─────────────────────────────────────────────────────────────────────────
     # DEBUG : Visualisation détections
@@ -1527,371 +1949,8 @@ class TranslationPipeline:
                 self.logger.error(f"Aucune image dans {input_dir}")
                 return {'success': False, 'error': 'no_images'}
 
-            # Traiter chapitre par chapitre
-            global_stats = {
-                'total_images': len(all_images),
-                'processed': 0,
-                'failed': 0,
-                'total_detections': 0,
-                'total_translated': 0,
-                'total_skipped': 0,
-                'total_time_seconds': 0,
-                'results': []
-            }
-
-            start_time = time.time()
-            for ch_name, imgs in chapter_map.items():
-                out_ch_dir = output_dir / ch_name
-                out_ch_dir.mkdir(parents=True, exist_ok=True)
-                self.logger.header(f"🚀 TRADUCTION CHAPITRE: {ch_name} - {len(imgs)} IMAGES")
-
-                # PHASE A: Détection pour tout le chapitre (collecte des bulles)
-                chapter_images = []  # tuples (img_path, img, w, h)
-                chapter_detections = {}  # img_path -> List[Detection]
-                total_detections = 0
-
-                for img_path in imgs:
-                    try:
-                        img = cv2.imread(str(img_path))
-                        if img is None:
-                            self.logger.error(f"Impossible de charger {img_path}")
-                            chapter_detections[img_path] = []
-                            chapter_images.append((img_path, None, 0, 0))
-                            continue
-                        h, w = img.shape[:2]
-                        chapter_images.append((img_path, img, w, h))
-
-                        # Detection (reuse same logic as process_image)
-                        use_black_padding = bool(
-                            getattr(config.detection, 'black_bars_enabled', getattr(config.detection, 'use_black_padding', False))
-                        )
-                        pad_h = int(h * max(0.0, float(getattr(config.detection, 'black_padding_ratio', 0.03)))) if use_black_padding else 0
-                        if pad_h > 0:
-                            black_bar_top = np.zeros((pad_h, w, 3), dtype=np.uint8)
-                            black_bar_bot = np.zeros((pad_h, w, 3), dtype=np.uint8)
-                            img_padded = np.vstack([black_bar_top, img, black_bar_bot])
-                        else:
-                            img_padded = img
-
-                        max_h = int(getattr(config.detection, 'max_height', 0) or 0)
-                        detection_img = img_padded
-                        detection_scale = 1.0
-                        if max_h > 0 and img_padded.shape[0] > max_h:
-                            detection_scale = img_padded.shape[0] / float(max_h)
-                            resized_w = max(1, int(img_padded.shape[1] / detection_scale))
-                            detection_img = cv2.resize(img_padded, (resized_w, max_h), interpolation=cv2.INTER_AREA)
-
-                        dets = self.detector.detect(detection_img, logger=self.logger)
-
-                        if detection_scale != 1.0:
-                            for det in dets:
-                                det.bbox = [
-                                    float(det.bbox[0] * detection_scale),
-                                    float(det.bbox[1] * detection_scale),
-                                    float(det.bbox[2] * detection_scale),
-                                    float(det.bbox[3] * detection_scale),
-                                ]
-
-                        if pad_h > 0:
-                            for det in dets:
-                                new_y1 = max(0, int(det.bbox[1]) - pad_h)
-                                new_y2 = min(h, int(det.bbox[3]) - pad_h)
-                                det.bbox = [det.bbox[0], new_y1, det.bbox[2], new_y2]
-
-                        dets = [d for d in dets if d.y2 > 0 and d.y1 < h]
-                        translatable = self.detector.get_translatable_detections(dets)
-                        pre_filter_count = len(translatable)
-                        translatable = [
-                            d for d in translatable
-                            if str(getattr(d, 'class_name', '')).lower() != 'sfx'
-                        ]
-                        translatable = self._sort_detections_reading_order(translatable)
-
-                        chapter_detections[img_path] = translatable
-                        total_detections += len(translatable)
-
-                        # Debug saves per-image detections
-                        if self.debug:
-                            self.save_debug_detections(img, dets, translatable, out_ch_dir, img_path.stem)
-                            try:
-                                yolo_report = self.detector.get_last_debug_report()
-                            except Exception:
-                                yolo_report = {}
-                            self.save_debug_yolo_rejected(out_ch_dir, img_path.stem, yolo_report if isinstance(yolo_report, dict) else {})
-
-                    except Exception as e:
-                        self.logger.error(f"Erreur detection {img_path}: {e}")
-                        chapter_detections[img_path] = []
-                        chapter_images.append((img_path, None, 0, 0))
-
-                self.logger.info(f"\n✅ Détection chapitre terminée: {total_detections} zones à traiter")
-
-                # PHASE B: OCR pour toutes les detections du chapitre
-                if total_detections == 0:
-                    self.logger.warning("Aucune zone traduisible dans ce chapitre")
-                    # still create empty outputs for images
-                    for img_path, img, w, h in chapter_images:
-                        stats = {'image': img_path.name, 'success': True, 'detections': 0, 'translated': 0, 'skipped': 0, 'time_seconds': 0}
-                        global_stats['results'].append(stats)
-                        global_stats['processed'] += 1
-                    continue
-
-                if not self._ensure_ocr_engine():
-                    self.logger.error("OCR engine non initialisé — arrêt du chapitre")
-                    for img_path, img, w, h in chapter_images:
-                        global_stats['failed'] += 1
-                        global_stats['results'].append({'image': img_path.name, 'success': False, 'error': 'ocr_init_failed'})
-                    continue
-
-                # Build global crops list
-                crops = []
-                crops_map = []  # (img_path, det_index)
-                for img_path, img, w, h in chapter_images:
-                    dets = chapter_detections.get(img_path, [])
-                    for di, det in enumerate(dets):
-                        if img is None:
-                            continue
-                        crop = img[det.y1:det.y2, det.x1:det.x2]
-                        if crop.size == 0:
-                            continue
-                        crops.append(crop)
-                        crops_map.append((img_path, di))
-
-                self.logger.info(f"   📦 OCR chapter batch: {len(crops)} crops envoyés")
-
-                # Run OCR in chunks to avoid huge batches
-                ocr_results = []
-                CHUNK = 300
-                def _ocr_debug_log(message: str):
-                    self.logger.info(f"      {message}")
-
-                for i in range(0, len(crops), CHUNK):
-                    chunk = crops[i:i+CHUNK]
-                    try:
-                        res = self.ocr_engine.extract_batch(chunk, debug_hook=_ocr_debug_log)
-                    except Exception as e:
-                        self.logger.error(f"OCR chunk failed: {e}")
-                        res = [("", 0.0, False, 'ocr_error', [], 1.0)] * len(chunk)
-                    ocr_results.extend(res)
-
-                # Assign OCR results back to detections
-                valid_text_entries = []  # (img_path, det_index, text)
-                for (img_path, det_idx), ocr_res in zip(crops_map, ocr_results):
-                    det = chapter_detections.get(img_path, [])[det_idx]
-                    text, confidence, is_valid, skip_reason, text_regions, upscale_factor = ocr_res
-                    det.ocr_upscale_factor = upscale_factor
-                    det.ocr_confidence = confidence
-                    if not is_valid or not text:
-                        det.text_original = ""
-                        continue
-                    # Filter short/noisy
-                    if float(confidence) < 0.85 and len((text or "").strip()) < 4:
-                        det.text_original = ""
-                        continue
-                    det.text_original = text
-                    det.text_regions = text_regions or []
-                    valid_text_entries.append((img_path, det_idx, det.text_original))
-
-                self.logger.info(f"\n✅ OCR chapitre terminé: {len(valid_text_entries)} textes valides")
-
-                # PHASE C: Traduction batch (global pour le chapitre)
-                translator_cm = None
-                translator = self.shared_translator
-                if translator is None:
-                    def _create_trans():
-                        backend = str(getattr(config.translation, 'backend', 'local_llm')).lower()
-                        if backend == "gemini" and GeminiTranslator is not None:
-                            # Prefer to infer series_name from input_dir (chapter root)
-                            series_name = None
-                            try:
-                                if getattr(self, 'input_dir', None):
-                                    p = Path(self.input_dir)
-                                    if re.match(r'^(chap|chapter|chapitre)\b', p.name.lower()):
-                                        series_name = p.parent.name
-                                    elif p.is_file():
-                                        series_name = p.parent.name
-                                    else:
-                                        series_name = p.name
-                            except Exception:
-                                series_name = None
-
-                            # Fallback to series_db metadata
-                            if not series_name and self.series_db is not None:
-                                try:
-                                    if hasattr(self.series_db, 'name'):
-                                        series_name = getattr(self.series_db, 'name')
-                                    elif hasattr(self.series_db, 'title'):
-                                        series_name = getattr(self.series_db, 'title')
-                                    elif isinstance(self.series_db, dict):
-                                        series_name = self.series_db.get('name') or self.series_db.get('title')
-                                except Exception:
-                                    series_name = None
-
-                            series_name = (series_name or "default")
-                            return GeminiTranslator(self.device, series_db=self.series_db, series_name=series_name)
-                        t = NLLBTranslator(self.device)
-                        try:
-                            setattr(t, 'series_db', self.series_db)
-                        except Exception:
-                            pass
-                        return t
-
-                    translator_cm = model_context(_create_trans)
-                    translator = translator_cm.__enter__()
-
-                try:
-                    # Build payload texts in stable order and map back
-                    payload_texts = [entry[2] for entry in valid_text_entries]
-                    translations_map = {}
-                    if payload_texts:
-                        # chunk translations to avoid huge single requests
-                        TCH = 1000
-                        offset = 0
-                        while offset < len(payload_texts):
-                            block = payload_texts[offset:offset+TCH]
-                            res = translator.translate_page_json(block)
-                            # merge res into translations_map with indices shifted by offset
-                            for k, v in res.items():
-                                try:
-                                    idx = int(k) + offset
-                                except Exception:
-                                    continue
-                                translations_map[idx] = v
-                            offset += TCH
-
-                    # Assign translations back to detections
-                    for out_idx, (img_path, det_idx, _) in enumerate(valid_text_entries):
-                        det = chapter_detections.get(img_path, [])[det_idx]
-                        tr = translations_map.get(out_idx)
-                        if tr:
-                            det.text_nllb_raw = tr
-                            det.text_translated = tr
-                        else:
-                            det.text_nllb_raw = det.text_original
-                            det.text_translated = det.text_original
-
-                    # Save cache/states if translator mutated them
-                    try:
-                        if hasattr(translator, '_save_cache'):
-                            translator._save_cache()
-                    except Exception:
-                        pass
-
-                finally:
-                    if translator_cm is not None:
-                        translator_cm.__exit__(None, None, None)
-
-                # PHASE D: RENDERING per image (inpaint + insert text)
-                renderer = TextRenderer()
-                for img_path, img, w, h in chapter_images:
-                    dets = chapter_detections.get(img_path, [])
-                    if img is None:
-                        global_stats['failed'] += 1
-                        global_stats['results'].append({'image': img_path.name, 'success': False, 'error': 'load_failed'})
-                        continue
-
-                    img_translated, inpaint_sec = self._run_pre_inpainting(img, dets, renderer)
-                    timings = {'inpainting_seconds': inpaint_sec, 'text_render_seconds': 0.0}
-
-                    for i_det, det in enumerate(dets):
-                        if not getattr(det, 'text_translated', None):
-                            continue
-                        det.text_style = renderer.infer_text_style(
-                            det.text_translated,
-                            det.x2 - det.x1,
-                            det.y2 - det.y1,
-                            class_name=det.class_name,
-                        )
-                        det.text_color_rgb = renderer.extract_original_text_color(
-                            img,
-                            det.x1, det.y1, det.x2, det.y2,
-                            getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
-                        )
-                        det.font_hint = renderer.detect_font_hint(
-                            img,
-                            det.x1, det.y1, det.x2, det.y2,
-                            getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
-                        )
-
-                        rt0 = time.perf_counter()
-                        img_translated = renderer.insert_text(
-                            img_translated,
-                            det.text_translated,
-                            det.x1, det.y1, det.x2, det.y2,
-                            text_regions=getattr(det, 'text_regions', None),
-                            text_color_rgb=getattr(det, 'text_color_rgb', None),
-                            text_style=getattr(det, 'text_style', 'dialogue'),
-                            font_hint=getattr(det, 'font_hint', 'regular'),
-                            class_name=getattr(det, 'class_name', ''),
-                        )
-                        timings['text_render_seconds'] += max(0.0, time.perf_counter() - rt0)
-
-                    # Save outputs
-                    out_dir = out_ch_dir
-                    out_dir.mkdir(parents=True, exist_ok=True)
-                    output_image_path = out_dir / f"{img_path.stem}_translated.png"
-                    cv2.imwrite(str(output_image_path), img_translated)
-
-                    # Metadata
-                    metadata = {
-                        'source': str(img_path),
-                        'output': str(output_image_path),
-                        'dimensions': {'width': w, 'height': h},
-                        'stats': {
-                            'detections': len(dets),
-                            'translated': sum(1 for d in dets if getattr(d, 'text_translated', None)),
-                        },
-                        'detections': [
-                            {
-                                'class': d.class_name,
-                                'bbox': d.bbox,
-                                'original': d.text_original,
-                                'translated': d.text_translated,
-                                'confidence': d.ocr_confidence,
-                                'detection_confidence': d.score,
-                            }
-                            for d in dets if getattr(d, 'text_translated', None)
-                        ]
-                    }
-                    metadata_path = out_dir / f"{img_path.stem}_metadata.json"
-                    with open(metadata_path, 'w', encoding='utf-8') as f:
-                        json.dump(metadata, f, ensure_ascii=False, indent=2)
-
-                    stats = {
-                        'image': img_path.name,
-                        'success': True,
-                        'detections': len(dets),
-                        'translated': sum(1 for d in dets if getattr(d, 'text_translated', None)),
-                        'skipped': sum(1 for d in dets if not getattr(d, 'text_original', None)),
-                        'time_seconds': inpaint_sec + timings['text_render_seconds']
-                    }
-                    global_stats['processed'] += 1
-                    global_stats['total_detections'] += stats['detections']
-                    global_stats['total_translated'] += stats['translated']
-                    global_stats['total_skipped'] += stats['skipped']
-                    global_stats['results'].append(stats)
-
-                    if config.performance.aggressive_cleanup:
-                        MemoryManager.cleanup_medium()
-
-            global_stats['total_time_seconds'] = time.time() - start_time
-            # résumé
-            self.logger.header("🎉 TRAITEMENT TERMINÉ")
-            self.logger.summary({
-                'Images traitées': f"{global_stats['processed']}/{global_stats['total_images']}",
-                'Détections': global_stats['total_detections'],
-                'Traductions': global_stats['total_translated'],
-                'Ignorées': global_stats['total_skipped'],
-                'Échecs': global_stats['failed'],
-                'Temps total': f"{global_stats['total_time_seconds']:.1f}s",
-            })
-
-            summary_path = output_dir / "summary.json"
-            with open(summary_path, 'w', encoding='utf-8') as f:
-                json.dump(global_stats, f, ensure_ascii=False, indent=2)
-
-            self.logger.info(f"\n📊 {summary_path}")
-            return global_stats
+            # Traiter chapitre par chapitre (mega-batch mode)
+            return self._process_chapters_mega_batch(chapter_map, output_dir)
         
         self.logger.header(f"🚀 TRADUCTION BATCH - {len(image_files)} IMAGES")
         self.logger.stat("Input", str(input_dir))

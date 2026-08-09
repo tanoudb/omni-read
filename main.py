@@ -13,6 +13,13 @@ Usage:
 import argparse
 import sys
 from pathlib import Path
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # charge .env (GEMINI_API_KEY, etc.) avant de lire la config
+except ImportError:
+    pass
+
 from config import config, INPUT_DIR, OUTPUT_DIR, LOGS_DIR
 from utils import init_logger, MemoryManager
 from pipeline import TranslationPipeline
@@ -196,11 +203,19 @@ def main():
         config.translation.enable_cache = False
 
     # Mode traduction
+    import os
+    has_gemini_key = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+
     if getattr(args, 'api', False):
         config.translation.translation_mode = "gemini"
         config.translation.backend = "gemini"
     elif args.translation_mode:
         config.translation.translation_mode = args.translation_mode
+    elif has_gemini_key:
+        # Clé Gemini détectée (.env ou env var) → traduction cloud par défaut,
+        # gratuite/quasi-gratuite grâce au mega-batch + cascade de fallback.
+        config.translation.translation_mode = "gemini"
+        config.translation.backend = "gemini"
     else:
         config.translation.translation_mode = "qwen"
 

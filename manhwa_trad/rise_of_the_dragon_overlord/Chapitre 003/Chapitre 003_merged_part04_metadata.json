@@ -1,0 +1,560 @@
+{
+  "source": "manhwa\\rise_of_the_dragon_overlord\\Chapitre 003\\Chapitre 003_merged_part04.jpg",
+  "output": "manhwa_trad\\rise_of_the_dragon_overlord\\Chapitre 003\\Chapitre 003_merged_part04_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 33770
+  },
+  "stats": {
+    "detections": 43,
+    "translated": 42
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        59.32167053222656,
+        518,
+        244.7792510986328,
+        685
+      ],
+      "original": "AH..",
+      "translated": "AH..",
+      "confidence": 0.84897,
+      "detection_confidence": 0.8597533106803894
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        247.3143513997396,
+        1339,
+        625.5528767903646,
+        1721
+      ],
+      "original": "AH... AH! AH!!",
+      "translated": "AH... AH! AH!!",
+      "confidence": 0.8070133333333334,
+      "detection_confidence": 0.8231725096702576
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        29.2156982421875,
+        2656,
+        330.6865234375,
+        2981
+      ],
+      "original": "H-HELP iaW",
+      "translated": "A-Aidez-moi",
+      "confidence": 0.748415,
+      "detection_confidence": 0.8521857261657715
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        1.6182454427083335,
+        2934,
+        329.64935302734375,
+        3342
+      ],
+      "original": "HELP",
+      "translated": "Au secours !",
+      "confidence": 0.99811,
+      "detection_confidence": 0.7953540086746216
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        25.368942260742188,
+        3363,
+        223.8409881591797,
+        3554
+      ],
+      "original": "I DIDN'T EXPECT....",
+      "translated": "Je ne m'attendais pas à...",
+      "confidence": 0.9539150000000001,
+      "detection_confidence": 0.8813836574554443
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        341.15259806315106,
+        3513,
+        680.2213033040365,
+        3843
+      ],
+      "original": "EVEN A NEWLY HATCHED BABY DRAGON IS THIS STRONG...",
+      "translated": "Même un bébé dragon nouveau-né est aussi fort...",
+      "confidence": 0.9422080000000002,
+      "detection_confidence": 0.9097723960876465
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        40.562616984049484,
+        4266,
+        381.48373921712243,
+        4598
+      ],
+      "original": "NO WONDER NO ONE CAN TAME A DRAGON!",
+      "translated": "Pas étonnant que personne ne puisse apprivoiser un dragon !",
+      "confidence": 0.9661925,
+      "detection_confidence": 0.8834248185157776
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        143.90728759765625,
+        4696,
+        382.71392822265625,
+        4855
+      ],
+      "original": "DRA.IT'S A DRAGON?!",
+      "translated": "DRA.C'est un dragon ?!",
+      "confidence": 0.920175,
+      "detection_confidence": 0.867838978767395
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        41.245625813802086,
+        4845,
+        419.705810546875,
+        5126
+      ],
+      "original": "WHAT DID YOU JUST SAY I? THAT WAS ACTUALLY A DRAGON EGG?",
+      "translated": "Qu'est-ce que tu viens de dire ? C'était en fait un œuf de dragon ?",
+      "confidence": 0.9583980000000001,
+      "detection_confidence": 0.7804051637649536
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        286.26164754231775,
+        4939,
+        690.0,
+        5384
+      ],
+      "original": "WAS AH!!",
+      "translated": "Was AH !!",
+      "confidence": 0.78382,
+      "detection_confidence": 0.8703163862228394
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        78.19842529296875,
+        7935,
+        335.9980773925781,
+        8176
+      ],
+      "original": "AAAH....",
+      "translated": "AAAH....",
+      "confidence": 0.85444,
+      "detection_confidence": 0.9009634256362915
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        12.67840067545573,
+        8365,
+        350.8988952636719,
+        8612
+      ],
+      "original": "MATERIAL HUNTERS'S ENSE OF SMELL IS WAY TOO DULL!",
+      "translated": "Le sens de l'odorat des chasseurs de matériaux est bien trop émoussé !",
+      "confidence": 0.97161,
+      "detection_confidence": 0.8610944151878357
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        53.63941192626953,
+        9125,
+        446.03729248046875,
+        9412
+      ],
+      "original": "TRYING TO TAKE THE DRAGON THAT WAS MEANT FOR ME? THAT'S WHAT YOU GET!",
+      "translated": "Essayer de prendre le dragon qui m'était destiné ? C'est ce que tu mérites !",
+      "confidence": 0.9487100000000002,
+      "detection_confidence": 0.8684926629066467
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        496.1240539550781,
+        9060,
+        659.123046875,
+        9215
+      ],
+      "original": "AH!",
+      "translated": "AH!",
+      "confidence": 0.95019,
+      "detection_confidence": 0.84256911277771
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        236.71290079752606,
+        10210,
+        633.388417561849,
+        10478
+      ],
+      "original": "ART OF DRAGON TAMING!!!!",
+      "translated": "ART DE L'APPARTEMENT DU DRAGON !!!!",
+      "confidence": 0.9678299999999999,
+      "detection_confidence": 0.8650137782096863
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        44.555066426595054,
+        11479,
+        392.38718668619794,
+        11735
+      ],
+      "original": "Grnk?!",
+      "translated": "Grnk ?!",
+      "confidence": 0.99787,
+      "detection_confidence": 0.8653966188430786
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        111.67967478434245,
+        13349,
+        525.3640747070312,
+        13633
+      ],
+      "original": "AAAH! W-WHO ARE YOU?!",
+      "translated": "AAAH ! M-Mais qui es-tu ?!",
+      "confidence": 0.9336724999999999,
+      "detection_confidence": 0.8878101110458374
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        30.122772216796875,
+        13738,
+        300.6973571777344,
+        13975
+      ],
+      "original": "HA... HAHAHA, DIDN'T YOU WANT TO KNOW WHO I AM?",
+      "translated": "Ha... Hahaha, tu ne voulais pas savoir qui je suis ?",
+      "confidence": 0.93684,
+      "detection_confidence": 0.9043825268745422
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        432.6627604166667,
+        14274,
+        690.0,
+        14523
+      ],
+      "original": "I'M NOT A SUMMONER..",
+      "translated": "Je ne suis pas un invocateur...",
+      "confidence": 0.901475,
+      "detection_confidence": 0.8959625363349915
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.0,
+        14888,
+        251.320068359375,
+        15124
+      ],
+      "original": "I'M A DRAGON TAMER!",
+      "translated": "Je suis un Dompteur de dragons !",
+      "confidence": 0.9672299999999999,
+      "detection_confidence": 0.9030919671058655
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        481.373779296875,
+        15073,
+        685.998291015625,
+        15268
+      ],
+      "original": "Roar!",
+      "translated": "Roar !",
+      "confidence": 0.99564,
+      "detection_confidence": 0.7229795455932617
+    },
+    {
+      "class": "System",
+      "bbox": [
+        5.588785807291667,
+        15378,
+        689.581298828125,
+        15801
+      ],
+      "original": "BLACK DRAGON CONTRACT ESTABLISHED! SKILLUNLOCKED:DRAGON CLAW SKILL UNLOCKED: DRAGON FANG STRIKE SKILL UNLOCKED: DRAGON'S ENCOURAGEMENT Dmg",
+      "translated": "CONTRAT DE DRAGON NOIR ÉTABLI ! Compétence débloquée : Griffe de Dragon Compétence débloquée : Frappe de Croc de Dragon Compétence débloquée : Encouragement du Dragon Dmg",
+      "confidence": 0.949892,
+      "detection_confidence": 0.6678647994995117
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        11.009918212890625,
+        15934,
+        384.43414306640625,
+        16180
+      ],
+      "original": "S-SPARE ME.. I DIDN'T KNOW IT WAS A DRAGON EGG!",
+      "translated": "S-Pardonne-moi... Je ne savais pas que c'était un œuf de dragon !",
+      "confidence": 0.9376900000000001,
+      "detection_confidence": 0.8823453187942505
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        104.23405456542969,
+        16612,
+        405.35162353515625,
+        16891
+      ],
+      "original": "YOU VILE MATERIAL HUNTERS, HOW MANY PEOPLE HAVE YOU MURDERED?",
+      "translated": "Espèces de vils chasseurs de matériaux, combien de personnes avez-vous assassinées ?",
+      "confidence": 0.956772,
+      "detection_confidence": 0.9019205570220947
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        250.58721923828125,
+        17260,
+        565.5816650390625,
+        17425
+      ],
+      "original": "jON I DIDN'T! T T",
+      "translated": "jON Je n'ai pas ! T T",
+      "confidence": 0.93918,
+      "detection_confidence": 0.8265745043754578
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        47.7557373046875,
+        17721,
+        359.3753560384115,
+        18017
+      ],
+      "original": "JOIN YOUR TEAMMATES!",
+      "translated": "Rejoins tes coéquipiers !",
+      "confidence": 0.9535450000000001,
+      "detection_confidence": 0.8748158812522888
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        88.53140258789062,
+        18368,
+        348.9219970703125,
+        18569
+      ],
+      "original": "NO..",
+      "translated": "Non...",
+      "confidence": 0.79814,
+      "detection_confidence": 0.8536545634269714
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        177.3440704345703,
+        19038,
+        506.24993896484375,
+        19612
+      ],
+      "original": "AAAH",
+      "translated": "AAAH",
+      "confidence": 0.98914,
+      "detection_confidence": 0.30785685777664185
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        159.22732543945312,
+        21351,
+        458.9147033691406,
+        21633
+      ],
+      "original": "PHEW. FINALLY GOT THAT SORTED OUT.",
+      "translated": "Ouf. Enfin réglé.",
+      "confidence": 0.974865,
+      "detection_confidence": 0.9054124355316162
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        379.3790283203125,
+        22502,
+        645.5697021484375,
+        22749
+      ],
+      "original": "ICAN'T BELIEVE....",
+      "translated": "J'arrive pas à croire...",
+      "confidence": 0.908425,
+      "detection_confidence": 0.8734952211380005
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        29.884521484375,
+        22997,
+        306.94427490234375,
+        23268
+      ],
+      "original": "HAHA, ALRIGHT, ALRIGHT,YOU'RE TOO ENERGETIC.",
+      "translated": "Haha, d'accord, d'accord, tu es trop énergique.",
+      "confidence": 0.9570966666666667,
+      "detection_confidence": 0.9068396091461182
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        413.79473876953125,
+        23083,
+        569.3355102539062,
+        23235
+      ],
+      "original": "Rawr?",
+      "translated": "Rawr ?",
+      "confidence": 0.9969,
+      "detection_confidence": 0.866301417350769
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        346.65842692057294,
+        23612,
+        657.0034790039062,
+        23897
+      ],
+      "original": "I'VE REALLY CROSSED THE LINE FROM WEAKEST TO STRONGEST!",
+      "translated": "J'ai vraiment franchi la ligne du plus faible au plus fort !",
+      "confidence": 0.9713700000000001,
+      "detection_confidence": 0.8826099038124084
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        16.72618865966797,
+        24399,
+        389.72178141276044,
+        24732
+      ],
+      "original": "SO POWERFUL JUST AFTER BEING BORN, I CAN'T IMAGINE HOW STRONG YOU'LL BE AFTER LEVELING UP!",
+      "translated": "Si puissant juste après la naissance, j'imagine même pas à quel point tu seras fort après avoir monté de niveau !",
+      "confidence": 0.9505140000000001,
+      "detection_confidence": 0.8960180878639221
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        275.8592732747396,
+        25451,
+        669.0298461914062,
+        25829
+      ],
+      "original": "THE DAY THE DRAGON TAMER GETS RID OF THE\"WEAKEST JOB\" TITLE IS JUST AROUND THE CORNER!",
+      "translated": "Le jour où le Dompteur de dragons se débarrassera du titre de \"métier le plus faible\" est tout proche !",
+      "confidence": 0.95709,
+      "detection_confidence": 0.9086441993713379
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        43.87860107421875,
+        25774,
+        371.64630126953125,
+        26093
+      ],
+      "original": "BUT WHAT SHOULD I NAME YOU?",
+      "translated": "Mais comment devrais-je t'appeler ?",
+      "confidence": 0.9371,
+      "detection_confidence": 0.8958085775375366
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        245.65704345703125,
+        26625,
+        645.0583902994792,
+        26982
+      ],
+      "original": "LITTLE SOOT BALL? NO...BLACK KING KONG? NO, NO...",
+      "translated": "Petite boule de suie ? Non... Roi Kong Noir ? Non, non...",
+      "confidence": 0.944386,
+      "detection_confidence": 0.918688178062439
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        69.57534790039062,
+        27073,
+        356.0000305175781,
+        27353
+      ],
+      "original": "HOW ABOUT....",
+      "translated": "Que dirais-tu de....",
+      "confidence": 0.94093,
+      "detection_confidence": 0.8939743041992188
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        300.0815836588542,
+        27571,
+        677.5901285807292,
+        27891
+      ],
+      "original": "WAIT! WHAT ARE YOU DOING!?",
+      "translated": "Attends ! Qu'est-ce que tu fais !?",
+      "confidence": 0.9497233333333334,
+      "detection_confidence": 0.8755101561546326
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        372.388916015625,
+        30131,
+        644.437744140625,
+        30351
+      ],
+      "original": "UWAAAH!!!",
+      "translated": "UWAAAH!!!",
+      "confidence": 0.92421,
+      "detection_confidence": 0.8620538711547852
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        107.95785522460938,
+        32064,
+        305.29364013671875,
+        32254
+      ],
+      "original": "THAT.... YOU...",
+      "translated": "Ça... Toi...",
+      "confidence": 0.8036099999999999,
+      "detection_confidence": 0.9025688767433167
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        257.21807861328125,
+        33381,
+        551.0907592773438,
+        33670
+      ],
+      "original": "W- WHAT'S GOING ON?",
+      "translated": "Q-Qu'est-ce qui se passe ?",
+      "confidence": 0.986095,
+      "detection_confidence": 0.9022985100746155
+    }
+  ]
+}

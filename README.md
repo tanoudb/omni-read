@@ -40,6 +40,20 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
+### 3) Configurer la clé Gemini (traduction quasi-gratuite)
+
+```powershell
+cp .env.example .env
+# puis éditer .env et coller ta clé (https://aistudio.google.com/apikey)
+```
+
+Dès que `GEMINI_API_KEY` est présent dans `.env`, `main.py` bascule automatiquement
+sur la traduction cloud (Gemini, mega-batch + cascade de fallback gratuite) —
+plus besoin de passer `--api` à chaque fois. Sans clé, ça retombe sur la
+traduction locale (Qwen/NLLB), plus lente et gourmande en VRAM.
+
+**Ne jamais commiter de clé API en dur dans le code** — `.env` est ignoré par git.
+
 ## Usage
 
 ### Run standard
@@ -53,6 +67,17 @@ pip install -r requirements-dev.txt
 ```powershell
 python main.py --image "image test\image1.png" --output "output" --debug
 ```
+
+### Traduire une série complète (mode chapitres)
+
+```powershell
+python main.py --series nom-de-la-serie
+```
+
+Cherche les chapitres dans `manhwa/<slug>/`, traduit chapitre par chapitre et
+écrit le résultat dans `manhwa_trad/<slug>/`. Avec une clé Gemini configurée,
+la traduction se fait par mega-batch (5 chapitres/appel) pour rester dans le
+quota gratuit.
 
 ### Afficher la config active
 

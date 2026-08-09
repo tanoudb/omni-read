@@ -3,169 +3,129 @@
   "processed": 20,
   "failed": 0,
   "total_detections": 570,
-  "total_translated": 550,
-  "total_skipped": 20,
-  "total_time_seconds": 676.7780420780182,
+  "total_translated": 549,
+  "total_skipped": 0,
+  "total_time_seconds": 410.3767786026001,
   "results": [
     {
       "image": "Chapitre 001_merged_part01.jpg",
       "success": true,
       "detections": 37,
-      "translated": 35,
-      "skipped": 2,
-      "time_seconds": 40.18375570059288
+      "translated": 35
     },
     {
       "image": "Chapitre 001_merged_part02.jpg",
       "success": true,
       "detections": 42,
-      "translated": 41,
-      "skipped": 1,
-      "time_seconds": 18.580300899920985
+      "translated": 41
     },
     {
       "image": "Chapitre 001_merged_part03.jpg",
       "success": true,
       "detections": 37,
-      "translated": 36,
-      "skipped": 1,
-      "time_seconds": 15.782379799871705
+      "translated": 36
     },
     {
       "image": "Chapitre 001_merged_part04.jpg",
       "success": true,
       "detections": 29,
-      "translated": 29,
-      "skipped": 0,
-      "time_seconds": 12.841173799941316
+      "translated": 29
     },
     {
       "image": "Chapitre 002_merged_part01.jpg",
       "success": true,
       "detections": 15,
-      "translated": 14,
-      "skipped": 1,
-      "time_seconds": 25.951545399962924
+      "translated": 13
     },
     {
       "image": "Chapitre 002_merged_part02.jpg",
       "success": true,
       "detections": 21,
-      "translated": 19,
-      "skipped": 2,
-      "time_seconds": 6.557170900050551
+      "translated": 19
     },
     {
       "image": "Chapitre 002_merged_part03.jpg",
       "success": true,
       "detections": 18,
-      "translated": 18,
-      "skipped": 0,
-      "time_seconds": 7.9932626002701
+      "translated": 18
     },
     {
       "image": "Chapitre 002_merged_part04.jpg",
       "success": true,
       "detections": 21,
-      "translated": 21,
-      "skipped": 0,
-      "time_seconds": 7.227759099798277
+      "translated": 21
     },
     {
       "image": "Chapitre 003_merged_part01.jpg",
       "success": true,
       "detections": 37,
-      "translated": 37,
-      "skipped": 0,
-      "time_seconds": 37.328640199732035
+      "translated": 37
     },
     {
       "image": "Chapitre 003_merged_part02.jpg",
       "success": true,
       "detections": 32,
-      "translated": 31,
-      "skipped": 1,
-      "time_seconds": 12.175971200224012
+      "translated": 31
     },
     {
       "image": "Chapitre 003_merged_part03.jpg",
       "success": true,
       "detections": 17,
-      "translated": 16,
-      "skipped": 1,
-      "time_seconds": 7.007023800164461
+      "translated": 16
     },
     {
       "image": "Chapitre 003_merged_part04.jpg",
       "success": true,
       "detections": 30,
-      "translated": 29,
-      "skipped": 1,
-      "time_seconds": 11.704018899938092
+      "translated": 29
     },
     {
       "image": "Chapitre 004_merged_part01.jpg",
       "success": true,
       "detections": 28,
-      "translated": 27,
-      "skipped": 1,
-      "time_seconds": 30.778509400086477
+      "translated": 27
     },
     {
       "image": "Chapitre 004_merged_part02.jpg",
       "success": true,
       "detections": 30,
-      "translated": 30,
-      "skipped": 0,
-      "time_seconds": 12.507244700100273
+      "translated": 30
     },
     {
       "image": "Chapitre 004_merged_part03.jpg",
       "success": true,
       "detections": 18,
-      "translated": 17,
-      "skipped": 1,
-      "time_seconds": 6.820060099940747
+      "translated": 17
     },
     {
       "image": "Chapitre 004_merged_part04.jpg",
       "success": true,
       "detections": 32,
-      "translated": 32,
-      "skipped": 0,
-      "time_seconds": 12.20636469963938
+      "translated": 32
     },
     {
       "image": "Chapitre 005_merged_part01.jpg",
       "success": true,
       "detections": 26,
-      "translated": 24,
-      "skipped": 2,
-      "time_seconds": 30.01446000067517
+      "translated": 24
     },
     {
       "image": "Chapitre 005_merged_part02.jpg",
       "success": true,
       "detections": 31,
-      "translated": 31,
-      "skipped": 0,
-      "time_seconds": 11.705945199471898
+      "translated": 31
     },
     {
       "image": "Chapitre 005_merged_part03.jpg",
       "success": true,
       "detections": 29,
-      "translated": 26,
-      "skipped": 3,
-      "time_seconds": 9.829693800304085
+      "translated": 26
     },
     {
       "image": "Chapitre 005_merged_part04.jpg",
       "success": true,
       "detections": 40,
-      "translated": 37,
-      "skipped": 3,
-      "time_seconds": 14.80060909956228
+      "translated": 37
     }
   ]
 }

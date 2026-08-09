@@ -268,47 +268,39 @@ def main():
 
     send({"status": "ready", "engine": "PP-OCRv5", "load_time": round(lt, 1)})
 
-    try:
-        for raw in sys.stdin:
-            line = raw.strip()
-            if not line:
-                continue
+    for raw in sys.stdin:
+        line = raw.strip()
+        if not line:
+            continue
 
-            try:
-                cmd = json.loads(line)
-            except json.JSONDecodeError as e:
-                send({"status": "error", "message": f"json_error: {e}"})
-                continue
+        try:
+            cmd = json.loads(line)
+        except json.JSONDecodeError as e:
+            send({"status": "error", "message": f"json_error: {e}"})
+            continue
 
-            act = cmd.get("cmd", "")
+        act = cmd.get("cmd", "")
 
-            if act == "ping":
-                send({"status": "pong", "engine": "PP-OCRv5"})
+        if act == "ping":
+            send({"status": "pong", "engine": "PP-OCRv5"})
 
-            elif act == "ocr_batch":
-                imgs = cmd.get("images", [])
-                t0 = time.time()
-                res = handle_batch(imgs)
-                send({
-                    "status": "ok",
-                    "results": res,
-                    "elapsed": round(time.time() - t0, 3),
-                    "count": len(res),
-                })
+        elif act == "ocr_batch":
+            imgs = cmd.get("images", [])
+            t0 = time.time()
+            res = handle_batch(imgs)
+            send({
+                "status": "ok",
+                "results": res,
+                "elapsed": round(time.time() - t0, 3),
+                "count": len(res),
+            })
 
-            elif act == "shutdown":
-                send({"status": "shutdown"})
-                break
+        elif act == "shutdown":
+            send({"status": "shutdown"})
+            break
 
-            else:
-                send({"status": "error", "message": f"unknown: {act}"})
-    except KeyboardInterrupt:
-        # Allow clean shutdown when parent sends SIGINT / user interrupts
-        pass
-    except Exception as exc:
-        sys.stderr.write(f"[paddle_worker] Event loop exception: {exc}\n")
-        sys.stderr.write(traceback.format_exc())
-        sys.stderr.flush()
+        else:
+            send({"status": "error", "message": f"unknown: {act}"})
 
     import shutil
     try:

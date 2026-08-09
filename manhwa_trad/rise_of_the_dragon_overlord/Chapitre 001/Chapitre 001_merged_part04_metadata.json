@@ -1,0 +1,131 @@
+{
+  "source": "manhwa\\rise_of_the_dragon_overlord\\Chapitre 001\\Chapitre 001_merged_part04.jpg",
+  "output": "manhwa_trad\\rise_of_the_dragon_overlord\\Chapitre 001\\Chapitre 001_merged_part04_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 34380
+  },
+  "stats": {
+    "detections": 10,
+    "translated": 9
+  },
+  "detections": [
+    {
+      "class": "bulle",
+      "bbox": [
+        436.916748046875,
+        2488,
+        613.155517578125,
+        2649
+      ],
+      "original": "WHO A!!",
+      "translated": "QUI A !!",
+      "confidence": 0.95034,
+      "detection_confidence": 0.8323149681091309
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.0,
+        2661,
+        278.9116516113281,
+        2894
+      ],
+      "original": "AHHHHH!",
+      "translated": "AHHHHH !",
+      "confidence": 0.98336,
+      "detection_confidence": 0.7940106987953186
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        381.2412109375,
+        2779,
+        563.1646728515625,
+        2957
+      ],
+      "original": "UGH...",
+      "translated": "UGH...",
+      "confidence": 0.85606,
+      "detection_confidence": 0.8707484006881714
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        8.263206481933594,
+        4452,
+        403.4199523925781,
+        4723
+      ],
+      "original": "KID, WHAT'S YOUR JOB?",
+      "translated": "MON PETIT, QUEL EST TON MÉTIER ?",
+      "confidence": 0.954995,
+      "detection_confidence": 0.8241516947746277
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        306.68780008951825,
+        4557,
+        672.0792643229167,
+        4851
+      ],
+      "original": "IS IT DRAGON BLOOD WARRIOR, OR A DRAGON MAGE?!",
+      "translated": "EST-CE GUERRIER DU SANG DE DRAGON, OU MAGE DRAGON ?!",
+      "confidence": 0.9485950000000001,
+      "detection_confidence": 0.7938472628593445
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        69.15008544921875,
+        5859,
+        429.709716796875,
+        6121
+      ],
+      "original": "I....",
+      "translated": "JE...",
+      "confidence": 0.61204,
+      "detection_confidence": 0.8883243799209595
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        162.58132934570312,
+        7331,
+        584.4076029459636,
+        7644
+      ],
+      "original": "AMA DRAGON TAMER....",
+      "translated": "JE SUIS UN DRESSEUR DE DRAGON....",
+      "confidence": 0.93307,
+      "detection_confidence": 0.8969160318374634
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        259.3931070963542,
+        9975,
+        671.2017822265625,
+        10292
+      ],
+      "original": "SUCH A BIG COMMOTION... HOW COULD...",
+      "translated": "UNE COMMOTION SI IMPORTANTE... COMMENT...",
+      "confidence": 0.9289433333333333,
+      "detection_confidence": 0.9086911678314209
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        4.900360107421875,
+        12059,
+        689.7249348958334,
+        12726
+      ],
+      "original": "HOW COULD IT BE. A DRAGON TAMER, THE MOST",
+      "translated": "COMMENT EST-CE POSSIBLE. UN DRESSEUR DE DRAGON, LE PLUS",
+      "confidence": 0.94353,
+      "detection_confidence": 0.865986704826355
+    }
+  ]
+}

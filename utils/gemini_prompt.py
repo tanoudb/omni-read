@@ -1,62 +1,218 @@
 """
-Prompt bank and font map for Gemini localization engine - V2 (Enhanced Emotional Nuance).
+═══════════════════════════════════════════════════════════════════════════════
+PROMPT BANK V3 — Localisation Vivante + Mega-Batch + Nettoyage OCR
+
+Changements V3 :
+- BASE_SYSTEM refondu : directive "doublage", français oral, contractions
+- SYSTEM_FORMAT : retours à la ligne après les deux-points (JOB:\nPRIEST)
+- OCR_CLEANING : ignorer bruits numériques, reconstruire le sens
+- EMOTION_RULES : cris → verbes percutants, chuchotements → doux
+- MEGA_BATCH_HEADER : instructions pour IDs composites (CH01_001)
+═══════════════════════════════════════════════════════════════════════════════
 """
 from typing import Dict
 
-# Semantic font map (inchangé, tes chemins sont parfaits)
+# ── Font Map (inchangé) ──────────────────────────────────────────────────
+
 FONT_MAP: Dict[str, str] = {
-    "STANDARD": r"A:\\omni read\\assets\\fonts\\Bulles classiques\\CCWILDWORDS-BOLD.OTF",
-    "THOUGHT": r"A:\\omni read\\assets\\fonts\\Bulles classiques\\CCMightyMouth-Regular.otf",
-    "FEAR": r"A:\\omni read\\assets\\fonts\\Expressives (cris, creepy, peur etc.)\\creepy\\KOMIKA_BOO.TTF",
-    "ANGRY": r"A:\\omni read\\assets\\fonts\\Expressives (cris, creepy, peur etc.)\\cris\\Roadrage-owgBd.otf",
-    "SYSTEM": r"A:\\omni read\\assets\\fonts\\Polices système\\ARGONE_NORMAL.OTF",
-    "COMBAT": r"A:\\omni read\\assets\\fonts\\Expressives (cris, creepy, peur etc.)\\cris\\Fighting Spirit 2 bold.otf",
+    "STANDARD": r"A:\omni read\assets\fonts\Bulles classiques\CCWILDWORDS-BOLD.OTF",
+    "THOUGHT":  r"A:\omni read\assets\fonts\Bulles classiques\CCMightyMouth-Regular.otf",
+    "FEAR":     r"A:\omni read\assets\fonts\Expressives (cris, creepy, peur etc.)\creepy\KOMIKA_BOO.TTF",
+    "ANGRY":    r"A:\omni read\assets\fonts\Expressives (cris, creepy, peur etc.)\cris\Roadrage-owgBd.otf",
+    "SYSTEM":   r"A:\omni read\assets\fonts\Polices système\ARGONE_NORMAL.OTF",
+    "COMBAT":   r"A:\omni read\assets\fonts\Expressives (cris, creepy, peur etc.)\cris\Fighting Spirit 2 bold.otf",
 }
 
+
 class PromptBank:
+
+    # ── SYSTÈME PRINCIPAL (refondu V3) ────────────────────────────────────
+
     BASE_SYSTEM = (
-        "Tu es un expert en LOCALISATION de Manhwa (EN/KO → FR).\n"
-        "Ton objectif est de rendre le texte VIVANT et NATUREL. RÈGLES DE FER :\n"
-        "1) FRANÇAIS ORAL & FLUIDE : Évite les structures calquées sur l'anglais. "
-        "Le texte doit pouvoir être crié ou chuchoté naturellement. Utilise des contractions familières "
-        "si le contexte le permet (ex: 'T'as' au lieu de 'Tu as', 'J'en peux plus' au lieu de 'Je suis épuisé').\n"
-        "2) PERSONNALITÉ (VOIX) : Adapte le vocabulaire au personnage :\n"
-        "   - Enfant : Argot enfantin, expressions naïves ou boudeuses.\n"
-        "   - Guerrier/Méchant : Phrases courtes, percutantes, vocabulaire brutal ou menaçant.\n"
-        "   - Noble/Système : Langage soutenu, froid ou solennel.\n"
-        "3) ADAPTATION > TRADUCTION : Priorise le sens et l'impact émotionnel. "
-        "(ex: 'I will' -> 'C'est promis' ou 'Compte sur moi' ; 'Hold still' -> 'Ne bouge plus !').\n"
-        "4) SFX & NOMS PROPRES : Garde les noms et les onomatopées pures (KRGH, GAAAAH, BAM) tels quels.\n"
-        "5) PAS D'HALLUCINATION : Ne rajoute aucune information factuelle absente du texte source.\n"
-        "6) TYPOGRAPHIE : Pour chaque bloc, fournis la `font_key` qui traduit l'émotion visuelle."
+        "Tu es un ADAPTATEUR de manhwa, pas un traducteur littéral.\n"
+        "Ton travail est identique à celui d'un studio de doublage : rendre le texte VIVANT en français.\n\n"
+
+        "═══ RÈGLES DE FER ═══\n"
+        "1) FRANÇAIS ORAL & FLUIDE :\n"
+        "   - Utilise des contractions naturelles : \"T'as\", \"J'en peux plus\", \"C'est quoi ce truc ?!\"\n"
+        "   - Évite le français figé/littéraire SAUF pour les personnages nobles ou le Système.\n"
+        "   - Le texte doit pouvoir être LU À VOIX HAUTE naturellement.\n\n"
+
+        "2) VOIX DES PERSONNAGES :\n"
+        "   - Enfant/Ado : Argot jeune, exclamations naïves (\"Trop cool !\", \"C'est ouf !\")\n"
+        "   - Guerrier/Voyou : Phrases sèches, jurons adaptés, vocabulaire brutal.\n"
+        "   - Noble/Mage : Tournures recherchées, vouvoiement systématique.\n"
+        "   - Système/Interface : Froid, technique, pas de contractions. Mots-clés en CAPS.\n\n"
+
+        "3) ADAPTATION > TRADUCTION MOT-À-MOT :\n"
+        "   - 'I will.' → 'Compte sur moi.' ou 'C'est promis.'\n"
+        "   - 'Hold still' → 'Bouge pas !'\n"
+        "   - 'You bastard!' → 'Enfoiré !' (pas 'Vous bâtard')\n"
+        "   - 'My lord' → 'Monseigneur' (pas 'Mon seigneur')\n\n"
+
+        "4) SFX & NOMS PROPRES : Garde-les tels quels (KRGH, GAAAAH, BAM, Sung Jin-Woo).\n\n"
+
+        "5) ZÉRO HALLUCINATION : Ne rajoute RIEN absent du texte source. Si le texte est vide ou "
+        "illisible, renvoie une chaîne vide.\n\n"
+
+        "6) TU/VOUS : \"tu\" entre proches, amis, famille. \"vous\" pour la hiérarchie, les inconnus, le respect.\n\n"
+
+        "7) TYPOGRAPHIE : Fournis la `font_key` adaptée à l'émotion de chaque bulle."
     )
+
+    # ── NETTOYAGE OCR ─────────────────────────────────────────────────────
+
+    OCR_CLEANING = (
+        "═══ NETTOYAGE OCR ═══\n"
+        "L'OCR fait souvent des erreurs. Applique ces corrections AVANT de traduire :\n"
+        "- BRUITS NUMÉRIQUES : Ignore les séquences aberrantes (\"677777\", \"111000\", \"09876\").\n"
+        "  Ce sont des artefacts, PAS du texte réel.\n"
+        "- MOTS COLLÉS : Sépare mentalement (\"ABOUTOUR\" → \"ABOUT OUR\", \"DONTSTOP\" → \"DON'T STOP\").\n"
+        "- LETTRES CONFONDUES : I/l, O/0, rn/m sont souvent confondus. Déduis le mot correct du contexte.\n"
+        "- RÉPÉTITIONS PARASITES : \"AAAAAATTACK\" → \"ATTACK\", \"NOOOOO\" → \"NON !!!\" (garde l'émotion, "
+        "pas le bruit).\n"
+        "- TEXTE FRAGMENTÉ : Si un mot est coupé entre deux bulles, reconstruis le sens complet.\n"
+        "- Si le texte OCR est totalement incompréhensible (charabia pur), renvoie une chaîne vide \"\"."
+    )
+
+    # ── FORMAT SYSTEM ─────────────────────────────────────────────────────
+
+    SYSTEM_FORMAT = (
+        "═══ FORMAT ÉCRANS SYSTÈME ═══\n"
+        "Pour les bulles de classe 'System' (interfaces de jeu, fenêtres de quêtes, stats) :\n"
+        "- Insère un retour à la ligne (\\n) APRÈS chaque deux-points (:).\n"
+        "  Exemple : \"JOB: PRIEST\" → \"CLASSE :\\nPRÊTRE\"\n"
+        "  Exemple : \"LEVEL: 45\" → \"NIVEAU :\\n45\"\n"
+        "  Exemple : \"SKILL: SHADOW EXTRACTION\" → \"COMPÉTENCE :\\nExtraction des Ombres\"\n"
+        "- Traduis les termes gaming en français standard :\n"
+        "  HP → PV | MP → PM | STR → FOR | DEX → DEX | INT → INT | LV/LVL → NV\n"
+        "  QUEST → QUÊTE | SKILL → COMPÉTENCE | DUNGEON → DONJON\n"
+        "- Garde les chiffres/valeurs tels quels.\n"
+        "- font_key = \"SYSTEM\" obligatoire pour ces bulles."
+    )
+
+    # ── ÉMOTIONS ──────────────────────────────────────────────────────────
+
+    EMOTION_RULES = (
+        "═══ GESTION DES ÉMOTIONS ═══\n"
+        "- CRIS (scream/angry) : Verbes percutants, phrases COURTES. "
+        "\"CRÈVE !\" pas \"Tu vas mourir !\". \"DÉGAGE !\" pas \"Va-t-en s'il te plaît\".\n"
+        "- CHUCHOTEMENTS (whisper/thought) : Tons doux, hésitations. "
+        "\"Je... je sais pas...\" ou \"C'est peut-être...\".\n"
+        "- PEUR (fear) : Phrases hachées, points de suspension. "
+        "\"Non... Non, c'est impossible...\" ou \"Qu'est-ce que... c'est quoi ÇA ?!\"\n"
+        "- DÉTERMINATION : Phrases nettes sans hésitation. "
+        "\"J'y vais.\" \"C'est maintenant ou jamais.\"\n"
+        "- SURPRISE : Exclamations naturelles. \"Hein ?!\" \"Quoi ?!\" \"Sans dec' ?!\""
+    )
+
+    # ── MEGA-BATCH HEADER ─────────────────────────────────────────────────
+
+    MEGA_BATCH_HEADER = (
+        "═══ MODE MEGA-BATCH ═══\n"
+        "Tu reçois les textes de PLUSIEURS CHAPITRES en une seule requête.\n"
+        "Chaque texte a un ID composite au format : {CHAPITRE}_{INDEX} (ex: CH01_001, CH02_045).\n"
+        "RÈGLES :\n"
+        "- Traduis CHAQUE texte individuellement.\n"
+        "- L'ID dans ta réponse DOIT correspondre exactement à l'ID source.\n"
+        "- Le contexte narratif peut évoluer entre les chapitres. Adapte le ton en conséquence.\n"
+        "- Ne confonds PAS les personnages ou événements entre chapitres différents."
+    )
+
+    # ── RÈGLES PAR LANGUE (inchangé + enrichi) ───────────────────────────
 
     LANG_RULES = {
         "en": (
-            "Source: ANGLAIS. Attention aux faux-amis et au ton trop formel. "
-            "Localise les insultes et les expressions familières pour qu'elles sonnent 'vrai' en français."
+            "Source : ANGLAIS.\n"
+            "- Attention aux faux-amis (actually ≠ actuellement, eventually ≠ éventuellement).\n"
+            "- Localise les insultes/expressions familières pour qu'elles sonnent VRAI en français.\n"
+            "- Les contractions anglaises (don't, can't, won't) doivent donner du français oral, "
+            "pas du français soutenu."
         ),
         "ko": (
-            "Source: CORÉEN. Analyse les suffixes (-ssi, -nim, -ah) pour déterminer la hiérarchie. "
-            "Traduire le respect par le Vouvoiement et l'intimité par le Tutoiement. "
-            "Explique brièvement les changements de relation dans le state_update."
+            "Source : CORÉEN.\n"
+            "- Analyse les suffixes honorifiques (-ssi, -nim, -ah/-ya) pour déterminer la hiérarchie.\n"
+            "- -nim → Vouvoiement + titres respectueux (Maître, Seigneur).\n"
+            "- -ah/-ya → Tutoiement intime.\n"
+            "- Note tout changement de relation dans le state_update."
         ),
     }
 
+    # ── TYPO RULES (enrichi V3) ──────────────────────────────────────────
+
     TYPO_RULES = (
-        "Choisis la `font_key` selon l'intention émotionnelle :\n"
-        "- STANDARD: Dialogues calmes ou narratifs.\n"
-        "- THOUGHT: Pensées internes, voix basse ou narrations hors-champ.\n"
-        "- FEAR: Texte tremblant, terreur, malaise, ou présence creepy.\n"
-        "- ANGRY: Colère, cris de rage, menaces hurlées (bulles avec pics).\n"
-        "- COMBAT: Uniquement pour les onomatopées d'impact ou les cris très courts de combat ('ARGH!', 'YAHO!').\n"
-        "- SYSTEM: Interfaces magiques, fenêtres de quêtes, stats, ou voix désincarnée du Système.\n"
+        "═══ FONT_KEY — GUIDE ÉMOTIONNEL ═══\n"
+        "Choisis la `font_key` selon l'intention émotionnelle de la bulle :\n"
+        "- STANDARD : Dialogues normaux, narrateur calme, expositions.\n"
+        "- THOUGHT  : Pensées internes, monologue intérieur, voix off, murmures.\n"
+        "- FEAR     : Terreur, malaise, présence menaçante, texte tremblant.\n"
+        "- ANGRY    : Colère explosive, cris de rage, menaces hurlées, bulles à pics.\n"
+        "- COMBAT   : Onomatopées d'impact (SLASH!, BOOM!), cris courts de combat.\n"
+        "- SYSTEM   : Interfaces de jeu, fenêtres de quêtes, stats, voix du Système.\n\n"
+        "⚠️ En cas de doute, utilise STANDARD. Ne mets JAMAIS SYSTEM sur un dialogue normal."
     )
+
+    # ── STATE RULES (inchangé) ────────────────────────────────────────────
 
     STATE_RULES = (
         "Mets à jour le `state_update` même pour des changements mineurs :\n"
-        "- `summary_update`: Synthèse de l'ambiance et des faits (ex: 'X est mourante, situation désespérée').\n"
-        "- `relationship_changes`: Note l'évolution du ton (ex: 'Y jure de venger sa femme').\n"
-        "- `entity_discovery`: Noms de lieux, groupes (ex: 'Cheongdo Group') ou objets.\n"
+        "- `summary_update` : Synthèse de l'ambiance et des faits nouveaux.\n"
+        "- `relationship_changes` : Évolution des relations entre personnages.\n"
+        "- `entity_discovery` : Nouveaux noms, lieux, groupes, objets.\n"
         "Sois proactif : si l'ambiance change radicalement, note-le."
     )
+
+    # ── ASSEMBLEUR DE PROMPT ──────────────────────────────────────────────
+
+    @classmethod
+    def build_full_prompt(
+        cls,
+        numbered_texts: str,
+        context: str = "",
+        source_lang: str = "en",
+        font_keys: list = None,
+        is_mega_batch: bool = False,
+    ) -> str:
+        """Assemble le prompt complet pour Gemini."""
+        if font_keys is None:
+            font_keys = list(FONT_MAP.keys())
+
+        sections = [context] if context else []
+
+        # Ajouter le header mega-batch si applicable
+        if is_mega_batch:
+            sections.append(cls.MEGA_BATCH_HEADER)
+
+        # Règles langue
+        lang_rule = cls.LANG_RULES.get(source_lang, "")
+        if lang_rule:
+            sections.append(lang_rule)
+
+        # Nettoyage OCR
+        sections.append(cls.OCR_CLEANING)
+
+        # Format System
+        sections.append(cls.SYSTEM_FORMAT)
+
+        # Émotions
+        sections.append(cls.EMOTION_RULES)
+
+        # Typo
+        sections.append(cls.TYPO_RULES)
+
+        # State
+        sections.append(cls.STATE_RULES)
+
+        # Textes à traduire
+        sections.append(f"TEXTES À TRADUIRE (id: texte source) :\n{numbered_texts}")
+
+        # Instructions de sortie
+        sections.append(
+            f"Pour chaque item, renvoie un objet {{id, fr, font_key}} où `font_key` est l'une de : "
+            f"{', '.join(font_keys)}.\n"
+            "Renvoie un JSON au format exact demandé. Inclut aussi un objet `state_update` "
+            "contenant `summary_update`, `relationship_changes` et `entity_discovery` si pertinent.\n"
+            "Ne répète pas l'ancien résumé ; fournis seulement les faits NOUVEAUX dans `summary_update`."
+        )
+
+        return "\n\n".join(sections)

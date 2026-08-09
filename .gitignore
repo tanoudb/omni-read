@@ -31,6 +31,7 @@ logs/
 # Local environment files
 .env
 .env.*
+!.env.example
 
 # Model/cache artifacts (heavy, reproducible)
 assets/cache/
@@ -52,3 +53,8 @@ manhwa/
 oeuvres/
 
 temp/
+
+# Artefacts de debug (--debug) : crops individuels + visualisations,
+# volumineux et régénérables, pas le livrable final.
+manhwa_trad/**/debug/
+output*/**/debug/

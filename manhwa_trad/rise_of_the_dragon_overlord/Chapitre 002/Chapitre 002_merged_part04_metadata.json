@@ -1,0 +1,235 @@
+{
+  "source": "manhwa\\rise_of_the_dragon_overlord\\Chapitre 002\\Chapitre 002_merged_part04.jpg",
+  "output": "manhwa_trad\\rise_of_the_dragon_overlord\\Chapitre 002\\Chapitre 002_merged_part04_translated.png",
+  "dimensions": {
+    "width": 690,
+    "height": 25565
+  },
+  "stats": {
+    "detections": 20,
+    "translated": 17
+  },
+  "detections": [
+    {
+      "class": "System",
+      "bbox": [
+        142.60889689127606,
+        3636,
+        655.8570861816406,
+        3921
+      ],
+      "original": "I'm going to Rocky Plain, please don't worry about me.",
+      "translated": "Je vais à la Planise Rocheuse, ne vous inquiétez pas pour moi.",
+      "confidence": 0.9600316484769186,
+      "detection_confidence": 0.8144651055335999
+    },
+    {
+      "class": "System",
+      "bbox": [
+        11.752268473307293,
+        5424,
+        657.6075744628906,
+        5726
+      ],
+      "original": "This may be my chance to change my fate as a Dragon Tamer,",
+      "translated": "C'est peut-être ma chance de changer mon destin de Dompteur de dragons,",
+      "confidence": 0.9480763673782349,
+      "detection_confidence": 0.6695255637168884
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        31.071014404296875,
+        6719,
+        672.2986857096355,
+        7044
+      ],
+      "original": "I'll be fine.",
+      "translated": "Je vais bien.",
+      "confidence": 0.964128851890564,
+      "detection_confidence": 0.7542836666107178
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.0,
+        7810,
+        690.0,
+        7979
+      ],
+      "original": "Wait for me to come back!",
+      "translated": "Attendez mon retour !",
+      "confidence": 0.9681243896484375,
+      "detection_confidence": 0.5652570128440857
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        164.68760172526044,
+        9141,
+        658.6761474609375,
+        9428
+      ],
+      "original": "I will let us live a good life!",
+      "translated": "Je ferai en sorte qu'on vive une belle vie !",
+      "confidence": 0.9625359773635864,
+      "detection_confidence": 0.7811955809593201
+    },
+    {
+      "class": "System",
+      "bbox": [
+        30.667724609375,
+        9841,
+        432.46159871419275,
+        10013
+      ],
+      "original": "OUTSKIRTSOF ROCKYPLAIN",
+      "translated": "BANLIEUE DE LA PLANISE ROCHEUSE",
+      "confidence": 0.9960675239562988,
+      "detection_confidence": 0.7813734412193298
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        16.36968994140625,
+        12439,
+        212.66217041015625,
+        12631
+      ],
+      "original": "HELLO!",
+      "translated": "HÉ HO !",
+      "confidence": 0.987520158290863,
+      "detection_confidence": 0.8890910744667053
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        97.74561564127605,
+        14979,
+        445.1112365722656,
+        15319
+      ],
+      "original": "YOUNG MAN, WANNA TRAVEL TOGETHER?",
+      "translated": "JEUNE HOMME, TU VEUX VOYAGER ENSEMBLE ?",
+      "confidence": 0.9658066034317017,
+      "detection_confidence": 0.899463415145874
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        244.4010772705078,
+        16064,
+        526.6154174804688,
+        16347
+      ],
+      "original": "NO, THANKS...",
+      "translated": "Non merci...",
+      "confidence": 0.9435182511806488,
+      "detection_confidence": 0.8804162740707397
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        347.091064453125,
+        16836,
+        690.0,
+        17165
+      ],
+      "original": "THESE GUYS...",
+      "translated": "Ces types...",
+      "confidence": 0.9728931188583374,
+      "detection_confidence": 0.8723426461219788
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        0.8727518717447917,
+        17364,
+        424.1186014811198,
+        17764
+      ],
+      "original": "COULD THEY BE MATERIAL HUNTERS?",
+      "translated": "Ce pourraient-ils être des chasseurs de matériaux ?",
+      "confidence": 0.9669675827026367,
+      "detection_confidence": 0.881706714630127
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        246.73596700032553,
+        17746,
+        619.630839029948,
+        18070
+      ],
+      "original": "THINK ABOUT IT AGAIN,HANDSOME.",
+      "translated": "Réfléchis-y encore, beau gosse.",
+      "confidence": 0.9742390215396881,
+      "detection_confidence": 0.8923752307891846
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        49.068359375,
+        18964,
+        396.70458984375,
+        19281
+      ],
+      "original": "YOUNG MAN, IT'S TOODANGEROUS TO BE ALONE IN THE WILDERNESS ATNIGHT,HEH HEHHEH.",
+      "translated": "JEUNE HOMME, C'EST TROP DANGEREUX D'ÊTRE SEUL DANS LE DÉSERT LA NUIT, HEH HEHHEH.",
+      "confidence": 0.9633995890617371,
+      "detection_confidence": 0.9105471968650818
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        231.84946695963544,
+        19638,
+        690.0,
+        20067
+      ],
+      "original": "IN ORDER TO STEAL MATERIALS...",
+      "translated": "Pour voler des matériaux...",
+      "confidence": 0.9552753766377767,
+      "detection_confidence": 0.8473206758499146
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        93.91891479492188,
+        21459,
+        612.0473734537761,
+        21961
+      ],
+      "original": "MURDER ANDROBBERY ARE NOTHING TO PEOPLE LIKE THEM!",
+      "translated": "Le meurtre et le vol ne sont rien pour des gens comme eux !",
+      "confidence": 0.9900008201599121,
+      "detection_confidence": 0.8647939562797546
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        262.93416341145837,
+        22116,
+        676.893310546875,
+        22520
+      ],
+      "original": "SO?HAVE YOU THOUGHT ABOUT IT? HEH HEHHEH!",
+      "translated": "ALORS ? TU AS RÉFLÉCHI ? HEH HEHHEH !",
+      "confidence": 0.9515823721885681,
+      "detection_confidence": 0.9127787351608276
+    },
+    {
+      "class": "bulle",
+      "bbox": [
+        3.3879597981770835,
+        24006,
+        492.34161376953125,
+        24442
+      ],
+      "original": "DAMN IT,I'VE BEEN TARGETEDBY THEM!",
+      "translated": "Merde, j'ai été ciblé par eux !",
+      "confidence": 0.972710907459259,
+      "detection_confidence": 0.8564251661300659
+    }
+  ]
+}

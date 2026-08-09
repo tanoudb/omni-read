@@ -519,6 +519,16 @@ class OCREngine:
     def post_process_text(self, text: str) -> str:
         if not text:
             return ""
+        # ★ NOUVEAU : OCR Cleaner V2 ★
+        try:
+            from utils.ocr_cleaner import clean_ocr_output
+            result = clean_ocr_output(text)
+            if result is None:
+                return ""
+            text = result
+        except Exception:
+            # If cleaner unavailable, continue with existing pipeline
+            pass
         text = self.text_filter.clean_text(text)
         text = re.sub(r"\b1\.(?=\s+[A-Z])", "I.", text)
         text = re.sub(r"\bI\.(?=\s+THE\b)", "I,", text)
@@ -533,6 +543,15 @@ class OCREngine:
         return text
 
     def is_valid_text(self, text: str, confidence: float) -> Tuple[bool, Optional[str]]:
+        # Filtre confiance-aware via OCR Cleaner
+        try:
+            from utils.ocr_cleaner import clean_low_confidence
+            text = clean_low_confidence(text, confidence)
+            if text is None:
+                return False, "low_conf_noise"
+        except Exception:
+            pass
+
         if confidence < self.cfg.min_confidence:
             return False, "low_confidence"
         if len(text.strip()) < self.cfg.min_text_length:

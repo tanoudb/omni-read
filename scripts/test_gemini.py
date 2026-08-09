@@ -1,6 +1,12 @@
+import os
+
 from google.genai import Client
 
-client = Client(api_key="AIzaSyCKNCVWaq5skUtF8Jw_izvScNwwzuJgPH8")  # Mets ta clé ici
+api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+if not api_key:
+    raise SystemExit("GEMINI_API_KEY non défini (voir .env)")
+
+client = Client(api_key=api_key)
 
 success = 0
 
