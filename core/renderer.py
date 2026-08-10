@@ -122,6 +122,13 @@ def _resolve_colors(
     if _simple_luma(bg) > 200 and _simple_luma(text_color) < 60:
         return text_color, None, 0
 
+    # Cas texte coloré (override / couleur originale préservée) sur fond
+    # clair : la couleur unie suffit, pas besoin d'outline disgracieux.
+    if text_color_override is not None and _simple_luma(bg) > 150:
+        cr_override = _contrast_ratio(text_color, bg)
+        if cr_override >= 3.0:
+            return text_color, None, 0
+
     # Contraste Pro : si ratio > 12 → PAS d'outline
     if cr >= _CONTRAST_PRO_THRESHOLD:
         return text_color, None, 0
@@ -169,7 +176,7 @@ except ImportError:
 class TextRenderer:
     """Rendu texte avec LaMa inpainting local + ColorResolver V2"""
 
-    SHRINK_RATIO = 0.18
+    SHRINK_RATIO = 0.22
     CROP_MARGIN = 30
     INPAINT_MIN_HEIGHT = 20
 
@@ -318,6 +325,19 @@ class TextRenderer:
             key=lambda p: 0 if any(k in str(p).lower() for k in preferred) else 1,
         )
 
+        # Parmi les polices préférées, favoriser Bold/Regular pour la
+        # cohérence visuelle et la lisibilité (pas d'Italic aléatoire).
+        top_picks = [p for p in ordered_paths if any(k in str(p).lower() for k in preferred)]
+        if top_picks:
+            for pick in top_picks:
+                low = str(pick).lower()
+                if "bold" in low and "italic" not in low:
+                    return pick
+            for pick in top_picks:
+                low = str(pick).lower()
+                if "regular" in low:
+                    return pick
+            return top_picks[0]
         return ordered_paths[0] if ordered_paths else None
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -464,8 +484,13 @@ class TextRenderer:
                     cv2.fillPoly(local_mask_shifted, [arr], 255)
             local_mask = local_mask_shifted
 
-            # Dilater légèrement
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+            # Dilater le masque OCR — les polices stylisées/cursives (script,
+            # italique) ont des jambages/fioritures qui dépassent souvent le
+            # polygone OCR serré, laissant un résidu coloré visible après
+            # effacement (ex: "CONGRATULATIONS," en police script). Marge
+            # élargie par rapport à l'ancien (7,7), toujours raisonnable vu
+            # la marge de crop existante (CROP_MARGIN).
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
             local_mask = cv2.dilate(local_mask, kernel, iterations=1)
         else:
             return img
@@ -1154,7 +1179,7 @@ class TextRenderer:
         if use_locked_mode or text_style == "system_card":
             ys = iy1 + self.cfg.padding_vertical
         elif self.cfg.vertical_align == 'center':
-            ys = iy1 + ((iy2 - iy1) - total_h) // 2
+            ys = iy1 + self.cfg.padding_vertical + (inner_h - total_h) // 2
         elif self.cfg.vertical_align == 'top':
             ys = iy1 + self.cfg.padding_vertical
         else:
@@ -1170,7 +1195,7 @@ class TextRenderer:
             if use_locked_mode or text_style == "system_card":
                 xp = ix1 + self.cfg.padding_horizontal
             elif self.cfg.horizontal_align == 'center':
-                xp = ix1 + (tw - lw) // 2
+                xp = ix1 + self.cfg.padding_horizontal + (inner_w - lw) // 2
             elif self.cfg.horizontal_align == 'left':
                 xp = ix1 + self.cfg.padding_horizontal
             else:

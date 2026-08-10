@@ -380,7 +380,7 @@ class TranslationConfig:
 @dataclass
 class RenderingConfig:
     inpainting_method: str = "simple_fill"
-    margin_px: int = 5
+    margin_px: int = 10
     inpaint_radius: int = 7
     inpaint_method: str = "telea"
     background_detection: str = "median_border"
@@ -390,18 +390,18 @@ class RenderingConfig:
     font_paths: List[str] = field(default_factory=_discover_font_paths)
     
     enable_dynamic_sizing: bool = True
-    target_fill_ratio: float = 0.80
-    min_font_size: int = 12
+    target_fill_ratio: float = 0.70
+    min_font_size: int = 18
     max_font_size: int = 80
     font_size_step: int = 2
     max_iterations: int = 15
     
     horizontal_align: str = "center"
     vertical_align: str = "center"
-    line_spacing_ratio: float = 0.20
+    line_spacing_ratio: float = 0.25
     word_wrap_ratio: float = 0.90
-    padding_horizontal: int = 8
-    padding_vertical: int = 6
+    padding_horizontal: int = 16
+    padding_vertical: int = 14
     
     auto_text_color: bool = True
     luminosity_threshold: int = 128
@@ -410,9 +410,9 @@ class RenderingConfig:
     # Seuils et options pour la détection de couleurs de texte
     luma_contrast_threshold: int = 40
     colored_saturation_threshold: float = 0.15
-    use_border_outline: bool = True
-    enable_outline: bool = True
-    outline_width: int = 2
+    use_border_outline: bool = False
+    enable_outline: bool = False
+    outline_width: int = 0
     outline_method: str = "stroke"
     enable_shadow: bool = False
     shadow_offset: Tuple[int, int] = (2, 2)
