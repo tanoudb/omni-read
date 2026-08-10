@@ -483,7 +483,7 @@ class TextRenderer:
         if self.lama is not None:
             try:
                 result = self._inpaint_lama(crop, local_mask)
-                img[crop_y1:crop_y2, crop_x1:crop_x2] = result
+                img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
                 return img
             except Exception:
                 pass
@@ -492,7 +492,7 @@ class TextRenderer:
         if self.anime_inpainter_ready and self.anime_inpainter is not None:
             try:
                 result = self._inpaint_anime(crop, local_mask)
-                img[crop_y1:crop_y2, crop_x1:crop_x2] = result
+                img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
                 return img
             except Exception:
                 pass
@@ -500,11 +500,37 @@ class TextRenderer:
         # cv2 fallback
         try:
             result = cv2.inpaint(crop, local_mask, 7, cv2.INPAINT_TELEA)
-            img[crop_y1:crop_y2, crop_x1:crop_x2] = result
+            img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
         except Exception:
             pass
 
         return img
+
+    @staticmethod
+    def _blend_masked(crop: np.ndarray, result: np.ndarray, mask: np.ndarray) -> np.ndarray:
+        """
+        Ne remplace QUE les pixels réellement masqués (le texte) par le
+        résultat de l'inpainting — le reste du crop reste strictement
+        identique à l'original.
+
+        Les modèles d'inpainting (LaMa en particulier) redimensionnent
+        parfois l'image en interne pour respecter une taille multiple de 8,
+        puis la redimensionnent en sens inverse pour revenir à la taille
+        d'origine — cet aller-retour peut décaler l'image ENTIÈRE de
+        quelques pixels, y compris les zones non masquées. Sans ce filtre,
+        une ligne droite (bordure de case, trait noir) qui traverse le crop
+        sans être masquée pouvait ressortir légèrement décalée pile à la
+        frontière du crop, visible comme une "marche" sur la ligne.
+        """
+        if result.shape[:2] != crop.shape[:2]:
+            return crop
+        m = mask
+        if m.ndim == 3:
+            m = m[:, :, 0]
+        mask_bool = m > 0
+        blended = crop.copy()
+        blended[mask_bool] = result[mask_bool]
+        return blended
 
     def _inpaint_lama(self, crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
         h_orig, w_orig = crop.shape[:2]
