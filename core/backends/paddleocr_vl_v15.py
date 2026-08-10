@@ -122,15 +122,26 @@ class PaddleOCRVLV15Backend(OCRBackend):
 
         timeout = BATCH_TIMEOUT_BASE + BATCH_TIMEOUT_PER_CROP * len(images)
 
-        response = self._send_command({
-            "cmd": "ocr_batch",
-            "images": batch_payload,
-        }, timeout=timeout)
+        cmd = {"cmd": "ocr_batch", "images": batch_payload}
+        response = self._send_command(cmd, timeout=timeout)
 
         if response is None or response.get("status") != "ok":
             error_msg = (response or {}).get("message", "worker_error")
-            print(f"⚠️ PaddleOCR batch error: {error_msg}")
-            return [("", 0.0, []) for _ in images]
+            print(f"⚠️ PaddleOCR batch error: {error_msg} — relance du worker + 1 nouvelle tentative")
+            # Le process a pu crasher EN COURS de traitement du lot (au lieu
+            # d'être déjà mort quand on l'a vérifié) : poll()/pipe cassé ne
+            # sont pas toujours détectés à temps par _ensure_worker(). On le
+            # force à mourir proprement, on en relance un neuf, et on retente
+            # UNE fois plutôt que de rendre tout le lot vide définitivement.
+            self._kill_worker()
+            if self._ensure_worker():
+                response = self._send_command(cmd, timeout=timeout)
+
+            if response is None or response.get("status") != "ok":
+                error_msg = (response or {}).get("message", "worker_error")
+                print(f"❌ PaddleOCR: échec du lot même après relance ({error_msg})")
+                return [("", 0.0, []) for _ in images]
+            print("✅ PaddleOCR: lot retraité avec succès après relance")
 
         raw_results = response.get("results", [])
         elapsed = response.get("elapsed", 0)

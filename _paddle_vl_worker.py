@@ -203,17 +203,43 @@ def ocr_crop(img, crop_id: int) -> dict:
 
     except Exception as exc:
         result["error"] = str(exc)
-        sys.stderr.write(f"[paddle_worker] OCR error crop {crop_id}: {exc}\n")
+        shape = getattr(img, "shape", "?")
+        sys.stderr.write(f"[paddle_worker] OCR error crop {crop_id} (shape={shape}): {exc}\n")
         sys.stderr.flush()
 
     return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# GPU HOUSEKEEPING
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _try_free_gpu_memory():
+    """
+    Libère le cache mémoire GPU de Paddle entre les lots. Ce worker tourne en
+    persistant sur des centaines/milliers de crops d'affilée sur une longue
+    session — sans ce nettoyage périodique, la fragmentation mémoire peut
+    s'accumuler et finir par déclencher des erreurs d'allocation étranges
+    en cours de route (observé après une longue session de tests).
+    """
+    try:
+        import paddle
+        paddle.device.cuda.empty_cache()
+    except Exception:
+        pass
+    gc.collect()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # BATCH HANDLER
 # ═══════════════════════════════════════════════════════════════════════════════
 
+_batches_since_cleanup = 0
+_GPU_CLEANUP_EVERY_N_BATCHES = 5
+
+
 def handle_batch(images_data: list) -> list:
+    global _batches_since_cleanup
     results = []
 
     for item in images_data:
@@ -237,7 +263,12 @@ def handle_batch(images_data: list) -> list:
         r = ocr_crop(img, cid)
         results.append(r)
 
-    gc.collect()
+    _batches_since_cleanup += 1
+    if _batches_since_cleanup >= _GPU_CLEANUP_EVERY_N_BATCHES:
+        _batches_since_cleanup = 0
+        _try_free_gpu_memory()
+    else:
+        gc.collect()
     return results
 
 
@@ -287,13 +318,26 @@ def main():
         elif act == "ocr_batch":
             imgs = cmd.get("images", [])
             t0 = time.time()
-            res = handle_batch(imgs)
-            send({
-                "status": "ok",
-                "results": res,
-                "elapsed": round(time.time() - t0, 3),
-                "count": len(res),
-            })
+            try:
+                res = handle_batch(imgs)
+                send({
+                    "status": "ok",
+                    "results": res,
+                    "elapsed": round(time.time() - t0, 3),
+                    "count": len(res),
+                })
+            except Exception as exc:
+                # Filet de sécurité : une erreur pas rattrapée par ocr_crop()
+                # (ex: gc.collect() qui pète sur un état Paddle corrompu) ne
+                # doit pas faire mourir tout le worker en pleine série —
+                # le process appelant redémarrera de toute façon en le
+                # voyant répondre "error", mais autant rester vivant si on
+                # le peut encore.
+                sys.stderr.write(f"[paddle_worker] batch fatal error: {exc}\n")
+                sys.stderr.write(traceback.format_exc())
+                sys.stderr.flush()
+                send({"status": "error", "message": f"batch_error: {exc}"})
+                _try_free_gpu_memory()
 
         elif act == "shutdown":
             send({"status": "shutdown"})
