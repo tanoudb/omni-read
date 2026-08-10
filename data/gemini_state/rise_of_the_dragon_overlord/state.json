@@ -34,11 +34,20 @@
     "Random location": "Emplacement aléatoire",
     "Weakest profession": "Profession la plus faible",
     "Soot Ball": "Boule de suie",
-    "Black King Kong": "King Kong noir"
+    "Black King Kong": "King Kong noir",
+    "Job Change": "Changement de Classe",
+    "Bloodthirsty Gray Fox": "Renard Gris Sanguinaire",
+    "Triple Claw Strike": "Frappe à Triple Griffe",
+    "Bloodloss": "Désaignement",
+    "Dragon Coins": "Pièces Dragon",
+    "Black Dragon": "Dragon Noir",
+    "Dragon Claw": "Griffe de Dragon",
+    "Dragon Fang Strike": "Frappe de Croc de Dragon",
+    "Dragon's Encouragement": "Encouragement du Dragon"
   },
   "personnages": {
     "Heidi Keller": "Tante de Luke, chef, gère une boutique de brioches à la vapeur.",
-    "Luke Foster": "Jeune homme transmigré, protagoniste, devient Dompteur de dragons.",
+    "Luke Foster": "Jeune homme transmigré, protagoniste, devient Dompteur de dragons et contracte un Dragon Noir.",
     "Zac": "Personnage ayant obtenu un métier de combat."
   }
 }
