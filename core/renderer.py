@@ -24,7 +24,9 @@ from typing import Tuple, Optional, List, Dict
 from pathlib import Path
 import math
 import re
+import logging
 import torch
+
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -39,6 +41,8 @@ from utils.mask_builder import (
 from utils.gemini_prompt import FONT_MAP
 
 # ── ColorResolver (inline pour éviter import circulaire) ──────────────────
+
+logger = logging.getLogger(__name__)
 
 def _srgb_to_linear(c: int) -> float:
     s = c / 255.0
@@ -124,7 +128,8 @@ def _resolve_colors(
 
     # Cas texte coloré (override / couleur originale préservée) sur fond
     # clair : la couleur unie suffit, pas besoin d'outline disgracieux.
-    if text_color_override is not None and _simple_luma(bg) > 150:
+    # Exception : out_text sur artwork a besoin d'outline pour la lisibilité.
+    if text_color_override is not None and _simple_luma(bg) > 150 and cls != "out_text":
         cr_override = _contrast_ratio(text_color, bg)
         if cr_override >= 3.0:
             return text_color, None, 0
@@ -763,7 +768,11 @@ class TextRenderer:
             return "dialogue"
 
         upper_ratio = sum(1 for c in clean if c.isupper()) / max(1, sum(1 for c in clean if c.isalpha()))
-        if "!" in clean and upper_ratio > 0.45:
+        # Scream uniquement si majorité uppercase ET exclamation forte
+        # (double !! ou ! en fin + ratio élevé). Un simple "C'EST VRAI !"
+        # ne doit pas déclencher la police de cri.
+        has_strong_exclamation = '!!' in clean or (clean.endswith('!') and upper_ratio > 0.70)
+        if has_strong_exclamation and upper_ratio > 0.60:
             return "scream"
         if clean.startswith("(") or clean.startswith("["):
             return "narration"
@@ -867,59 +876,50 @@ class TextRenderer:
             font_size = max(self.cfg.min_font_size, min(font_size, self.cfg.max_font_size))
         return font_size
 
-    def _bubble_width_profile(
-        self, bubble_mask: Optional[np.ndarray], box_h: int, n_bins: int = 10,
-    ) -> Optional[List[float]]:
+    @staticmethod
+    def _mask_row_span(mask: np.ndarray, y0: float, y1: float) -> float:
         """
-        Profil de largeur normalisé (0..1) de la bulle par bande verticale,
-        pour un wrap qui épouse sa forme ronde/ovale au lieu d'un rectangle
-        rigide (lignes courtes en haut/bas, longues au centre).
-        Retourne None si le masque est absent/trop petit (fallback rectangle).
+        Largeur RÉELLE (max_x - min_x, en pixels du masque) de la bulle sur
+        la bande de lignes [y0, y1) — pas une estimation, une mesure directe
+        du masque de segmentation à l'endroit précis où une ligne de texte
+        sera dessinée. Retourne 0 si la bande ne contient aucun pixel opaque
+        (hors de la bulle, ou bande vide).
         """
-        if bubble_mask is None or not isinstance(bubble_mask, np.ndarray) or bubble_mask.size == 0:
-            return None
-        m = bubble_mask
-        if m.ndim == 3:
-            m = m[:, :, 0]
-        h = m.shape[0]
-        if h < n_bins * 2:
-            return None
+        h = mask.shape[0]
+        y0c = max(0, min(h, int(round(y0))))
+        y1c = max(y0c + 1, min(h, int(round(y1))))
+        band = mask[y0c:y1c, :]
+        xs = np.nonzero(band > 0)[1]
+        if xs.size == 0:
+            return 0.0
+        return float(xs.max() - xs.min())
 
-        widths = []
-        band = max(1, h // n_bins)
-        for i in range(n_bins):
-            y0 = min(h - 1, i * band)
-            y1 = min(h, y0 + band)
-            rows = m[y0:y1, :]
-            xs = np.nonzero(rows > 0)[1]
-            widths.append(float(xs.max() - xs.min()) if xs.size > 0 else 0.0)
-
-        max_w = max(widths) if widths else 0.0
-        if max_w <= 0:
-            return None
-        # Plancher pour ne jamais réduire une ligne à (quasi) rien.
-        return [max(0.45, w / max_w) for w in widths]
-
-    def _wrap_text_shape_aware(
-        self, text: str, font: ImageFont.FreeTypeFont, base_max_width: int, profile: List[float],
+    def _wrap_text_by_mask(
+        self, text: str, font: ImageFont.FreeTypeFont,
+        inner_w: int, inner_h: int, line_h: int, spacing: int,
+        bubble_mask: np.ndarray, mask_y_offset: float,
     ) -> List[str]:
-        """Comme wrap_text, mais la largeur dispo varie ligne par ligne selon `profile`."""
-        n_bins = len(profile)
-
-        # Le texte est centré VERTICALEMENT dans la bulle (voir insert_text),
-        # pas aligné en haut. Un texte court (peu de lignes) doit donc
-        # échantillonner le profil autour du CENTRE (le plus large dans une
-        # bulle ronde/ovale), pas les toutes premières bandes (le plus étroit
-        # en haut) — sinon le texte se retrouve inutilement contraint et
-        # rendu trop petit / n'utilisant pas la place disponible.
-        avg_ratio = sum(profile) / max(1, len(profile))
-        approx_width = max(10, int(base_max_width * avg_ratio))
-        est_lines = max(1, len(self.wrap_text(text, font, approx_width)))
-        start_bin = max(0, min(n_bins - 1, (n_bins - est_lines) // 2))
+        """
+        Wrap "intelligent" : la largeur disponible pour CHAQUE ligne est
+        calculée par une mesure directe du masque réel de la bulle à la
+        position verticale où cette ligne sera effectivement dessinée
+        (le bloc de texte est centré verticalement dans la bulle) — pas une
+        approximation par bandes fixes, un calcul sur la géométrie réelle.
+        """
+        # Passage 1 (grossier, rectangle) : juste pour savoir où le bloc de
+        # texte sera centré verticalement avant de connaître son vrai wrap.
+        rough_w = max(10, int(inner_w * self.cfg.word_wrap_ratio))
+        n_est = max(1, len(self.wrap_text(text, font, rough_w)))
+        total_h_est = n_est * line_h + max(0, n_est - 1) * spacing
+        ys_local = max(0, (inner_h - total_h_est) // 2)
 
         def _width_for_line(idx: int) -> int:
-            ratio = profile[min(n_bins - 1, start_bin + idx)]
-            return max(10, int(base_max_width * ratio))
+            y0 = mask_y_offset + ys_local + idx * (line_h + spacing)
+            y1 = y0 + line_h
+            w = self._mask_row_span(bubble_mask, y0, y1)
+            if w <= 0:
+                return rough_w
+            return max(10, int(w * self.cfg.word_wrap_ratio))
 
         words = (text or "").split()
         if not words:
@@ -946,7 +946,7 @@ class TextRenderer:
     def _fit_font_hard(
         self, text: str, font_size: int, inner_w: int, inner_h: int,
         bubble_mask: Optional[np.ndarray] = None, class_name: str = "",
-        font_path: Optional[str] = None,
+        font_path: Optional[str] = None, mask_y_offset: float = 0,
     ) -> Tuple[Optional[ImageFont.FreeTypeFont], int, List[str], int, int]:
         """
         Ajuste strictement la taille pour éviter tout débordement.
@@ -957,30 +957,36 @@ class TextRenderer:
         """
         fs = max(self.cfg.min_font_size, min(font_size, self.cfg.max_font_size))
 
-        # Wrap "forme de bulle" seulement pour les vraies bulles rondes —
-        # une boîte System/narration est déjà rectangulaire, pas besoin.
-        shape_profile = None
-        if str(class_name).lower().strip() == "bulle":
-            box_h = bubble_mask.shape[0] if isinstance(bubble_mask, np.ndarray) else 0
-            shape_profile = self._bubble_width_profile(bubble_mask, box_h)
+        # Wrap "forme de bulle" (calcul direct sur le masque réel) seulement
+        # pour les vraies bulles rondes — une boîte System/narration est déjà
+        # rectangulaire, pas besoin.
+        use_mask_wrap = (
+            str(class_name).lower().strip() == "bulle"
+            and isinstance(bubble_mask, np.ndarray)
+            and bubble_mask.size > 0
+            and bubble_mask.shape[0] >= 20
+        )
 
         while fs >= self.cfg.min_font_size:
             font = self._load_font_from_path(font_path, fs)
             if not font:
                 return None, fs, [], 0, 0
 
-            wrap_w = max(10, int(inner_w * self.cfg.word_wrap_ratio))
-            if shape_profile is not None:
-                lines = self._wrap_text_shape_aware(text, font, wrap_w, shape_profile)
-            else:
-                lines = self.wrap_text(text, font, wrap_w)
-
             try:
                 line_h = font.getbbox("Tg")[3] - font.getbbox("Tg")[1]
             except Exception:
                 line_h = fs
-
             spacing = int(line_h * self.cfg.line_spacing_ratio)
+
+            if use_mask_wrap:
+                lines = self._wrap_text_by_mask(
+                    text, font, inner_w, inner_h, line_h, spacing,
+                    bubble_mask, mask_y_offset,
+                )
+            else:
+                wrap_w = max(10, int(inner_w * self.cfg.word_wrap_ratio))
+                lines = self.wrap_text(text, font, wrap_w)
+
             total_h = len(lines) * line_h + max(0, len(lines) - 1) * spacing
 
             line_widths = []
@@ -1000,6 +1006,10 @@ class TextRenderer:
         font = self._load_font_from_path(font_path, self.cfg.min_font_size)
         if not font:
             return None, self.cfg.min_font_size, [], 0, 0
+        logger.warning(
+            "⚠️ Texte forcé à min_font_size=%d — débordement possible : %.50s",
+            self.cfg.min_font_size, text,
+        )
         lines = self.wrap_text(text, font, max(10, int(inner_w * self.cfg.word_wrap_ratio)))
         try:
             line_h = font.getbbox("Tg")[3] - font.getbbox("Tg")[1]
@@ -1131,6 +1141,20 @@ class TextRenderer:
         if tw <= 0 or th <= 0:
             return img
 
+        # Normalise bubble_mask à la taille de la bbox (repère dans lequel
+        # mask_y_offset sera calculé plus bas) — au cas où le masque stocké
+        # n'a pas exactement cette résolution.
+        mask_for_wrap: Optional[np.ndarray] = None
+        if isinstance(bubble_mask, np.ndarray) and bubble_mask.size > 0:
+            box_h_full, box_w_full = max(1, y2 - y1), max(1, x2 - x1)
+            m = bubble_mask[:, :, 0] if bubble_mask.ndim == 3 else bubble_mask
+            if m.shape[:2] != (box_h_full, box_w_full):
+                try:
+                    m = cv2.resize(m, (box_w_full, box_h_full), interpolation=cv2.INTER_NEAREST)
+                except Exception:
+                    m = None
+            mask_for_wrap = m
+
         # ── V7: ColorResolver — 3 valeurs, outline peut être None ──
         text_color, outline_color, outline_width = self.get_text_colors(
             img, x1, y1, x2, y2,
@@ -1145,6 +1169,13 @@ class TextRenderer:
 
         if text_style == "system_card":
             text = self._format_system_card_text(text)
+
+        # ── Uppercase auto pour les fonts comics ──
+        # Les polices BD/comics (CCWildWords, AnimeAce, etc.) sont conçues
+        # pour du ALL CAPS. Le texte mixte (minuscules) donne un rendu amateur.
+        # Exception : whisper (chuchotement) et system_card (interface).
+        if text_style not in ("whisper", "system_card"):
+            text = text.upper()
 
         # ── Font sizing ──
         fs = self.calculate_optimal_font_size(text, bw, bh)
@@ -1161,9 +1192,12 @@ class TextRenderer:
         inner_w = max(10, tw - 2 * self.cfg.padding_horizontal)
         inner_h = max(10, th - 2 * self.cfg.padding_vertical)
         resolved_font_path = self._resolve_font_path(font_key, text_style, font_hint)
+        # Offset de l'inner zone par rapport au haut de la bbox — bubble_mask
+        # est indexé dans le repère de la bbox (0 = y1), pas de l'inner zone.
+        mask_y_offset = iy1 - y1
         font, fs, lines, lh, sp = self._fit_font_hard(
-            text, fs, inner_w, inner_h, bubble_mask=bubble_mask, class_name=class_name,
-            font_path=resolved_font_path,
+            text, fs, inner_w, inner_h, bubble_mask=mask_for_wrap, class_name=class_name,
+            font_path=resolved_font_path, mask_y_offset=mask_y_offset,
         )
 
         if not font:

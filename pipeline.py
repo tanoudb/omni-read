@@ -1802,6 +1802,9 @@ class TranslationPipeline:
                     for det_idx, det in enumerate(regular_detections):
                         det.text_nllb_raw = (translations_map.get(str(det_idx)) or translations_map.get(det_idx) or det.text_original)
                         det.text_translated = det.text_nllb_raw
+                        # Récupérer le font_key choisi par le LLM
+                        if hasattr(translator, 'get_font_key'):
+                            det.font_key = translator.get_font_key(str(det_idx))
 
                 for det in system_detections:
                     lines = [ln.strip() for ln in getattr(det, 'ocr_lines', []) if ln and ln.strip()]
@@ -1897,6 +1900,7 @@ class TranslationPipeline:
                 font_hint=getattr(det, 'font_hint', 'regular'),
                 class_name=getattr(det, 'class_name', ''),
                 bubble_mask=getattr(det, 'mask_binary', None),
+                font_key=getattr(det, 'font_key', None),
             )
             timings['text_render_seconds'] += max(0.0, time.perf_counter() - render_t0)
 
