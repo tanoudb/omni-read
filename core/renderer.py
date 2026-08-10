@@ -855,8 +855,19 @@ class TextRenderer:
         """Comme wrap_text, mais la largeur dispo varie ligne par ligne selon `profile`."""
         n_bins = len(profile)
 
+        # Le texte est centré VERTICALEMENT dans la bulle (voir insert_text),
+        # pas aligné en haut. Un texte court (peu de lignes) doit donc
+        # échantillonner le profil autour du CENTRE (le plus large dans une
+        # bulle ronde/ovale), pas les toutes premières bandes (le plus étroit
+        # en haut) — sinon le texte se retrouve inutilement contraint et
+        # rendu trop petit / n'utilisant pas la place disponible.
+        avg_ratio = sum(profile) / max(1, len(profile))
+        approx_width = max(10, int(base_max_width * avg_ratio))
+        est_lines = max(1, len(self.wrap_text(text, font, approx_width)))
+        start_bin = max(0, min(n_bins - 1, (n_bins - est_lines) // 2))
+
         def _width_for_line(idx: int) -> int:
-            ratio = profile[min(idx, n_bins - 1)]
+            ratio = profile[min(n_bins - 1, start_bin + idx)]
             return max(10, int(base_max_width * ratio))
 
         words = (text or "").split()
