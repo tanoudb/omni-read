@@ -445,12 +445,24 @@ class TranslationPipeline:
                     inside = gray[line > 0]
                     if inside.size <= 32:
                         continue
-                    # Le fond d'une ligne est majoritaire ; l'encre en est
-                    # l'écart. Seuil relatif à la dispersion de CETTE ligne,
-                    # donc valable aussi bien sur du blanc franc que sur du
-                    # blanc à moitié transparent.
-                    bg = float(np.median(inside))
-                    spread = float(np.percentile(np.abs(inside.astype(np.int16) - bg), 90))
+                    # Estimation du fond : on prend le PERCENTILE 90 des
+                    # valeurs intérieures au polygone, pas la médiane.
+                    # La médiane est biaisée par les pixels d'encre (foncés),
+                    # qui peuvent représenter 30-40 % du polygone sur du
+                    # texte dense — elle tire `bg` vers le bas, sous-estime
+                    # le fond clair, et le seuil résultant est trop petit
+                    # pour attraper le remplissage blanc des glyphes creux
+                    # et l'anticrénelage intérieur. Le p90 cible le fond
+                    # dominant (clair et majoritaire) en ignorant l'encre
+                    # (minoritaire et sombre), quelle que soit la densité
+                    # du texte et la teinte du fond.
+                    bg = float(np.percentile(inside, 90))
+                    # `spread` mesuré uniquement vers le BAS (bg - pixel),
+                    # c'est-à-dire sur les pixels foncés (encre). Les pixels
+                    # plus clairs que bg sont du fond/bruit et ne doivent pas
+                    # gonfler le seuil au risque de sur-masquer le fond.
+                    dark_dev = (bg - inside.astype(np.float32)).clip(min=0.0)
+                    spread = float(np.percentile(dark_dev, 90))
                     threshold = max(16.0, spread * 0.55)
 
                     # On cherche un peu AU-DELÀ du polygone : les polices script
