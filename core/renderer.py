@@ -526,7 +526,23 @@ class TextRenderer:
             return False
 
         edge_after = float(np.mean(np.abs(cv2.Laplacian(gray_after, cv2.CV_32F, ksize=3))[m]))
-        return (edge_after / edge_before) > 0.18
+        if (edge_after / edge_before) > 0.18:
+            return True
+
+        # Second signal, orthogonal au premier : la COULEUR de remplissage,
+        # pas sa structure. Mesuré sur une bulle grise unie : LaMa a rempli le
+        # masque en blanc quasi pur (243) alors que le fond réel est gris
+        # clair (231) — à peine 12 niveaux d'écart, donc peu de relief
+        # interne (le ratio de bord ci-dessus ne voyait rien d'anormal), mais
+        # assez pour dessiner un halo fantôme visible à l'endroit exact des
+        # lettres d'origine. Comparaison à la couleur MÉDIANE de la couronne
+        # juste hors masque, pas à `crop` (qui contient encore les lettres).
+        ring = (cv2.dilate(mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25))) > 0) & (mask == 0)
+        if not ring.any():
+            return False
+        ring_color = np.median(crop[ring].reshape(-1, 3), axis=0)
+        result_color = np.median(result[m].reshape(-1, 3), axis=0)
+        return float(np.max(np.abs(ring_color - result_color))) > 15.0
 
     @staticmethod
     def _background_is_diffusable(crop: np.ndarray, mask: np.ndarray, margin: int = 25) -> bool:
@@ -540,17 +556,31 @@ class TextRenderer:
         laissé. Autant garder alors le résultat de LaMa, imparfait mais
         crédible, plutôt que d'y substituer un artefact pire.
 
-        Test : le résidu haute fréquence (écart à un flou large) dans la
-        couronne juste hors masque. Mesuré : ~11 sur fond en dégradé (sûr
-        pour la diffusion), ~17 sur fond à motif réel (pas sûr).
+        Premier essai : résidu haute fréquence en NIVEAUX DE GRIS (écart à un
+        flou large) dans la couronne juste hors masque. Rejeté : un fond en
+        dégradé sombre (bulle noire, carte System avec halo) accumule du bruit
+        de compression JPEG proportionnellement plus grand dans les tons
+        foncés, et ce bruit — pourtant sans aucun rapport avec une vraie
+        texture — faisait grimper le résidu au-delà même du cas de motif réel
+        qu'on cherchait à détecter. Mesuré : ~28 sur un fond noir uni (qu'on
+        voulait accepter) contre ~17 sur le ruban à motif (qu'on voulait
+        rejeter) — l'ordre était inversé, aucun seuil ne pouvait séparer les
+        deux correctement.
+
+        Ce qui sépare net : l'écart-type de la COULEUR (BGR, pas la
+        luminosité) dans cette même couronne. Un dégradé ou un halo, même
+        sombre et bruité, reste dans une gamme de TEINTES étroite — seule la
+        luminosité varie. Un vrai motif (ruban doré + éléments numériques
+        teal/marine) mélange des teintes franchement différentes. Mesuré :
+        9.9 à 44.3 sur quatre fonds à dégradé/halo (bulle grise, bulle noire,
+        carte teal, panneau noir+lueur) contre 78.4 sur le ruban à motif —
+        écart net, pas de zone ambiguë entre les deux groupes.
         """
         ring = (cv2.dilate(mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (margin, margin))) > 0) & (mask == 0)
         if not ring.any():
             return True
-        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY).astype(np.float32)
-        blurred = cv2.GaussianBlur(gray, (0, 0), sigmaX=5)
-        residual = float(np.mean(np.abs(gray - blurred)[ring]))
-        return residual < 13.0
+        color_std = float(crop[ring].reshape(-1, 3).std(axis=0).max())
+        return color_std < 55.0
 
     @staticmethod
     def _diffuse_fill(crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
