@@ -483,15 +483,28 @@ class FilterConfig:
         r'asurascans?\.com',
         r'reaper-?scans?\.com',
         r'flamescans?\.org',
-        r'\.com',
-        r'\.net',
-        r'\.org',
+        # Espace(s) tolérés entre les syllabes : l'OCR lit souvent ce nom de
+        # site en mots séparés ("MAN HWA CLAN" au lieu de "MANHWACLAN").
+        r'man\s?hwa\s?clan',
+        # Espace toléré autour du point : l'OCR lit souvent "CLAN.COM" en
+        # "CLAN. COM" (le point est confondu avec une fin de phrase). Mesuré
+        # sur "MANHWACLAN.COM" collé à la suite d'un texte de narration —
+        # sans cette tolérance, ni ce pattern ni la détection de watermark
+        # ne matchaient, et le nom de domaine se retrouvait traduit tel quel.
+        r'\.\s{0,2}com\b',
+        r'\.\s{0,2}net\b',
+        r'\.\s{0,2}org\b',
         r'www\.',
         r'http',
         r'chapter\s*\d+',
         r'page\s*\d+',
         r'read\s+on',
         r'scan\s+by',
+        # Crédit d'agrégateur ("CRAWLED BY <site>"), variante de "scan by"
+        # trouvée sur des séries republiées par un site tiers plutôt que par
+        # la team de scantrad d'origine.
+        r'crawl(ed)?\s+by',
+        r'translat(ed)?\s+by',
         # Bandeau titre/crédits de série (format webtoon standard :
         # "STORY | ART <nom>", parfois avec l'éditeur). Mesuré : un tel
         # bandeau pleine largeur ("THE CLEANER — STORY | ART ZorongE YLAB")

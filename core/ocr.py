@@ -347,6 +347,8 @@ class OCREngine:
             # If cleaner unavailable, continue with existing pipeline
             pass
         text = self.text_filter.clean_text(text)
+        if getattr(config.filters, 'enable_watermark_filter', True):
+            text = self.text_filter.strip_watermark_fragments(text)
         text = re.sub(r"\b1\.(?=\s+[A-Z])", "I.", text)
         text = re.sub(r"\bI\.(?=\s+THE\b)", "I,", text)
         text = re.sub(r"(?<=[A-Z])\s+1\s+(?=[A-Z])", " I ", text)

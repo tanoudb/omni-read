@@ -79,6 +79,12 @@ class PromptBank:
         "- RÉPÉTITIONS PARASITES : \"AAAAAATTACK\" → \"ATTACK\", \"NOOOOO\" → \"NON !!!\" (garde l'émotion, "
         "pas le bruit).\n"
         "- TEXTE FRAGMENTÉ : Si un mot est coupé entre deux bulles, reconstruis le sens complet.\n"
+        "- CRÉDIT DE SCAN COLLÉ AU TEXTE : un filigrane d'équipe de scantrad/agrégateur "
+        "(\"CRAWLED BY <site>\", \"SCANNED BY <site>\", \"TRANSLATED BY <site>\", un nom de domaine "
+        "\".com/.net/.org\") est parfois OCR dans LA MÊME bulle qu'un texte de narration réel, "
+        "l'OCR les lit comme une seule phrase collée. Ce n'est jamais du dialogue : identifie ce "
+        "fragment (même mal OCR, ex. \"CRIAWLED\" pour \"CRAWLED\") et NE LE TRADUIS PAS — traduis "
+        "uniquement le reste, le texte de narration réel qui l'accompagne.\n"
         "- Si le texte OCR est totalement incompréhensible (charabia pur), renvoie une chaîne vide \"\"."
     )
 

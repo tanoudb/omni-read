@@ -474,6 +474,21 @@ class GeminiTranslator:
         formatted = re.sub(r":\s+(?!\n)", ":\n", text)
         return formatted.strip()
 
+    # ── DÉTECTION LANGUE (compat interface Translator) ────────────────────
+
+    def detect_source_language_with_confidence(self, text: str) -> Tuple[str, float]:
+        """
+        Gemini infère la langue depuis le contexte du prompt lui-même (pas de
+        détection statistique locale nécessaire) : on retourne juste la langue
+        source configurée avec confiance maximale, pour rester compatible avec
+        l'interface de Translator (utilisée par pipeline.py pour le scoring de
+        confiance globale, pas pour le choix de traduction).
+        """
+        return self.source_lang, 1.0
+
+    def detect_source_language(self, text: str) -> str:
+        return self.source_lang
+
     # ── TRADUCTION PAGE (API PRINCIPALE) ──────────────────────────────────
 
     def translate_page_json(
@@ -758,6 +773,17 @@ class GeminiTranslator:
         fk = self._last_font_map.get(composite_id)
         return fk if fk in FONT_MAP else None
 
+    def translate(self, text: str) -> str:
+        """
+        Traduction d'un seul texte (compat interface Translator), utilisée en
+        fallback quand translate_page_json ne renvoie pas un JSON indexé
+        exploitable, ou pour les cartes System traitées titre/corps séparément.
+        """
+        if not text or not text.strip():
+            return text
+        result = self.translate_page_json([text])
+        return (result.get("0") or result.get(0) or text) if isinstance(result, dict) else text
+
     # ── STATS ─────────────────────────────────────────────────────────────
 
     def stats(self) -> Dict[str, Any]:
@@ -769,3 +795,9 @@ class GeminiTranslator:
             "generation_seconds": round(self.generation_seconds_total, 2),
             "fallback_count": self.fallback_count,
         }
+
+    def get_cache_stats(self) -> dict:
+        """Compat interface Translator (pipeline.py logue entries/hit_rate)."""
+        total = self.cache_hits + self.cache_misses
+        hit_rate = f"{(100.0 * self.cache_hits / total):.1f}%" if total else "0.0%"
+        return {"entries": len(self._cache), "hit_rate": hit_rate}

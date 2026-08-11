@@ -1120,6 +1120,9 @@ class TranslationPipeline:
                         bubble_mask=getattr(det, 'mask_binary', None),
                         font_key=getattr(det, 'font_key', None),
                         source_line_height=getattr(det, 'source_line_height', None),
+                        sibling_boxes=[
+                            (d.x1, d.y1, d.x2, d.y2) for d in dets if d is not det
+                        ],
                     )
 
                 output_path = self._write_output_image(out_ch_dir, img_path.stem, img_translated)
@@ -2106,6 +2109,9 @@ class TranslationPipeline:
                 bubble_mask=getattr(det, 'mask_binary', None),
                 font_key=getattr(det, 'font_key', None),
                 source_line_height=getattr(det, 'source_line_height', None),
+                sibling_boxes=[
+                    (d.x1, d.y1, d.x2, d.y2) for d in valid_detections if d is not det
+                ],
             )
             timings['text_render_seconds'] += max(0.0, time.perf_counter() - render_t0)
 

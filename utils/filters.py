@@ -19,6 +19,36 @@ class TextFilter:
     # WATERMARKS
     # ─────────────────────────────────────────────────────────────────────────
     
+    def strip_watermark_fragments(self, text: str) -> str:
+        """
+        Retire les FRAGMENTS de watermark collés à du texte traduisible.
+
+        `is_watermark`/`should_skip` jugent le texte en bloc : correct pour un
+        vrai bandeau de crédit isolé, mais un OCR qui englobe le même bloc de
+        détection qu'un texte de narration produit une chaîne unique du genre
+        « CRAWLED BY MANHWACLAN.COM SHARDS OF OUR GOD... » — le tout ne
+        "ressemble" pas à un watermark pur (il contient de vraies phrases), le
+        check en bloc laisse donc passer le nom de domaine tel quel jusqu'au
+        traducteur, qui n'a aucune garantie de l'écarter lui-même. On retire
+        ici les fragments correspondant aux patterns AVANT traduction.
+
+        Les patterns ancrés (^...$), qui supposent que TOUT le texte est le
+        watermark, ne sont pas de bons candidats à une suppression partielle
+        et sont laissés à `is_watermark`/`should_skip` seuls.
+        """
+        if not text:
+            return text
+        out = text
+        for pattern in self.watermark_patterns:
+            if pattern.pattern.startswith('^') or pattern.pattern.endswith('$'):
+                continue
+            out = pattern.sub(' ', out)
+        # Ponctuation/tirets orphelins laissés par la coupe ("CLAN.  SHARDS"
+        # → "CLAN SHARDS" une fois le "." isolé nettoyé), puis espaces multiples.
+        out = re.sub(r'\s+([.,:;])', r'\1', out)
+        out = re.sub(r'\s{2,}', ' ', out).strip(" .-—|")
+        return out
+
     def is_watermark(self, text: str) -> bool:
         """Détecte si le texte est un watermark"""
         if not text:

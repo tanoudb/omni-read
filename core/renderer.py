@@ -1494,6 +1494,7 @@ class TextRenderer:
     @staticmethod
     def _container_box(
         img: np.ndarray, x1: int, y1: int, x2: int, y2: int,
+        exclude_boxes: Optional[List[Tuple[int, int, int, int]]] = None,
     ) -> Optional[Tuple[int, int, int, int]]:
         """
         Cherche le CONTENANT uni (bulle, boîte de narration, cartouche) dans
@@ -1508,6 +1509,14 @@ class TextRenderer:
 
         Renvoie None si aucun contenant franc n'est trouvé (texte posé à même
         le dessin) : on reste alors sur la bbox.
+
+        `exclude_boxes` : bbox des AUTRES détections de la même planche. Sur
+        des cartouches de narration empilés de près, le padding de recherche
+        peut fusionner deux cadres voisins en une seule composante malgré le
+        renforcement de l'érosion (le "pont" entre eux peut être plus large
+        que ce que l'érosion tranche). Signal direct et fiable : un contenant
+        qui engloutit la bbox d'UNE AUTRE détection a mangé le cadre du
+        voisin — on le rejette plutôt que d'y dessiner deux textes empilés.
         """
         h_img, w_img = img.shape[:2]
         bw, bh = x2 - x1, y2 - y1
@@ -1531,13 +1540,20 @@ class TextRenderer:
             ref = float(np.median(inner))
             similar = (np.abs(gray.astype(np.int16) - ref) < 32).astype(np.uint8) * 255
 
+            # 2 passes (~14px de rayon) : sur des cartouches empilés de près
+            # (narration multi-boîtes), une seule passe (7px) ne suffisait pas
+            # à trancher le pont fin entre deux cadres voisins — le padding
+            # (0.6*bw / 0.9*bh) de l'un débordait alors dans le cadre suivant,
+            # les deux composantes fusionnaient en une seule, et le texte des
+            # deux détections finissait empilé dans le second cadre pendant
+            # que le premier restait vide.
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-            eroded = cv2.erode(similar, kernel, iterations=1)
+            eroded = cv2.erode(similar, kernel, iterations=2)
             n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(eroded, 8)
             if n_labels < 2:
                 return None
             biggest = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
-            mask = cv2.dilate((labels == biggest).astype(np.uint8) * 255, kernel, iterations=1)
+            mask = cv2.dilate((labels == biggest).astype(np.uint8) * 255, kernel, iterations=2)
 
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             if not contours:
@@ -1562,6 +1578,20 @@ class TextRenderer:
             return None
         if (bx2 - bx1) <= bw and (by2 - by1) <= bh:
             return None
+
+        for ex1, ey1, ex2, ey2 in (exclude_boxes or []):
+            # Chevauchement significatif avec la bbox d'une AUTRE détection :
+            # pas seulement "contenue", un simple recouvrement partiel suffit
+            # déjà à indiquer que le contenant déborde sur le cadre du voisin
+            # (les deux cadres s'étant révélés adjacents à quelques pixels
+            # près, pas franchement disjoints).
+            ox1, oy1 = max(bx1, ex1), max(by1, ey1)
+            ox2, oy2 = min(bx2, ex2), min(by2, ey2)
+            if ox2 > ox1 and oy2 > oy1:
+                overlap_area = (ox2 - ox1) * (oy2 - oy1)
+                sibling_area = max(1, (ex2 - ex1) * (ey2 - ey1))
+                if overlap_area > 0.25 * sibling_area:
+                    return None
 
         return (bx1, by1, bx2, by2)
 
@@ -1639,6 +1669,7 @@ class TextRenderer:
         stroke_width: Optional[int] = None,
         bg_color_rgb: Optional[Tuple[int, int, int]] = None,
         angle_override: Optional[float] = None,
+        sibling_boxes: Optional[List[Tuple[int, int, int, int]]] = None,
     ) -> np.ndarray:
         if not text or not str(text).strip():
             return img
@@ -1661,7 +1692,7 @@ class TextRenderer:
         # Mesuré sur la planche : une boîte de narration a un contenant uni qui
         # l'englobe, une vraie bulle n'en a pas (ses abords sont du dessin ou
         # des hachures). C'est ce test-là qui tranche.
-        container = self._container_box(img, x1, y1, x2, y2)
+        container = self._container_box(img, x1, y1, x2, y2, exclude_boxes=sibling_boxes)
         if container is not None:
             x1, y1, x2, y2 = container
 
