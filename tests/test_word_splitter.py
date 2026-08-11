@@ -22,6 +22,13 @@ DOIT_DECOUPER = [
     ("Everyonehunts", "Everyone hunts"),    # casse d'origine conservee telle quelle
     ("ABOUTOUR!", "ABOUT OUR!"),
     ("\"ABOUTOUR\"", "\"ABOUT OUR\""),
+    # contraction collee au mot suivant (the-frontier-count's-10th-class-outcas,
+    # ch1 p2/p3) : l'apostrophe interne au token n'etait ni prise en compte
+    # dans le decoupage ("im" absent de la liste des mots courts autorises),
+    # ni preservee dans la reconstruction.
+    ("I'MWORRIEDABOUT", "I'M WORRIED ABOUT"),
+    ("YOU'LLSEE", "YOU'LL SEE"),
+    ("I'VEGOTIT", "I'VE GOT IT"),
 ]
 
 DOIT_LAISSER_INTACT = [

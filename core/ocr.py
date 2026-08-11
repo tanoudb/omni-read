@@ -64,6 +64,12 @@ _SHORT_WORDS = frozenset({
     "A", "I", "AM", "AN", "AS", "AT", "BE", "BY", "DO", "GO", "HE", "IF", "IN",
     "IS", "IT", "ME", "MY", "NO", "OF", "OK", "ON", "OR", "SO", "TO", "UP",
     "US", "WE",
+    # Restes de contractions une fois l'apostrophe perdue en cours de
+    # découpage (I'M → IM, YOU'LL → YOULL...). Trouvé sur "I'MWORRIEDABOUT" :
+    # wordsegment proposait bien ['im','worried','about'], mais 'im' n'étant
+    # pas dans cette liste, tout le découpage était rejeté en bloc — le mot
+    # entier restait collé.
+    "IM", "ID", "ILL", "IVE",
 })
 
 _wordsegment_state: Dict[str, object] = {"loaded": False, "module": None}
