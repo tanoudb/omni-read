@@ -458,9 +458,11 @@ class RenderingConfig:
     inpainting_model_path: Path = INPAINTING_CACHE_DIR / "dreMaz--AnimeMangaInpainting"
 
     # ── Sortie ──
-    # jpg | webp | png. Le PNG sur des planches webtoon fusionnées pèse ~6x le
-    # JPEG source pour aucun gain visible (la source EST du JPEG).
-    output_format: str = os.environ.get("WEBTOON_OUTPUT_FORMAT", "jpg").strip().lower()
+    # png (sans perte, défaut) | jpg | webp.
+    # Le PNG pèse ~6x le JPEG source sur une planche fusionnée, mais il
+    # n'ajoute aucune perte de compression au-dessus de celle déjà présente
+    # dans la source. Passer à jpg/95 si le poids des fichiers devient gênant.
+    output_format: str = os.environ.get("WEBTOON_OUTPUT_FORMAT", "png").strip().lower()
     output_quality: int = _env_int("WEBTOON_OUTPUT_QUALITY", 95)
 
 

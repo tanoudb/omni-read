@@ -606,23 +606,35 @@ class TranslationPipeline:
         """
         Écrit la planche traduite.
 
-        Défaut JPEG q95 et non PNG : sur ces planches fusionnées, le PNG pesait
-        36 Mo contre 6 Mo pour le JPEG source (~132 Mo par chapitre) sans gain
-        visible — la source est déjà du JPEG. WEBTOON_OUTPUT_FORMAT=png pour
-        revenir au sans-perte.
+        Défaut PNG : sans perte, c'est la meilleure qualité possible. Le fichier
+        est gros (~35 Mo pour une planche fusionnée de 43 000 px) mais il ne
+        rajoute aucune génération de compression par-dessus le JPEG source.
+        `IMWRITE_PNG_COMPRESSION=6` réduit la taille sans toucher aux pixels
+        (OpenCV utilise 1 par défaut, soit le plus rapide et le plus gros).
+
+        WEBTOON_OUTPUT_FORMAT=jpg + WEBTOON_OUTPUT_QUALITY=95 pour des fichiers
+        ~6x plus légers, au prix d'une passe de compression supplémentaire.
+        Le WebP est refusé au-delà de 16383 px : c'est sa limite de format, et
+        ces planches font bien plus haut.
         """
-        fmt = str(getattr(config.rendering, 'output_format', 'jpg')).lower().strip()
+        fmt = str(getattr(config.rendering, 'output_format', 'png')).lower().strip()
         quality = int(getattr(config.rendering, 'output_quality', 95))
+
+        if fmt == 'webp' and max(img.shape[:2]) > 16383:
+            fmt = 'png'
 
         if fmt in ('jpg', 'jpeg'):
             path = out_dir / f"{stem}_translated.jpg"
-            params = [cv2.IMWRITE_JPEG_QUALITY, max(1, min(100, quality))]
+            params = [
+                cv2.IMWRITE_JPEG_QUALITY, max(1, min(100, quality)),
+                cv2.IMWRITE_JPEG_SAMPLING_FACTOR, cv2.IMWRITE_JPEG_SAMPLING_FACTOR_444,
+            ]
         elif fmt == 'webp':
             path = out_dir / f"{stem}_translated.webp"
-            params = [cv2.IMWRITE_WEBP_QUALITY, max(1, min(100, quality))]
+            params = [cv2.IMWRITE_WEBP_QUALITY, max(1, min(101, quality))]
         else:
             path = out_dir / f"{stem}_translated.png"
-            params = []
+            params = [cv2.IMWRITE_PNG_COMPRESSION, 6]
 
         out_dir.mkdir(parents=True, exist_ok=True)
         cv2.imwrite(str(path), img, params)
