@@ -1,5 +1,5 @@
 """Vérifie que le texte reste dans la bulle et que les lignes ne se chevauchent pas."""
-import sys, math
+import sys
 sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent.parent))
 import cv2, numpy as np
 from core.renderer import TextRenderer

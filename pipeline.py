@@ -405,8 +405,15 @@ class TranslationPipeline:
         On redescend donc à l'encre : à l'intérieur de chaque polygone, on ne
         garde que les pixels qui s'écartent du fond local, puis on dilate juste
         assez pour attraper l'anticrénelage.
+
+        Le seuil est calculé LIGNE PAR LIGNE. Un seuil global était dominé par
+        la ligne la plus contrastée : sur une carte System holographique, dont
+        les lignes du haut sont en blanc semi-transparent et celle du bas en
+        blanc franc, seule la ligne du bas était masquée — les deux autres
+        restaient visibles sous la traduction.
         """
         polygons = np.zeros((h_det, w_det), dtype=np.uint8)
+        per_line: List[np.ndarray] = []
         for region in regions or []:
             pts = region.get('bbox') if isinstance(region, dict) else None
             if not pts:
@@ -416,51 +423,57 @@ class TranslationPipeline:
                 continue
             arr[:, 0] = np.clip(arr[:, 0], 0, max(0, w_det - 1))
             arr[:, 1] = np.clip(arr[:, 1], 0, max(0, h_det - 1))
+            line = np.zeros((h_det, w_det), dtype=np.uint8)
+            cv2.fillPoly(line, [arr], 255)
             cv2.fillPoly(polygons, [arr], 255)
+            per_line.append(line)
 
         if int(np.count_nonzero(polygons)) == 0:
             return None
 
         ink = None
-        if crop_bgr is not None and crop_bgr.size > 0:
+        if crop_bgr is not None and crop_bgr.size > 0 and per_line:
             try:
                 gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
                 if gray.shape[:2] != (h_det, w_det):
                     gray = cv2.resize(gray, (w_det, h_det), interpolation=cv2.INTER_AREA)
-                inside = gray[polygons > 0]
-                if inside.size > 32:
-                    # Le fond d'une ligne de texte est majoritaire ; l'encre en
-                    # est l'écart. Seuil relatif à la dispersion réelle, pour
-                    # rester valable sur bulle blanche comme sur boîte sombre.
+                gray_i = gray.astype(np.int16)
+                search_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+
+                accumulated = np.zeros((h_det, w_det), dtype=np.uint8)
+                for line in per_line:
+                    inside = gray[line > 0]
+                    if inside.size <= 32:
+                        continue
+                    # Le fond d'une ligne est majoritaire ; l'encre en est
+                    # l'écart. Seuil relatif à la dispersion de CETTE ligne,
+                    # donc valable aussi bien sur du blanc franc que sur du
+                    # blanc à moitié transparent.
                     bg = float(np.median(inside))
                     spread = float(np.percentile(np.abs(inside.astype(np.int16) - bg), 90))
-                    threshold = max(28.0, spread * 0.55)
+                    threshold = max(16.0, spread * 0.55)
 
-                    # On cherche l'encre un peu AU-DELÀ du polygone : les
-                    # polices script ont des jambages et des fioritures qui
-                    # sortent du rectangle OCR et laissaient un résidu coloré.
-                    search = cv2.dilate(
-                        polygons, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)),
-                    )
+                    # On cherche un peu AU-DELÀ du polygone : les polices script
+                    # ont des jambages et fioritures qui sortent du rectangle
+                    # OCR et laissaient un résidu coloré.
+                    search = cv2.dilate(line, search_kernel)
                     candidate = (
-                        (np.abs(gray.astype(np.int16) - bg) > threshold) & (search > 0)
+                        (np.abs(gray_i - bg) > threshold) & (search > 0)
                     ).astype(np.uint8)
 
                     # ...mais on ne garde que ce qui touche le polygone : sinon
-                    # un bout de dessin sombre voisin serait pris pour du texte
-                    # et effacé lui aussi.
+                    # un bout de dessin voisin serait pris pour du texte.
                     n_labels, labels = cv2.connectedComponents(candidate, 8)
-                    if n_labels > 1:
-                        touching = np.unique(labels[polygons > 0])
-                        keep = np.isin(labels, touching[touching > 0])
-                        ink = keep.astype(np.uint8) * 255
-                    else:
-                        ink = None
+                    if n_labels <= 1:
+                        continue
+                    touching = np.unique(labels[line > 0])
+                    keep = np.isin(labels, touching[touching > 0])
+                    accumulated |= keep.astype(np.uint8) * 255
 
-                    # Trop peu d'encre trouvée : seuillage non concluant
-                    # (dégradé, texte contourné). On reprend les polygones.
-                    if ink is not None and np.count_nonzero(ink) < 0.02 * np.count_nonzero(polygons):
-                        ink = None
+                # Trop peu d'encre trouvée : seuillage non concluant (dégradé,
+                # texte contourné). On reprend les polygones pleins.
+                if np.count_nonzero(accumulated) >= 0.02 * np.count_nonzero(polygons):
+                    ink = accumulated
             except Exception:
                 ink = None
 

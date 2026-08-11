@@ -24,7 +24,7 @@ import numpy as np
 from config import config
 from core import OCREngine, TextRenderer, SmartSegmenter, YOLODetector
 from pipeline import TranslationPipeline
-from utils import ImageUtils, WebtoonLogger
+from utils import WebtoonLogger
 
 DEFAULT_IMAGE = (
     "manhwa/rise_of_the_dragon_overlord/Chapitre 001/Chapitre 001_merged_part01.jpg"
@@ -47,16 +47,31 @@ def build_pipeline() -> TranslationPipeline:
     return p
 
 
-def erase_residue(after_crop: np.ndarray, mask: np.ndarray) -> float:
-    """% de pixels encore écartés du fond, dans la zone qui portait du texte."""
+def erase_rate(before_crop: np.ndarray, after_crop: np.ndarray, mask: np.ndarray) -> float:
+    """
+    % de l'encre d'origine effacée. 100 = plus aucune trace.
+
+    On compare l'écart au fond LOCAL avant et après. Mesurer simplement la
+    dispersion résiduelle ne veut rien dire sur une carte System : son fond
+    holographique varie de plus de 10 niveaux même parfaitement détouré, et
+    l'indicateur criait au résidu là où il n'y en avait pas.
+    """
     if mask is None or not mask.any():
-        return 0.0
-    zone = cv2.dilate(mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25))) > 0
-    if not zone.any():
-        return 0.0
-    gray = cv2.cvtColor(after_crop, cv2.COLOR_BGR2GRAY).astype(np.int16)
-    bg = float(np.median(gray[zone]))
-    return float(np.mean(np.abs(gray[zone] - bg) > 10)) * 100
+        return 100.0
+    ink = mask > 0
+    ring = (cv2.dilate(mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25))) > 0) & ~ink
+    if not ring.any() or not ink.any():
+        return 100.0
+
+    g_before = cv2.cvtColor(before_crop, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    g_after = cv2.cvtColor(after_crop, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    bg = float(np.median(g_before[ring]))
+
+    ecart_avant = float(np.mean(np.abs(g_before[ink] - bg)))
+    ecart_apres = float(np.mean(np.abs(g_after[ink] - bg)))
+    if ecart_avant < 1e-3:
+        return 100.0
+    return max(0.0, min(100.0, 100.0 * (1.0 - ecart_apres / ecart_avant)))
 
 
 def overlapping_pairs(dets, iou_min: float = 0.30) -> int:
@@ -158,13 +173,16 @@ def main() -> int:
     for d in keep:
         if getattr(d, "chirurgical_mask", None) is None:
             continue
-        residues.append((erase_residue(out[d.y1:d.y2, d.x1:d.x2], d.chirurgical_mask), d))
-    residues.sort(key=lambda t: -t[0])
+        rate = erase_rate(
+            img[d.y1:d.y2, d.x1:d.x2], out[d.y1:d.y2, d.x1:d.x2], d.chirurgical_mask,
+        )
+        residues.append((rate, d))
+    residues.sort(key=lambda t: t[0])  # les moins bien effacées d'abord
     vals = [r for r, _ in residues]
     if vals:
-        print(f"Effacement     : {t_erase:.1f}s   résidu médian {np.median(vals):.2f}% "
-              f"| p90 {np.percentile(vals, 90):.2f}% | max {max(vals):.2f}%")
-        print(f"  zones à résidu > 2% : {sum(1 for v in vals if v > 2)}")
+        print(f"Effacement     : {t_erase:.1f}s   encre effacée : médiane {np.median(vals):.1f}% "
+              f"| p10 {np.percentile(vals, 10):.1f}% | pire {min(vals):.1f}%")
+        print(f"  zones sous 70% d'effacement : {sum(1 for v in vals if v < 70)}")
 
     # ── Rendu (texte source réinjecté) ──
     t0 = time.time()
@@ -201,7 +219,7 @@ def main() -> int:
 
     # ── Sorties ──
     p._write_output_image(out_dir, img_path.stem + "_dryrun", out)
-    worst = residues[:6]
+    worst = residues[:6]  # les 6 zones les moins bien effacées
     if worst:
         tiles = []
         for _, d in worst:
