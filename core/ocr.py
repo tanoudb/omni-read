@@ -70,6 +70,11 @@ _SHORT_WORDS = frozenset({
     # pas dans cette liste, tout le découpage était rejeté en bloc — le mot
     # entier restait collé.
     "IM", "ID", "ILL", "IVE",
+    # Abréviation de "Level", omniprésente dans les fiches de stats/monstres
+    # de ce genre de manhwa ("GIANT HORNED ANTELOPE LV.7"). Même mécanisme :
+    # wordsegment proposait ['giant','horned','antelope','lv'], rejeté en bloc
+    # faute de 'lv' dans cette liste.
+    "LV",
 })
 
 _wordsegment_state: Dict[str, object] = {"loaded": False, "module": None}
@@ -201,6 +206,19 @@ def _split_glued_words(text: str, protected: Optional[frozenset] = None) -> str:
     """
     if not text:
         return text
+
+    # Ponctuation interne collée à un mot entier ("LEVEL:29", "LV.7",
+    # "FOXFUR(8") : le découpeur ci-dessous n'agit que sur des tokens
+    # délimités par des ESPACES, donc un token entier restait intact tant
+    # qu'aucun espace n'y donnait prise. Mesuré sur deux séries différentes :
+    # "GIANTHORNEDANTELOPELV.7" ne se découpait pas du tout, parce que le "7"
+    # final restait collé à "LV" une fois le point ignoré pour la
+    # segmentation — et "LV7" n'a pas la tête d'un mot valide (aucune
+    # voyelle), donc le découpage entier était rejeté.
+    # Lookbehind restreint aux LETTRES (pas aux chiffres) pour ne jamais
+    # toucher un vrai nombre décimal ("3.5").
+    text = re.sub(r'(?<=[A-Za-z])([.:])(?=[A-Za-z0-9])', r'\1 ', text)
+    text = re.sub(r'(?<=[A-Za-z0-9])(\()(?=[A-Za-z0-9])', r' \1', text)
 
     protected = protected or frozenset()
     result: List[str] = []

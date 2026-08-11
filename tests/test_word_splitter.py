@@ -29,6 +29,13 @@ DOIT_DECOUPER = [
     ("I'MWORRIEDABOUT", "I'M WORRIED ABOUT"),
     ("YOU'LLSEE", "YOU'LL SEE"),
     ("I'VEGOTIT", "I'VE GOT IT"),
+    # ponctuation interne collee a un mot entier (rise_of_the_dragon_overlord
+    # ET the-frontier-count's-10th-class-outcas, fiches de stats de monstre) :
+    # aucun espace ne donnait prise au decoupeur, le token entier restait
+    # intact malgre la ponctuation deja presente.
+    ("GIANTHORNEDANTELOPELV.7", "GIANT HORNED ANTELOPE LV. 7"),
+    ("LEVEL:29", "LEVEL: 29"),
+    ("MATERIALS:FOXFUR(8", "MATERIALS: FOX FUR (8"),
 ]
 
 DOIT_LAISSER_INTACT = [
@@ -41,6 +48,9 @@ DOIT_LAISSER_INTACT = [
     "HMPH",             # pas de decoupage plausible
     "I'M",              # trop court
     "SYSTEM",           # vrai mot
+    # ne doit JAMAIS etre modifie par la pre-passe de ponctuation interne
+    "3.5",              # nombre decimal
+    "12:30",            # heure
 ]
 
 PROTEGES = frozenset({"SUNGJINWOO", "CHEONGDO"})
