@@ -1090,7 +1090,7 @@ class TextRenderer:
 
     def _fit_font_hard(
         self, text: str, font_size: int, inner_w: int, inner_h: int,
-        bubble_mask: Optional[np.ndarray] = None, class_name: str = "",
+        bubble_mask: Optional[np.ndarray] = None, shape_wrap: bool = False,
         font_path: Optional[str] = None, mask_y_offset: float = 0,
         max_font_size: Optional[int] = None,
     ) -> Optional[Dict]:
@@ -1107,7 +1107,7 @@ class TextRenderer:
         taille fait déborder ou chevaucher les lignes.
         """
         use_mask_wrap = (
-            str(class_name).lower().strip() == "bulle"
+            shape_wrap
             and isinstance(bubble_mask, np.ndarray)
             and bubble_mask.size > 0
             and bubble_mask.shape[0] >= 20
@@ -1150,7 +1150,7 @@ class TextRenderer:
     # ZONE UTILE
     # ─────────────────────────────────────────────────────────────────────────
 
-    def _shrink_ratio_for(self, class_name: str, has_mask_wrap: bool) -> float:
+    def _shrink_ratio_for(self, is_round: bool, has_mask_wrap: bool) -> float:
         """
         Marge intérieure, en fraction de la bbox, de CHAQUE côté.
 
@@ -1161,8 +1161,7 @@ class TextRenderer:
         ovale à l'aveugle ; dès qu'on mesure le masque de la bulle ligne par
         ligne, la forme est déjà respectée.
         """
-        cls = str(class_name or "").lower().strip()
-        if cls == "bulle":
+        if is_round:
             return 0.08 if has_mask_wrap else 0.18
         return 0.06
 
@@ -1350,6 +1349,23 @@ class TextRenderer:
         return filled
 
     @staticmethod
+    def _is_non_rectangular(mask: np.ndarray, threshold: float = 0.90) -> bool:
+        """
+        Vrai si la forme s'écarte franchement de son rectangle englobant.
+
+        Repères mesurés sur la planche : ~0.77 pour une bulle ovale ou une
+        bulle de cri, ~1.0 pour un cartouche. Le wrap ligne-par-ligne n'a
+        d'intérêt que dans le premier cas.
+        """
+        ys, xs = np.nonzero(mask)
+        if xs.size == 0:
+            return False
+        area = (xs.max() - xs.min() + 1) * (ys.max() - ys.min() + 1)
+        if area <= 0:
+            return False
+        return (float(np.count_nonzero(mask)) / float(area)) < threshold
+
+    @staticmethod
     def _container_box(
         img: np.ndarray, x1: int, y1: int, x2: int, y2: int,
     ) -> Optional[Tuple[int, int, int, int]]:
@@ -1455,12 +1471,17 @@ class TextRenderer:
             if m is not None and float(np.count_nonzero(m)) / float(box_w * box_h) >= 0.55:
                 return (m > 0).astype(np.uint8) * 255
 
-        if not is_bubble:
-            return None
-
+        # Tentée quelle que soit l'étiquette : c'est une MESURE, elle n'a pas
+        # besoin que YOLO ait vu juste. L'appelant décidera ensuite, d'après la
+        # forme obtenue, s'il y a lieu d'épouser le contour.
         derived = self._bubble_mask_from_image(crop_bgr)
         if derived is not None:
             return derived
+
+        # Dernier recours seulement : l'ellipse inscrite est une SUPPOSITION,
+        # on ne la fait donc que si l'étiquette annonce une bulle.
+        if not is_bubble:
+            return None
 
         ellipse = np.zeros((box_h, box_w), dtype=np.uint8)
         cv2.ellipse(
@@ -1492,30 +1513,40 @@ class TextRenderer:
         if not text or not str(text).strip():
             return img
 
-        is_bubble = str(class_name).lower().strip() == "bulle"
+        labelled_bubble = str(class_name).lower().strip() == "bulle"
 
         # Repère du texte SOURCE : `text_regions` y est exprimé, donc tout ce
         # qui s'y rapporte (ancrage System, angle, recentrage du bloc tourné)
         # doit continuer à l'utiliser.
         ox1, oy1, ox2, oy2 = x1, y1, x2, y2
 
-        # La bbox de détection épouse le texte source. Si elle est posée dans
-        # un contenant uni plus grand (boîte de narration, cartouche), c'est
-        # LUI la zone de composition — sinon le texte français, plus long, est
-        # comprimé alors que la place existe juste à côté.
-        if not is_bubble:
-            container = self._container_box(img, x1, y1, x2, y2)
-            if container is not None:
-                x1, y1, x2, y2 = container
+        # ── Mise en page décidée sur la FORME, pas sur l'étiquette ──
+        #
+        # L'étiquette de YOLO n'est pas stable : selon le cadrage des fenêtres
+        # glissantes, la même planche donne « 32 bulle + 3 out_text + 1 System »
+        # en tranches et « 36 bulle » en pleine hauteur. Se fier au libellé
+        # revenait à composer une boîte de narration comme un ovale, ou à
+        # perdre le wrap de bulle sur un ballon mal étiqueté.
+        #
+        # Mesuré sur la planche : une boîte de narration a un contenant uni qui
+        # l'englobe, une vraie bulle n'en a pas (ses abords sont du dessin ou
+        # des hachures). C'est ce test-là qui tranche.
+        container = self._container_box(img, x1, y1, x2, y2)
+        if container is not None:
+            x1, y1, x2, y2 = container
 
         box_h_full, box_w_full = max(1, y2 - y1), max(1, x2 - x1)
 
         mask_for_wrap = self._bubble_shape_mask(
             bubble_mask,
             img[max(0, y1):y2, max(0, x1):x2],
-            box_w_full, box_h_full, is_bubble,
+            box_w_full, box_h_full,
+            is_bubble=labelled_bubble and container is None,
         )
-        has_mask_wrap = is_bubble and mask_for_wrap is not None
+        # Le wrap « forme » ne sert que si la forme n'est PAS un rectangle :
+        # sur un cartouche il ne ferait qu'ajouter du bruit.
+        has_mask_wrap = mask_for_wrap is not None and self._is_non_rectangular(mask_for_wrap)
+        is_bubble = has_mask_wrap
 
         # ── Zone utile ──
         use_locked_mode = bool(getattr(self.cfg, 'lock_text_to_ocr_regions', False))
@@ -1533,7 +1564,7 @@ class TextRenderer:
             ix1, iy1, ix2, iy2 = self._get_inner_zone(
                 x1, y1, x2, y2, img.shape,
                 bubble_mask=mask_for_wrap,
-                shrink=self._shrink_ratio_for(class_name, has_mask_wrap),
+                shrink=self._shrink_ratio_for(is_bubble, has_mask_wrap),
             )
 
         tw, th = ix2 - ix1, iy2 - iy1
@@ -1599,7 +1630,7 @@ class TextRenderer:
         layout = self._fit_font_hard(
             text, fs, inner_w, inner_h,
             bubble_mask=mask_for_wrap if angle == 0.0 else None,
-            class_name=class_name,
+            shape_wrap=has_mask_wrap and angle == 0.0,
             font_path=resolved_font_path,
             # Origine verticale RÉELLE du bloc dans le repère de la bbox : le
             # padding manquait, les bandes de masque étaient mesurées 14 px
