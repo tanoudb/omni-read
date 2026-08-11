@@ -33,11 +33,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import config
 from utils import ImageUtils
-from utils.mask_builder import (
-    build_inpainting_mask,
-    build_inpainting_mask_bbox_fallback,
-    regions_to_crop_coords,
-)
 from utils.gemini_prompt import FONT_MAP
 
 # ── ColorResolver (inline pour éviter import circulaire) ──────────────────
@@ -111,6 +106,15 @@ def _resolve_colors(
         bg = _WHITE
 
     # ── Couleur texte ──
+    # La couleur « d'origine » vient d'un k-means à 2 classes sur les pixels du
+    # masque OCR. Quand ce masque est imprécis, le cluster retenu peut être
+    # celui du FOND : on écrivait alors du texte quasi invisible, et aucune des
+    # branches suivantes ne le rattrapait (elles ajoutent un contour, elles ne
+    # remplacent jamais la couleur). On rejette donc tout override qui ne
+    # ressort pas du fond.
+    if text_color_override is not None and _contrast_ratio(tuple(text_color_override), bg) < 2.0:
+        text_color_override = None
+
     if text_color_override is not None:
         text_color = text_color_override
     else:
@@ -169,7 +173,7 @@ try:
     LAMA_AVAILABLE = True
 except ImportError:
     LAMA_AVAILABLE = False
-    print("⚠️  simple-lama-inpainting non installé → pip install simple-lama-inpainting")
+    logger.warning("simple-lama-inpainting non installe -> pip install simple-lama-inpainting")
 
 try:
     from huggingface_hub import snapshot_download
@@ -181,7 +185,9 @@ except ImportError:
 class TextRenderer:
     """Rendu texte avec LaMa inpainting local + ColorResolver V2"""
 
-    SHRINK_RATIO = 0.22
+    # Repli seulement : la marge intérieure réelle est décidée par
+    # `_shrink_ratio_for()` selon la classe et la disponibilité du masque.
+    SHRINK_RATIO = 0.18
     CROP_MARGIN = 30
     INPAINT_MIN_HEIGHT = 20
 
@@ -205,11 +211,11 @@ class TextRenderer:
 
         if LAMA_AVAILABLE:
             try:
-                print("⏳ Chargement LaMa inpainting...")
+                logger.info("Chargement LaMa inpainting...")
                 self.lama = SimpleLama()
-                print("✅ LaMa chargé !")
+                logger.info("LaMa charge")
             except Exception as e:
-                print(f"⚠️  Erreur LaMa: {e}. Fallback cv2.inpaint.")
+                logger.warning("Erreur LaMa: %s. Fallback cv2.inpaint.", e)
 
     def _init_anime_inpainter(self):
         if not HF_AVAILABLE:
@@ -240,11 +246,11 @@ class TextRenderer:
                 hd_strategy_resize_limit=2048,
             )
             self.anime_inpainter_ready = True
-            print("✅ AnimeMangaInpainting prêt (lama-cleaner)")
+            logger.info("AnimeMangaInpainting pret (lama-cleaner)")
         except Exception as exc:
             self.anime_inpainter = None
             self.anime_inpainter_ready = False
-            print(f"⚠️  AnimeMangaInpainting indisponible: {exc}")
+            logger.warning("AnimeMangaInpainting indisponible: %s", exc)
 
     # ─────────────────────────────────────────────────────────────────────────
     # FONTS
@@ -344,65 +350,6 @@ class TextRenderer:
                     return pick
             return top_picks[0]
         return ordered_paths[0] if ordered_paths else None
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # INNER ZONE
-    # ─────────────────────────────────────────────────────────────────────────
-
-    def _get_inner_zone(
-        self, x1: int, y1: int, x2: int, y2: int, img_shape: Tuple[int, ...],
-        bubble_mask: Optional[np.ndarray] = None,
-    ) -> Tuple[int, int, int, int]:
-        h_img, w_img = img_shape[:2]
-        x1, y1 = max(0, int(x1)), max(0, int(y1))
-        x2, y2 = min(w_img, int(x2)), min(h_img, int(y2))
-
-        box_w, box_h = x2 - x1, y2 - y1
-        sx = max(5, int(box_w * self.SHRINK_RATIO))
-        sy = max(5, int(box_h * self.SHRINK_RATIO))
-        inner_w = max(1, box_w - 2 * sx)
-        inner_h = max(1, box_h - 2 * sy)
-
-        # Par défaut : centré sur le centre géométrique de la bbox.
-        cx, cy = x1 + box_w / 2.0, y1 + box_h / 2.0
-
-        # Si un masque de bulle précis est dispo, recentrer sur son centre de
-        # masse plutôt que sur le centre de la bbox : une bulle avec une queue
-        # (pointeur vers le personnage) a une bbox asymétrique, donc un
-        # centrage bbox tire visuellement le texte du côté de la queue.
-        if bubble_mask is not None and isinstance(bubble_mask, np.ndarray) and bubble_mask.size > 0:
-            m = bubble_mask
-            if m.ndim == 3:
-                m = m[:, :, 0]
-            if m.shape[:2] != (box_h, box_w) and box_w > 0 and box_h > 0:
-                try:
-                    m = cv2.resize(m, (box_w, box_h), interpolation=cv2.INTER_NEAREST)
-                except Exception:
-                    m = None
-            if m is not None:
-                ys, xs = np.nonzero(m > 0)
-                if xs.size > 200:
-                    cx = x1 + float(np.mean(xs))
-                    cy = y1 + float(np.mean(ys))
-
-        ix1 = cx - inner_w / 2.0
-        iy1 = cy - inner_h / 2.0
-        ix2 = ix1 + inner_w
-        iy2 = iy1 + inner_h
-
-        # Clamp pour rester dans la bbox d'origine
-        if ix1 < x1:
-            ix2 += (x1 - ix1); ix1 = x1
-        if iy1 < y1:
-            iy2 += (y1 - iy1); iy1 = y1
-        if ix2 > x2:
-            ix1 -= (ix2 - x2); ix2 = x2
-        if iy2 > y2:
-            iy1 -= (iy2 - y2); iy2 = y2
-        ix1, iy1 = max(x1, ix1), max(y1, iy1)
-        ix2, iy2 = min(x2, ix2), min(y2, iy2)
-
-        return (int(ix1), int(iy1), int(ix2), int(iy2))
 
     # ─────────────────────────────────────────────────────────────────────────
     # INPAINTING LOCAL
@@ -807,74 +754,111 @@ class TextRenderer:
         return compact
 
     # ─────────────────────────────────────────────────────────────────────────
+    # MÉTRIQUES DE POLICE
+    #
+    # `font.getbbox("Tg")` mesure l'ENCRE de "Tg" (hauteur de capitale +
+    # jambage), pas la hauteur de ligne typographique. L'utiliser comme
+    # interligne serrait les lignes au point que les accents des capitales
+    # françaises (É, À, Ê) mordaient sur la ligne du dessus ; et comme
+    # `draw.text()` ancre sur l'ASCENDANTE, le bloc était en plus dessiné plus
+    # bas que le centre calculé.
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _font_metrics(font: ImageFont.FreeTypeFont) -> Tuple[int, int]:
+        """(hauteur de ligne, ascendante) en pixels."""
+        try:
+            ascent, descent = font.getmetrics()
+            return max(1, int(ascent + descent)), int(ascent)
+        except Exception:
+            size = int(getattr(font, 'size', 16) or 16)
+            return max(1, int(size * 1.2)), size
+
+    @staticmethod
+    def _line_extents(font: ImageFont.FreeTypeFont, text: str) -> Tuple[int, int]:
+        """
+        (décalage gauche, largeur d'encre).
+
+        `draw.text((x, y), texte)` dessine l'encre de `x + décalage` à
+        `x + décalage + largeur`. Centrer sur la seule largeur, comme avant,
+        décale chaque ligne du left side bearing de sa première lettre.
+        """
+        try:
+            box = font.getbbox(text)
+            return int(box[0]), max(0, int(box[2] - box[0]))
+        except Exception:
+            size = int(getattr(font, 'size', 16) or 16)
+            return 0, len(text) * max(1, size // 2)
+
+    # ─────────────────────────────────────────────────────────────────────────
     # SIZING
     # ─────────────────────────────────────────────────────────────────────────
 
     def wrap_text(self, text: str, font: ImageFont.FreeTypeFont, max_width: int) -> List[str]:
         raw = (text or "").strip()
-        if raw and len(raw) < 30:
-            try:
-                one_line_w = font.getbbox(raw)[2] - font.getbbox(raw)[0]
-            except Exception:
-                one_line_w = len(raw) * (font.size // 2)
-            if one_line_w <= max_width:
-                return [raw]
+        if not raw:
+            return [""]
 
-        words = text.split()
+        if len(raw) < 30 and self._line_extents(font, raw)[1] <= max_width:
+            return [raw]
+
         lines: List[str] = []
-        current: List[str] = []
-        for word in words:
-            test = ' '.join(current + [word])
-            try:
-                w = font.getbbox(test)[2] - font.getbbox(test)[0]
-            except Exception:
-                w = len(test) * (font.size // 2)
-            if w <= max_width:
-                current.append(word)
-            else:
-                if current:
-                    lines.append(' '.join(current))
-                current = [word]
-        if current:
-            lines.append(' '.join(current))
+        # Les retours à la ligne explicites (cartes System) sont respectés.
+        for paragraph in raw.split("\n"):
+            words = paragraph.split()
+            if not words:
+                lines.append("")
+                continue
+            current: List[str] = []
+            for word in words:
+                test = ' '.join(current + [word])
+                if self._line_extents(font, test)[1] <= max_width:
+                    current.append(word)
+                else:
+                    if current:
+                        lines.append(' '.join(current))
+                    current = [word]
+            if current:
+                lines.append(' '.join(current))
         return lines if lines else [""]
 
-    def calculate_optimal_font_size(self, text: str, bbox_width: int, bbox_height: int) -> int:
-        if not self.cfg.enable_dynamic_sizing:
-            return max(self.cfg.min_font_size, min(bbox_height // 3, self.cfg.max_font_size))
-        nb_chars = len(text)
-        if nb_chars == 0:
-            return self.cfg.min_font_size
-        r = 1.0 - self.SHRINK_RATIO
-        area = int(bbox_width * r) * int(bbox_height * r) * self.cfg.target_fill_ratio
-        fs = int(math.sqrt(area / (nb_chars * 0.6)))
-        if nb_chars < 20:
-            fs = int(fs * 1.20)
-        return max(self.cfg.min_font_size, min(fs, self.cfg.max_font_size))
+    def calculate_optimal_font_size(
+        self, text: str, inner_w: int, inner_h: int,
+        source_line_height: Optional[float] = None,
+    ) -> int:
+        """
+        Estimation de départ, calculée sur la zone RÉELLEMENT utilisable.
 
-    def refine_font_size(self, text: str, font_size: int, bbox_width: int, bbox_height: int) -> int:
-        r = 1.0 - self.SHRINK_RATIO
-        uw = int(bbox_width * r) - 2 * self.cfg.padding_horizontal
-        uh = int(bbox_height * r) - 2 * self.cfg.padding_vertical
-        if uw <= 0 or uh <= 0:
-            return font_size
-        for _ in range(self.cfg.max_iterations):
-            font = self.get_font(font_size)
-            if not font:
-                break
-            lines = self.wrap_text(text, font, int(uw * self.cfg.word_wrap_ratio))
-            try:
-                lh = font.getbbox("Tg")[3] - font.getbbox("Tg")[1]
-            except Exception:
-                lh = font_size
-            sp = int(lh * self.cfg.line_spacing_ratio)
-            th = len(lines) * lh + (len(lines) - 1) * sp
-            fr = th / uh if uh > 0 else 1
-            if abs(fr - self.cfg.target_fill_ratio) < 0.1:
-                break
-            font_size += self.cfg.font_size_step if fr < self.cfg.target_fill_ratio else -self.cfg.font_size_step
-            font_size = max(self.cfg.min_font_size, min(font_size, self.cfg.max_font_size))
-        return font_size
+        L'ancienne version raisonnait sur la bbox complète (facteur 0.78) alors
+        que la zone utile vaut ~0.56 de la bbox : l'estimation partait toujours
+        beaucoup trop haut, la boucle d'ajustement devait redescendre par pas
+        de 2 et finissait souvent au plancher, où plus rien ne garantissait que
+        le texte tenait.
+
+        `source_line_height` (hauteur des lignes du texte ORIGINAL, mesurée sur
+        les polygones OCR) borne le résultat : sans elle, on remplit la bulle à
+        `target_fill_ratio` quoi qu'il arrive, ce qui transforme un « ENFIN… »
+        discret en titre pleine bulle.
+        """
+        clean = re.sub(r"\s+", " ", text or "").strip()
+        n_chars = len(clean)
+        if n_chars == 0:
+            return self.cfg.min_font_size
+
+        usable = max(1, int(inner_w)) * max(1, int(inner_h)) * float(self.cfg.target_fill_ratio)
+        # ~0.62 em² par caractère : largeur moyenne ~0.5 em, hauteur de ligne ~1.25 em.
+        fs = int(math.sqrt(usable / (n_chars * 0.62)))
+
+        if source_line_height and source_line_height > 4:
+            # La hauteur d'une ligne OCR couvre approximativement la capitale
+            # + le jambage, soit ~0.75 em. On VISE la taille d'origine : c'est
+            # le geste du letterer. Le texte français est plus long que
+            # l'anglais, donc l'ajustement final peut encore réduire — mais
+            # jamais grossir au-delà du corps de la planche.
+            em_source = float(source_line_height) / 0.75
+            fs = min(fs, int(em_source * 1.05))
+
+        return max(self.cfg.min_font_size, min(fs, self.cfg.max_font_size))
 
     @staticmethod
     def _mask_row_span(mask: np.ndarray, y0: float, y1: float) -> float:
@@ -898,68 +882,131 @@ class TextRenderer:
         self, text: str, font: ImageFont.FreeTypeFont,
         inner_w: int, inner_h: int, line_h: int, spacing: int,
         bubble_mask: np.ndarray, mask_y_offset: float,
-    ) -> List[str]:
+    ) -> Tuple[List[str], List[int]]:
         """
-        Wrap "intelligent" : la largeur disponible pour CHAQUE ligne est
-        calculée par une mesure directe du masque réel de la bulle à la
-        position verticale où cette ligne sera effectivement dessinée
-        (le bloc de texte est centré verticalement dans la bulle) — pas une
-        approximation par bandes fixes, un calcul sur la géométrie réelle.
+        Wrap « forme de bulle » : la largeur disponible pour CHAQUE ligne est
+        mesurée directement sur le masque de la bulle, à la hauteur où cette
+        ligne sera effectivement dessinée.
+
+        Retourne aussi la largeur autorisée de chaque ligne : c'est elle qui
+        fait foi pour décider si le texte tient, et non la largeur du rectangle
+        `inner_w`. Ce rectangle est volontairement étroit (il doit rester
+        inscrit dans l'ovale à l'aveugle) : le comparer aux lignes issues du
+        masque déclarait « ne tient pas » à toutes les tailles, et le texte
+        tombait systématiquement au plancher.
         """
-        # Passage 1 (grossier, rectangle) : juste pour savoir où le bloc de
-        # texte sera centré verticalement avant de connaître son vrai wrap.
         rough_w = max(10, int(inner_w * self.cfg.word_wrap_ratio))
-        n_est = max(1, len(self.wrap_text(text, font, rough_w)))
-        total_h_est = n_est * line_h + max(0, n_est - 1) * spacing
-        ys_local = max(0, (inner_h - total_h_est) // 2)
-
-        def _width_for_line(idx: int) -> int:
-            y0 = mask_y_offset + ys_local + idx * (line_h + spacing)
-            y1 = y0 + line_h
-            w = self._mask_row_span(bubble_mask, y0, y1)
-            if w <= 0:
-                return rough_w
-            return max(10, int(w * self.cfg.word_wrap_ratio))
-
-        words = (text or "").split()
+        words = re.sub(r"\s+", " ", text or "").strip().split()
         if not words:
-            return [""]
+            return [""], [rough_w]
 
-        lines: List[str] = []
-        current: List[str] = []
-        for word in words:
-            test = ' '.join(current + [word])
-            try:
-                w = font.getbbox(test)[2] - font.getbbox(test)[0]
-            except Exception:
-                w = len(test) * (font.size // 2)
-            if w <= _width_for_line(len(lines)):
-                current.append(word)
-            else:
-                if current:
-                    lines.append(' '.join(current))
-                current = [word]
-        if current:
-            lines.append(' '.join(current))
-        return lines if lines else [""]
+        def _wrap_with(n_lines_assumed: int) -> Tuple[List[str], List[int]]:
+            total_h = n_lines_assumed * line_h + max(0, n_lines_assumed - 1) * spacing
+            ys_local = max(0, (inner_h - total_h) // 2)
+
+            def _width_for_line(idx: int) -> int:
+                y0 = mask_y_offset + ys_local + idx * (line_h + spacing)
+                w = self._mask_row_span(bubble_mask, y0, y0 + line_h)
+                if w <= 0:
+                    return rough_w
+                return max(10, int(w * self.cfg.word_wrap_ratio))
+
+            lines: List[str] = []
+            allowed: List[int] = []
+            current: List[str] = []
+            current_w = _width_for_line(0)
+            for word in words:
+                test = ' '.join(current + [word])
+                if self._line_extents(font, test)[1] <= current_w:
+                    current.append(word)
+                else:
+                    if current:
+                        lines.append(' '.join(current))
+                        allowed.append(current_w)
+                    current = [word]
+                    current_w = _width_for_line(len(lines))
+            if current:
+                lines.append(' '.join(current))
+                allowed.append(current_w)
+            return lines, allowed
+
+        # Point fixe : la hauteur du bloc décide d'où commence la première
+        # ligne, donc de la bande de masque mesurée pour chaque ligne — mais
+        # cette hauteur dépend du découpage qu'on est en train de calculer.
+        # Une seule passe sur une estimation rectangulaire mesurait les lignes
+        # du bas à des bandes trop hautes (donc trop larges) : elles sortaient
+        # de l'ovale par la gauche et la droite.
+        n = max(1, len(self.wrap_text(text, font, rough_w)))
+        lines, allowed = _wrap_with(n)
+        for _ in range(3):
+            if len(lines) == n:
+                break
+            n = len(lines)
+            lines, allowed = _wrap_with(n)
+
+        return (lines, allowed) if lines else ([""], [rough_w])
+
+    def _layout_at_size(
+        self, text: str, font_size: int, inner_w: int, inner_h: int,
+        font_path: Optional[str], use_mask_wrap: bool,
+        bubble_mask: Optional[np.ndarray], mask_y_offset: float,
+    ) -> Optional[Dict]:
+        """Découpe + mesure du bloc de texte à une taille donnée."""
+        font = self._load_font_from_path(font_path, font_size)
+        if font is None:
+            return None
+
+        line_h, ascent = self._font_metrics(font)
+        spacing = int(line_h * self.cfg.line_spacing_ratio)
+
+        if use_mask_wrap and bubble_mask is not None:
+            lines, allowed = self._wrap_text_by_mask(
+                text, font, inner_w, inner_h, line_h, spacing, bubble_mask, mask_y_offset,
+            )
+            # Chaque ligne est jugée sur la largeur de la bulle À SA hauteur.
+            fits_width = all(
+                self._line_extents(font, ln)[1] <= aw
+                for ln, aw in zip(lines, allowed)
+            )
+        else:
+            lines = self.wrap_text(text, font, max(10, int(inner_w * self.cfg.word_wrap_ratio)))
+            fits_width = all(
+                self._line_extents(font, ln)[1] <= inner_w for ln in lines
+            )
+
+        total_h = len(lines) * line_h + max(0, len(lines) - 1) * spacing
+        max_line_w = max((self._line_extents(font, ln)[1] for ln in lines), default=0)
+
+        return {
+            'font': font,
+            'size': font_size,
+            'lines': lines,
+            'line_h': line_h,
+            'ascent': ascent,
+            'spacing': spacing,
+            'total_h': total_h,
+            'max_line_w': max_line_w,
+            'fits': total_h <= inner_h and fits_width,
+        }
 
     def _fit_font_hard(
         self, text: str, font_size: int, inner_w: int, inner_h: int,
         bubble_mask: Optional[np.ndarray] = None, class_name: str = "",
         font_path: Optional[str] = None, mask_y_offset: float = 0,
-    ) -> Tuple[Optional[ImageFont.FreeTypeFont], int, List[str], int, int]:
+        max_font_size: Optional[int] = None,
+    ) -> Optional[Dict]:
         """
-        Ajuste strictement la taille pour éviter tout débordement.
-        Mesure/découpe avec `font_path` (la police RÉELLEMENT utilisée au
-        rendu) — mesurer avec une police puis dessiner avec une autre à la
-        même taille peut faire chevaucher les lignes si les métriques (largeur
-        de glyphe, hauteur de ligne) diffèrent entre les deux polices.
-        """
-        fs = max(self.cfg.min_font_size, min(font_size, self.cfg.max_font_size))
+        Cherche la PLUS GRANDE taille qui tient dans la zone, par dichotomie.
 
-        # Wrap "forme de bulle" (calcul direct sur le masque réel) seulement
-        # pour les vraies bulles rondes — une boîte System/narration est déjà
-        # rectangulaire, pas besoin.
+        L'ancienne version ne faisait que décroître depuis l'estimation : quand
+        celle-ci était trop basse le texte restait trop petit, et quand elle
+        était trop haute il fallait jusqu'à 35 itérations de mesure. La
+        dichotomie en fait ~7 et corrige dans les deux sens.
+
+        Mesure et découpe avec `font_path` — la police RÉELLEMENT utilisée au
+        rendu. Mesurer avec une police puis dessiner avec une autre à la même
+        taille fait déborder ou chevaucher les lignes.
+        """
         use_mask_wrap = (
             str(class_name).lower().strip() == "bulle"
             and isinstance(bubble_mask, np.ndarray)
@@ -967,56 +1014,154 @@ class TextRenderer:
             and bubble_mask.shape[0] >= 20
         )
 
-        while fs >= self.cfg.min_font_size:
-            font = self._load_font_from_path(font_path, fs)
-            if not font:
-                return None, fs, [], 0, 0
+        lo = int(self.cfg.min_font_size)
+        hi = int(min(self.cfg.max_font_size, max_font_size or self.cfg.max_font_size))
+        hi = max(lo, hi)
 
-            try:
-                line_h = font.getbbox("Tg")[3] - font.getbbox("Tg")[1]
-            except Exception:
-                line_h = fs
-            spacing = int(line_h * self.cfg.line_spacing_ratio)
-
-            if use_mask_wrap:
-                lines = self._wrap_text_by_mask(
-                    text, font, inner_w, inner_h, line_h, spacing,
-                    bubble_mask, mask_y_offset,
-                )
+        best: Optional[Dict] = None
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            layout = self._layout_at_size(
+                text, mid, inner_w, inner_h, font_path, use_mask_wrap, bubble_mask, mask_y_offset,
+            )
+            if layout is None:
+                return None
+            if layout['fits']:
+                best = layout
+                lo = mid + 1
             else:
-                wrap_w = max(10, int(inner_w * self.cfg.word_wrap_ratio))
-                lines = self.wrap_text(text, font, wrap_w)
+                hi = mid - 1
 
-            total_h = len(lines) * line_h + max(0, len(lines) - 1) * spacing
+        if best is not None:
+            return best
 
-            line_widths = []
-            for line in lines:
-                try:
-                    line_widths.append(font.getbbox(line)[2] - font.getbbox(line)[0])
-                except Exception:
-                    line_widths.append(len(line) * max(1, fs // 2))
-
-            max_line_w = max(line_widths) if line_widths else 0
-
-            if total_h <= inner_h and max_line_w <= inner_w:
-                return font, fs, lines, line_h, spacing
-
-            fs -= self.cfg.font_size_step
-
-        font = self._load_font_from_path(font_path, self.cfg.min_font_size)
-        if not font:
-            return None, self.cfg.min_font_size, [], 0, 0
-        logger.warning(
-            "⚠️ Texte forcé à min_font_size=%d — débordement possible : %.50s",
-            self.cfg.min_font_size, text,
+        # Rien ne tient, même au plancher : on rend quand même, mais on le dit.
+        fallback = self._layout_at_size(
+            text, int(self.cfg.min_font_size), inner_w, inner_h,
+            font_path, use_mask_wrap, bubble_mask, mask_y_offset,
         )
-        lines = self.wrap_text(text, font, max(10, int(inner_w * self.cfg.word_wrap_ratio)))
-        try:
-            line_h = font.getbbox("Tg")[3] - font.getbbox("Tg")[1]
-        except Exception:
-            line_h = self.cfg.min_font_size
-        spacing = int(line_h * self.cfg.line_spacing_ratio)
-        return font, self.cfg.min_font_size, lines, line_h, spacing
+        if fallback is not None:
+            logger.warning(
+                "⚠️ Texte au plancher min_font_size=%d, débordement probable : %.60s",
+                self.cfg.min_font_size, text,
+            )
+        return fallback
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ZONE UTILE
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _shrink_ratio_for(self, class_name: str, has_mask_wrap: bool) -> float:
+        """
+        Marge intérieure, en fraction de la bbox, de CHAQUE côté.
+
+        Un `SHRINK_RATIO` fixe de 0.22 ne laissait que 56 % de la largeur, puis
+        16 px de padding, puis 90 % de wrap : sur une bulle de 215 px il restait
+        88 px utiles, moins que le mot « ROYAUMES » au plancher de taille. La
+        marge n'a besoin d'être large que quand on inscrit un rectangle dans un
+        ovale à l'aveugle ; dès qu'on mesure le masque de la bulle ligne par
+        ligne, la forme est déjà respectée.
+        """
+        cls = str(class_name or "").lower().strip()
+        if cls == "bulle":
+            return 0.08 if has_mask_wrap else 0.18
+        return 0.06
+
+    def _get_inner_zone(
+        self, x1: int, y1: int, x2: int, y2: int, img_shape: Tuple[int, ...],
+        bubble_mask: Optional[np.ndarray] = None, shrink: Optional[float] = None,
+    ) -> Tuple[int, int, int, int]:
+        h_img, w_img = img_shape[:2]
+        x1, y1 = max(0, int(x1)), max(0, int(y1))
+        x2, y2 = min(w_img, int(x2)), min(h_img, int(y2))
+
+        ratio = self.SHRINK_RATIO if shrink is None else float(shrink)
+        box_w, box_h = x2 - x1, y2 - y1
+        sx = max(3, int(box_w * ratio))
+        sy = max(3, int(box_h * ratio))
+        inner_w = max(1, box_w - 2 * sx)
+        inner_h = max(1, box_h - 2 * sy)
+
+        # Par défaut : centré sur le centre géométrique de la bbox.
+        cx, cy = x1 + box_w / 2.0, y1 + box_h / 2.0
+
+        # Si un masque de bulle précis est dispo, recentrer sur son centre de
+        # masse plutôt que sur le centre de la bbox : une bulle avec une queue
+        # (pointeur vers le personnage) a une bbox asymétrique, donc un
+        # centrage bbox tire visuellement le texte du côté de la queue.
+        if bubble_mask is not None and isinstance(bubble_mask, np.ndarray) and bubble_mask.size > 0:
+            m = bubble_mask
+            if m.ndim == 3:
+                m = m[:, :, 0]
+            if m.shape[:2] != (box_h, box_w) and box_w > 0 and box_h > 0:
+                try:
+                    m = cv2.resize(m, (box_w, box_h), interpolation=cv2.INTER_NEAREST)
+                except Exception:
+                    m = None
+            if m is not None:
+                ys, xs = np.nonzero(m > 0)
+                if xs.size > 200:
+                    cx = x1 + float(np.mean(xs))
+                    cy = y1 + float(np.mean(ys))
+
+        ix1 = cx - inner_w / 2.0
+        iy1 = cy - inner_h / 2.0
+        ix2 = ix1 + inner_w
+        iy2 = iy1 + inner_h
+
+        # Clamp pour rester dans la bbox d'origine
+        if ix1 < x1:
+            ix2 += (x1 - ix1); ix1 = x1
+        if iy1 < y1:
+            iy2 += (y1 - iy1); iy1 = y1
+        if ix2 > x2:
+            ix1 -= (ix2 - x2); ix2 = x2
+        if iy2 > y2:
+            iy1 -= (iy2 - y2); iy2 = y2
+        ix1, iy1 = max(x1, ix1), max(y1, iy1)
+        ix2, iy2 = min(x2, ix2), min(y2, iy2)
+
+        return (int(ix1), int(iy1), int(ix2), int(iy2))
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ORIENTATION DU TEXTE SOURCE
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _source_text_angle(regions: Optional[List[Dict]]) -> float:
+        """
+        Angle (degrés, sens horaire positif) des lignes de texte d'origine,
+        déduit des quadrilatères OCR.
+
+        Sans ça, un texte incliné sur un objet du décor (pancarte, feuille de
+        papier posée de travers) était réécrit strictement à l'horizontale, ce
+        qui casse la perspective du dessin.
+        """
+        angles: List[float] = []
+        for region in regions or []:
+            pts = region.get('bbox') if isinstance(region, dict) else None
+            if not pts or len(pts) < 4:
+                continue
+            try:
+                arr = np.array(pts, dtype=np.float32)
+            except Exception:
+                continue
+            if arr.ndim != 2 or arr.shape[0] < 4:
+                continue
+            # Bord supérieur du quadrilatère OCR : les points sont ordonnés
+            # (haut-gauche, haut-droite, bas-droite, bas-gauche).
+            dx = float(arr[1][0] - arr[0][0])
+            dy = float(arr[1][1] - arr[0][1])
+            if abs(dx) < 1e-3:
+                continue
+            angle = math.degrees(math.atan2(dy, dx))
+            if abs(angle) <= 45.0:
+                angles.append(angle)
+
+        if not angles:
+            return 0.0
+        angles.sort()
+        return float(angles[len(angles) // 2])
 
     # ─────────────────────────────────────────────────────────────────────────
     # RENDU PRINCIPAL
@@ -1035,74 +1180,126 @@ class TextRenderer:
         class_name: str = "",
         chirurgical_mask: Optional[np.ndarray] = None,
         bubble_mask: Optional[np.ndarray] = None,
+        font_key: Optional[str] = None,
+        source_line_height: Optional[float] = None,
     ) -> np.ndarray:
-        effective_regions = mask_regions if mask_regions else text_regions
+        """Efface puis réécrit. `text_regions` = polygones OCR (le texte),
+        `mask_regions` = segmentation de la bulle."""
+        erase_regions = text_regions or mask_regions
 
         if text_color_rgb is None and self.cfg.preserve_original_text_color:
-            text_color_rgb = self.extract_original_text_color(img, x1, y1, x2, y2, effective_regions)
+            text_color_rgb = self.extract_original_text_color(img, x1, y1, x2, y2, erase_regions)
 
         img = self.inpaint_region(
             img, x1, y1, x2, y2,
-            text_regions=effective_regions,
+            text_regions=erase_regions,
             class_name=class_name,
             chirurgical_mask=chirurgical_mask,
             bubble_mask=bubble_mask,
         )
-        img = self.insert_text(
+        return self.insert_text(
             img, text, x1, y1, x2, y2,
-            text_regions=effective_regions,
+            text_regions=erase_regions,
             text_color_rgb=text_color_rgb,
             text_style=text_style,
             font_hint=font_hint,
             class_name=class_name,
-        )
-        return img
-
-    def render_text_with_timing(
-        self,
-        img: np.ndarray,
-        text: str,
-        x1: int, y1: int, x2: int, y2: int,
-        text_regions: Optional[List[Dict]] = None,
-        mask_regions: Optional[List[Dict]] = None,
-        text_color_rgb: Optional[Tuple[int, int, int]] = None,
-        text_style: str = "dialogue",
-        font_hint: str = "regular",
-        class_name: str = "",
-        chirurgical_mask: Optional[np.ndarray] = None,
-        bubble_mask: Optional[np.ndarray] = None,
-    ) -> Tuple[np.ndarray, float, float]:
-        import time
-
-        effective_regions = mask_regions if mask_regions else text_regions
-
-        if text_color_rgb is None and self.cfg.preserve_original_text_color:
-            text_color_rgb = self.extract_original_text_color(img, x1, y1, x2, y2, effective_regions)
-
-        t0 = time.perf_counter()
-        img = self.inpaint_region(
-            img, x1, y1, x2, y2,
-            text_regions=effective_regions,
-            class_name=class_name,
-            chirurgical_mask=chirurgical_mask,
             bubble_mask=bubble_mask,
+            font_key=font_key,
+            source_line_height=source_line_height,
         )
-        inpaint_seconds = max(0.0, time.perf_counter() - t0)
 
-        t1 = time.perf_counter()
-        img = self.insert_text(
-            img, text, x1, y1, x2, y2,
-            text_regions=effective_regions,
-            text_color_rgb=text_color_rgb,
-            text_style=text_style,
-            font_hint=font_hint,
-            class_name=class_name,
+    @staticmethod
+    def _bubble_mask_from_image(crop_bgr: np.ndarray) -> Optional[np.ndarray]:
+        """
+        Déduit l'intérieur du ballon depuis l'image elle-même : plus grande
+        zone connexe de teinte homogène, contour rebouché.
+
+        `insert_text` reçoit l'image DÉJÀ détourée, donc l'intérieur du ballon
+        est uniforme à ce stade — ce qui rend la mesure fiable. L'érosion avant
+        l'étiquetage sert à colmater la couronne de hachures des bulles de cri,
+        qui est poreuse et laisserait fuir la zone vers l'extérieur.
+        """
+        h, w = crop_bgr.shape[:2]
+        if h < 24 or w < 24:
+            return None
+        try:
+            gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+            ref = float(np.median(gray[h // 3:2 * h // 3, w // 3:2 * w // 3]))
+            similar = (np.abs(gray.astype(np.int16) - ref) < 40).astype(np.uint8) * 255
+
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+            eroded = cv2.erode(similar, kernel, iterations=1)
+            n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(eroded, 8)
+            if n_labels < 2:
+                return None
+
+            biggest = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+            mask = cv2.dilate((labels == biggest).astype(np.uint8) * 255, kernel, iterations=1)
+
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if not contours:
+                return None
+            filled = np.zeros_like(mask)
+            cv2.drawContours(filled, contours, -1, 255, -1)
+        except Exception:
+            return None
+
+        fill = float(np.count_nonzero(filled)) / float(w * h)
+        if not (0.20 <= fill <= 0.98):
+            return None
+        return filled
+
+    def _bubble_shape_mask(
+        self, raw_mask: Optional[np.ndarray], crop_bgr: np.ndarray,
+        box_w: int, box_h: int, is_bubble: bool,
+    ) -> Optional[np.ndarray]:
+        """
+        Masque de la FORME de la bulle, au repère de la bbox.
+
+        Le masque du segmenter n'est pas celui du ballon : avec le backend
+        `hybrid` (le défaut quand le checkpoint SAM2 est absent), il est
+        construit à partir des régions OCR puis raffiné — c'est donc un masque
+        des LETTRES d'origine. Mesuré sur une vraie bulle : 20 % de la bbox,
+        et rien du tout au-dessus ni en dessous du texte anglais. Le wrap
+        « forme de bulle » donnait alors un bloc en sablier dont les premières
+        et dernières lignes sortaient de l'ovale.
+
+        Ordre de préférence : masque du segmenter s'il ressemble vraiment à un
+        ballon → forme déduite de l'image → ellipse inscrite.
+        """
+        if box_w < 8 or box_h < 8:
+            return None
+
+        if isinstance(raw_mask, np.ndarray) and raw_mask.size > 0:
+            m = raw_mask[:, :, 0] if raw_mask.ndim == 3 else raw_mask
+            if m.shape[:2] != (box_h, box_w):
+                try:
+                    m = cv2.resize(m, (box_w, box_h), interpolation=cv2.INTER_NEAREST)
+                except Exception:
+                    m = None
+            # Un ballon remplit largement sa bbox ; un masque de lettres non.
+            if m is not None and float(np.count_nonzero(m)) / float(box_w * box_h) >= 0.55:
+                return (m > 0).astype(np.uint8) * 255
+
+        if not is_bubble:
+            return None
+
+        derived = self._bubble_mask_from_image(crop_bgr)
+        if derived is not None:
+            return derived
+
+        ellipse = np.zeros((box_h, box_w), dtype=np.uint8)
+        cv2.ellipse(
+            ellipse,
+            (box_w // 2, box_h // 2),
+            (max(1, box_w // 2 - 1), max(1, box_h // 2 - 1)),
+            0, 0, 360, 255, -1,
         )
-        render_text_seconds = max(0.0, time.perf_counter() - t1)
-        return img, inpaint_seconds, render_text_seconds
+        return ellipse
 
     # ─────────────────────────────────────────────────────────────────────────
-    # INSERT TEXT — V7 avec ColorResolver intégré
+    # INSERT TEXT
     # ─────────────────────────────────────────────────────────────────────────
 
     def insert_text(
@@ -1117,140 +1314,291 @@ class TextRenderer:
         class_name: str = "",
         bubble_mask: Optional[np.ndarray] = None,
         font_key: Optional[str] = None,
+        source_line_height: Optional[float] = None,
     ) -> np.ndarray:
-        if not text:
+        if not text or not str(text).strip():
             return img
 
-        # ── Locked mode (System OCR regions) ──
+        is_bubble = str(class_name).lower().strip() == "bulle"
+        box_h_full, box_w_full = max(1, y2 - y1), max(1, x2 - x1)
+
+        mask_for_wrap = self._bubble_shape_mask(
+            bubble_mask,
+            img[max(0, y1):y2, max(0, x1):x2],
+            box_w_full, box_h_full, is_bubble,
+        )
+        has_mask_wrap = is_bubble and mask_for_wrap is not None
+
+        # ── Zone utile ──
         use_locked_mode = bool(getattr(self.cfg, 'lock_text_to_ocr_regions', False))
-        system_only = bool(getattr(self.cfg, 'lock_text_system_only', True))
-        is_system = str(class_name).lower() == 'system'
-        if system_only and not is_system:
+        if bool(getattr(self.cfg, 'lock_text_system_only', True)) and str(class_name).lower() != 'system':
             use_locked_mode = False
 
+        anchor_box = None
         if use_locked_mode:
             anchor_box = self._compute_anchor_box_from_regions(x1, y1, x2, y2, text_regions)
-            if anchor_box is not None:
-                ix1, iy1, ix2, iy2 = anchor_box
-            else:
-                ix1, iy1, ix2, iy2 = self._get_inner_zone(x1, y1, x2, y2, img.shape, bubble_mask=bubble_mask)
+
+        if anchor_box is not None:
+            ix1, iy1, ix2, iy2 = anchor_box
         else:
-            ix1, iy1, ix2, iy2 = self._get_inner_zone(x1, y1, x2, y2, img.shape, bubble_mask=bubble_mask)
+            use_locked_mode = False
+            ix1, iy1, ix2, iy2 = self._get_inner_zone(
+                x1, y1, x2, y2, img.shape,
+                bubble_mask=mask_for_wrap,
+                shrink=self._shrink_ratio_for(class_name, has_mask_wrap),
+            )
 
         tw, th = ix2 - ix1, iy2 - iy1
         if tw <= 0 or th <= 0:
             return img
 
-        # Normalise bubble_mask à la taille de la bbox (repère dans lequel
-        # mask_y_offset sera calculé plus bas) — au cas où le masque stocké
-        # n'a pas exactement cette résolution.
-        mask_for_wrap: Optional[np.ndarray] = None
-        if isinstance(bubble_mask, np.ndarray) and bubble_mask.size > 0:
-            box_h_full, box_w_full = max(1, y2 - y1), max(1, x2 - x1)
-            m = bubble_mask[:, :, 0] if bubble_mask.ndim == 3 else bubble_mask
-            if m.shape[:2] != (box_h_full, box_w_full):
-                try:
-                    m = cv2.resize(m, (box_w_full, box_h_full), interpolation=cv2.INTER_NEAREST)
-                except Exception:
-                    m = None
-            mask_for_wrap = m
-
-        # ── V7: ColorResolver — 3 valeurs, outline peut être None ──
+        # ── Couleurs ──
         text_color, outline_color, outline_width = self.get_text_colors(
             img, x1, y1, x2, y2,
             class_name=class_name,
             text_color_override=text_color_rgb,
         )
 
-        # ── Style inference ──
+        # ── Style ──
         bw, bh = x2 - x1, y2 - y1
         if text_style == "dialogue":
             text_style = self.infer_text_style(text, bw, bh, class_name=class_name)
-
         if text_style == "system_card":
             text = self._format_system_card_text(text)
 
-        # ── Uppercase auto pour les fonts comics ──
-        # Les polices BD/comics (CCWildWords, AnimeAce, etc.) sont conçues
-        # pour du ALL CAPS. Le texte mixte (minuscules) donne un rendu amateur.
-        # Exception : whisper (chuchotement) et system_card (interface).
+        # Les polices BD sont dessinées pour du ALL CAPS ; le texte mixte y a
+        # l'air amateur. Exceptions : chuchotement et interface système.
         if text_style not in ("whisper", "system_card"):
             text = text.upper()
-
-        # ── Font sizing ──
-        fs = self.calculate_optimal_font_size(text, bw, bh)
-        if text_style == "scream":
-            fs = min(self.cfg.max_font_size, int(fs * 1.15))
-        elif text_style == "whisper":
-            fs = max(self.cfg.min_font_size, int(fs * 0.90))
-        elif text_style == "system_card":
-            fs = max(self.cfg.min_font_size, int(fs * 0.92))
-
-        if self.cfg.enable_dynamic_sizing:
-            fs = self.refine_font_size(text, fs, bw, bh)
 
         inner_w = max(10, tw - 2 * self.cfg.padding_horizontal)
         inner_h = max(10, th - 2 * self.cfg.padding_vertical)
         resolved_font_path = self._resolve_font_path(font_key, text_style, font_hint)
-        # Offset de l'inner zone par rapport au haut de la bbox — bubble_mask
-        # est indexé dans le repère de la bbox (0 = y1), pas de l'inner zone.
-        mask_y_offset = iy1 - y1
-        font, fs, lines, lh, sp = self._fit_font_hard(
-            text, fs, inner_w, inner_h, bubble_mask=mask_for_wrap, class_name=class_name,
-            font_path=resolved_font_path, mask_y_offset=mask_y_offset,
-        )
 
-        if not font:
+        # ── Orientation du texte source ──
+        # Pas de filtre sur la classe : YOLO étiquette régulièrement en "bulle"
+        # un texte posé sur un objet du décor. C'est l'angle mesuré qui
+        # tranche — les quadrilatères OCR d'un vrai ballon sont à ~0°.
+        angle = 0.0
+        if self.cfg.follow_source_text_angle:
+            angle = self._source_text_angle(text_regions)
+            if abs(angle) < float(self.cfg.min_text_angle_deg):
+                angle = 0.0
+
+        if angle != 0.0:
+            # Sur un texte incliné, la largeur utile est la LONGUEUR de la ligne
+            # d'origine, pas la largeur de la bbox englobante (qui est plus
+            # large et ferait rentrer un texte qui, une fois tourné, dépasse).
+            diag_w = self._rotated_line_width(text_regions, angle)
+            if diag_w > 20:
+                inner_w = max(20, int(diag_w))
+                inner_h = max(10, int(max(inner_h, th)))
+
+        # ── Taille + découpe ──
+        fs = self.calculate_optimal_font_size(text, inner_w, inner_h, source_line_height)
+        if text_style == "scream":
+            fs = min(self.cfg.max_font_size, int(fs * 1.12))
+        elif text_style == "whisper":
+            fs = max(self.cfg.min_font_size, int(fs * 0.92))
+
+        size_cap = None
+        if source_line_height and source_line_height > 4:
+            size_cap = int((float(source_line_height) / 0.75) * 1.05)
+
+        layout = self._fit_font_hard(
+            text, fs, inner_w, inner_h,
+            bubble_mask=mask_for_wrap if angle == 0.0 else None,
+            class_name=class_name,
+            font_path=resolved_font_path,
+            # Origine verticale RÉELLE du bloc dans le repère de la bbox : le
+            # padding manquait, les bandes de masque étaient mesurées 14 px
+            # trop haut.
+            mask_y_offset=(iy1 + self.cfg.padding_vertical) - y1,
+            max_font_size=size_cap,
+        )
+        if layout is None:
             return img
 
-        # ── Dessin PIL ──
-        img_pil = ImageUtils.cv2_to_pil(img)
-        draw = ImageDraw.Draw(img_pil)
+        if angle != 0.0:
+            return self._draw_rotated(
+                img, layout, angle, text_regions, x1, y1, x2, y2,
+                text_color, outline_color, outline_width,
+            )
 
-        total_h = len(lines) * lh + (len(lines) - 1) * sp
+        return self._draw_block(
+            img, layout,
+            ix1, iy1, ix2, iy2, inner_w, inner_h,
+            text_color, outline_color, outline_width,
+            top_aligned=(use_locked_mode or text_style == "system_card"),
+        )
 
-        # Y start
-        if use_locked_mode or text_style == "system_card":
-            ys = iy1 + self.cfg.padding_vertical
-        elif self.cfg.vertical_align == 'center':
-            ys = iy1 + self.cfg.padding_vertical + (inner_h - total_h) // 2
+    # ─────────────────────────────────────────────────────────────────────────
+    # DESSIN
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _draw_block(
+        self, img: np.ndarray, layout: Dict,
+        ix1: int, iy1: int, ix2: int, iy2: int, inner_w: int, inner_h: int,
+        text_color, outline_color, outline_width: int,
+        top_aligned: bool = False,
+    ) -> np.ndarray:
+        """
+        Dessine le bloc de texte, à l'endroit, sur un CROP de l'image.
+
+        Deux raisons de ne pas convertir l'image entière en PIL comme avant :
+        c'était 4 copies d'une planche de ~90 Mo par bulle (des dizaines de Go
+        de recopie par planche), et le résultat était réécrit intégralement à
+        chaque appel.
+        """
+        font = layout['font']
+        lines = layout['lines']
+        line_h, spacing = layout['line_h'], layout['spacing']
+        total_h = layout['total_h']
+
+        left = ix1 + self.cfg.padding_horizontal
+        top = iy1 + self.cfg.padding_vertical
+
+        if top_aligned:
+            ys = top
         elif self.cfg.vertical_align == 'top':
-            ys = iy1 + self.cfg.padding_vertical
+            ys = top
+        elif self.cfg.vertical_align == 'bottom':
+            ys = iy2 - self.cfg.padding_vertical - total_h
         else:
-            ys = iy2 - total_h - self.cfg.padding_vertical
+            # Centrage du BLOC. L'ancienne version recalait ensuite chaque ligne
+            # individuellement dans la zone : dès que le bloc était trop haut,
+            # toutes les lignes du bas se retrouvaient à la même ordonnée,
+            # dessinées les unes sur les autres.
+            ys = top + (inner_h - total_h) // 2
+
+        # Zone à convertir en PIL : elle doit contenir TOUT le texte. Avec le
+        # wrap sur masque, une ligne peut légitimement être plus large que
+        # `inner_w` (la bulle est plus large que le rectangle inscrit) et
+        # déborder des deux côtés — la découper ici la tronquerait au rendu.
+        overflow_x = max(0, (layout['max_line_w'] - inner_w + 1) // 2)
+        pad = max(4, outline_width * 2 + layout['size'] // 2)
+        rx1 = max(0, min(left, ix1) - overflow_x - pad)
+        ry1 = max(0, min(ys, iy1) - pad)
+        rx2 = min(img.shape[1], max(ix2, left + inner_w) + overflow_x + pad)
+        ry2 = min(img.shape[0], max(iy2, ys + total_h) + pad)
+        if rx2 <= rx1 or ry2 <= ry1:
+            return img
+
+        crop = img[ry1:ry2, rx1:rx2]
+        crop_pil = ImageUtils.cv2_to_pil(crop)
+        draw = ImageDraw.Draw(crop_pil)
 
         for i, line in enumerate(lines):
-            try:
-                lw = font.getbbox(line)[2] - font.getbbox(line)[0]
-            except Exception:
-                lw = len(line) * (fs // 2)
+            if not line:
+                continue
+            offset_x, ink_w = self._line_extents(font, line)
 
-            # X position
-            if use_locked_mode or text_style == "system_card":
-                xp = ix1 + self.cfg.padding_horizontal
-            elif self.cfg.horizontal_align == 'center':
-                xp = ix1 + self.cfg.padding_horizontal + (inner_w - lw) // 2
-            elif self.cfg.horizontal_align == 'left':
-                xp = ix1 + self.cfg.padding_horizontal
+            if self.cfg.horizontal_align == 'left' or top_aligned:
+                xp = left
+            elif self.cfg.horizontal_align == 'right':
+                xp = left + inner_w - ink_w
             else:
-                xp = ix2 - lw - self.cfg.padding_horizontal
+                xp = left + (inner_w - ink_w) // 2
+            # `draw.text` place l'ORIGINE, pas le bord gauche de l'encre.
+            xp -= offset_x
 
-            yp = ys + i * (lh + sp)
+            yp = ys + i * (line_h + spacing)
 
-            # Clamp
-            xp = max(ix1 + self.cfg.padding_horizontal, min(xp, ix2 - lw - self.cfg.padding_horizontal))
-            yp = max(iy1 + self.cfg.padding_vertical, min(yp, iy2 - lh - self.cfg.padding_vertical))
-
-            # ── V7: Rendu avec ou sans outline ──
             if outline_color is not None and outline_width > 0:
                 draw.text(
-                    (xp, yp), line, font=font,
-                    fill=text_color,
-                    stroke_width=outline_width,
-                    stroke_fill=outline_color,
+                    (xp - rx1, yp - ry1), line, font=font,
+                    fill=text_color, stroke_width=outline_width, stroke_fill=outline_color,
                 )
             else:
-                # Pas d'outline → texte propre sans anti-aliasing sale
-                draw.text((xp, yp), line, font=font, fill=text_color)
+                draw.text((xp - rx1, yp - ry1), line, font=font, fill=text_color)
 
-        return ImageUtils.pil_to_cv2(img_pil)
+        img[ry1:ry2, rx1:rx2] = ImageUtils.pil_to_cv2(crop_pil)
+        return img
+
+    @staticmethod
+    def _rotated_line_width(regions: Optional[List[Dict]], angle: float) -> float:
+        """Longueur de la plus longue ligne OCR, mesurée le long de son axe."""
+        best = 0.0
+        for region in regions or []:
+            pts = region.get('bbox') if isinstance(region, dict) else None
+            if not pts or len(pts) < 4:
+                continue
+            try:
+                arr = np.array(pts, dtype=np.float32)
+            except Exception:
+                continue
+            width = float(np.hypot(arr[1][0] - arr[0][0], arr[1][1] - arr[0][1]))
+            best = max(best, width)
+        return best
+
+    def _draw_rotated(
+        self, img: np.ndarray, layout: Dict, angle: float,
+        regions: Optional[List[Dict]], x1: int, y1: int, x2: int, y2: int,
+        text_color, outline_color, outline_width: int,
+    ) -> np.ndarray:
+        """
+        Dessine le bloc sur un calque transparent, le tourne de `angle`, puis le
+        compose sur l'image au centre du texte d'origine.
+        """
+        font = layout['font']
+        lines = layout['lines']
+        line_h, spacing, total_h = layout['line_h'], layout['spacing'], layout['total_h']
+
+        widths = [self._line_extents(font, ln) for ln in lines]
+        block_w = max((w for _, w in widths), default=0)
+        if block_w <= 0 or total_h <= 0:
+            return img
+
+        pad = max(4, outline_width * 2 + layout['size'] // 2)
+        layer = Image.new('RGBA', (block_w + 2 * pad, total_h + 2 * pad), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(layer)
+
+        for i, line in enumerate(lines):
+            if not line:
+                continue
+            offset_x, ink_w = widths[i]
+            xp = pad + (block_w - ink_w) // 2 - offset_x
+            yp = pad + i * (line_h + spacing)
+            if outline_color is not None and outline_width > 0:
+                draw.text(
+                    (xp, yp), line, font=font, fill=tuple(text_color) + (255,),
+                    stroke_width=outline_width, stroke_fill=tuple(outline_color) + (255,),
+                )
+            else:
+                draw.text((xp, yp), line, font=font, fill=tuple(text_color) + (255,))
+
+        # PIL tourne dans le sens antihoraire pour un angle positif.
+        rotated = layer.rotate(-angle, resample=Image.BICUBIC, expand=True)
+
+        # Centre du texte d'origine (à défaut, centre de la bbox).
+        cx, cy = (x1 + x2) / 2.0, (y1 + y2) / 2.0
+        pts: List[Tuple[float, float]] = []
+        for region in regions or []:
+            raw = region.get('bbox') if isinstance(region, dict) else None
+            for p in raw or []:
+                pts.append((x1 + float(p[0]), y1 + float(p[1])))
+        if len(pts) >= 3:
+            cx = sum(p[0] for p in pts) / len(pts)
+            cy = sum(p[1] for p in pts) / len(pts)
+
+        rw, rh = rotated.size
+        px1 = int(round(cx - rw / 2.0))
+        py1 = int(round(cy - rh / 2.0))
+
+        # Découpe du calque à ce qui rentre dans l'image.
+        sx1 = max(0, -px1)
+        sy1 = max(0, -py1)
+        dx1 = max(0, px1)
+        dy1 = max(0, py1)
+        dx2 = min(img.shape[1], px1 + rw)
+        dy2 = min(img.shape[0], py1 + rh)
+        if dx2 <= dx1 or dy2 <= dy1:
+            return img
+
+        rotated = rotated.crop((sx1, sy1, sx1 + (dx2 - dx1), sy1 + (dy2 - dy1)))
+
+        base = ImageUtils.cv2_to_pil(img[dy1:dy2, dx1:dx2]).convert('RGBA')
+        base.alpha_composite(rotated)
+        img[dy1:dy2, dx1:dx2] = ImageUtils.pil_to_cv2(base.convert('RGB'))
+        return img
+

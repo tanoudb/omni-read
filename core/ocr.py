@@ -507,12 +507,19 @@ class OCREngine:
             img = cv2.resize(img, (max(1, int(w * extra)), 64), interpolation=cv2.INTER_CUBIC)
 
         if self.cfg.auto_resize:
+            h_before = img.shape[0]
             img = ImageUtils.smart_resize(
                 img,
                 min_height=self.cfg.min_text_height,
                 max_factor=self.cfg.max_resize_factor,
                 interpolation=self.cfg.resize_interpolation,
             )
+            # smart_resize peut agrandir une seconde fois. Sans ce cumul, le
+            # facteur renvoyé sous-estime l'agrandissement réel et l'appelant
+            # ne ramène pas complètement les polygones OCR dans le repère du
+            # crop d'origine (masque d'effacement décalé).
+            if h_before > 0 and img.shape[0] != h_before:
+                upscale_factor *= img.shape[0] / float(h_before)
 
         return img, upscale_factor
 

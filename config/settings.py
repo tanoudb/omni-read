@@ -7,7 +7,7 @@ WEBTOON TRANSLATOR V5 PREMIUM - CONFIGURATION CENTRALISÉE
 import os
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import List, Dict, Tuple
+from typing import List, Dict, Optional, Tuple
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PATHS & DIRECTORIES
@@ -22,10 +22,15 @@ OUTPUT_DIR = BASE_DIR / "output"
 LOGS_DIR = BASE_DIR / "logs"
 
 YOLO_MODEL_PATH = MODEL_DIR / os.environ.get("WEBTOON_YOLO_MODEL", "manhwa_v4.pt")
-# Second modèle pour ensemble détection (union + dédoublonnage IoU). v4 est
-# encore en cours d'entraînement (checkpoint partiel) ; v3 comble ce que v4
-# rate encore. Vide pour désactiver l'ensemble.
-YOLO_MODEL_PATH_SECONDARY = MODEL_DIR / os.environ.get("WEBTOON_YOLO_MODEL_SECONDARY", "manhwa_v3.pt")
+# Second modèle pour ensemble détection (union + dédoublonnage IoU).
+# DÉSACTIVÉ par défaut : l'ensemble v3+v4 produisait des détections en double
+# sur la même bulle avec des CLASSES différentes (v3 "bulle" + v4 "out_text"),
+# que le dédoublonnage — qui regroupe par classe — laissait passer. Résultat :
+# la même bulle traduite et rendue 2 à 3 fois, textes superposés.
+# On travaille sur v4 seul ; mettre WEBTOON_YOLO_MODEL_SECONDARY=manhwa_v3.pt
+# pour réactiver (le dédoublonnage inter-classes couvre maintenant ce cas).
+_secondary_name = os.environ.get("WEBTOON_YOLO_MODEL_SECONDARY", "").strip()
+YOLO_MODEL_PATH_SECONDARY = (MODEL_DIR / _secondary_name) if _secondary_name else None
 OCR_CACHE_DIR = CACHE_DIR / "ocr_weights"
 TRANSLATION_CACHE_DIR = CACHE_DIR / "translation_models"
 INPAINTING_CACHE_DIR = CACHE_DIR / "inpainting_models"
@@ -152,7 +157,20 @@ class DetectionConfig:
     })
     
     multi_scale_nms_iou: float = 0.6
-    inter_class_iou_threshold: float = 0.7
+    # Deux classes différentes sur la MÊME zone de texte = un doublon, pas deux
+    # zones. À 0.7 le cas typique passait juste en dessous (mesuré : un "bulle"
+    # et un "out_text" sur la même boîte de narration, IoU=0.696) et la zone
+    # était traduite puis rendue deux fois, textes superposés.
+    inter_class_iou_threshold: float = float(
+        os.environ.get("WEBTOON_INTER_CLASS_IOU", "0.5")
+    )
+    # Seuil de dédoublonnage appliqué APRÈS fusion de plusieurs modèles /
+    # passes. Deux modèles distincts prédisent rarement des boîtes identiques
+    # au pixel près pour la même bulle, d'où un seuil plus permissif que la NMS
+    # mono-modèle.
+    ensemble_dedupe_iou: float = float(
+        os.environ.get("WEBTOON_ENSEMBLE_DEDUPE_IOU", "0.35")
+    )
 
     # Padding noir optionnel (hack legacy) autour de l'image avant détection
     black_bars_enabled: bool = _env_bool("WEBTOON_BLACK_BARS_ENABLED", True)
@@ -391,10 +409,18 @@ class RenderingConfig:
     
     enable_dynamic_sizing: bool = True
     target_fill_ratio: float = 0.70
-    min_font_size: int = 18
-    max_font_size: int = 80
+    # 18 px était un plancher, pas un minimum : sur une planche de 690 px de
+    # large, une petite bulle n'offre que ~90 px utiles et un seul mot à cette
+    # taille dépasse déjà. Le texte débordait alors du cadre au lieu de rétrécir.
+    min_font_size: int = _env_int("WEBTOON_MIN_FONT_SIZE", 11)
+    max_font_size: int = _env_int("WEBTOON_MAX_FONT_SIZE", 80)
     font_size_step: int = 2
     max_iterations: int = 15
+
+    # Reprendre l'inclinaison du texte source (pancartes, papiers de travers)
+    # au lieu de tout réécrire à l'horizontale.
+    follow_source_text_angle: bool = _env_bool("WEBTOON_FOLLOW_TEXT_ANGLE", True)
+    min_text_angle_deg: float = float(os.environ.get("WEBTOON_MIN_TEXT_ANGLE", "6.0"))
     
     horizontal_align: str = "center"
     vertical_align: str = "center"
@@ -430,6 +456,12 @@ class RenderingConfig:
     inpaint_pass2_enabled: bool = _env_bool("WEBTOON_INPAINT_PASS2", False)
     inpainting_model_id: str = os.environ.get("WEBTOON_INPAINTING_MODEL_ID", "dreMaz/AnimeMangaInpainting")
     inpainting_model_path: Path = INPAINTING_CACHE_DIR / "dreMaz--AnimeMangaInpainting"
+
+    # ── Sortie ──
+    # jpg | webp | png. Le PNG sur des planches webtoon fusionnées pèse ~6x le
+    # JPEG source pour aucun gain visible (la source EST du JPEG).
+    output_format: str = os.environ.get("WEBTOON_OUTPUT_FORMAT", "jpg").strip().lower()
+    output_quality: int = _env_int("WEBTOON_OUTPUT_QUALITY", 95)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -496,7 +528,7 @@ class LoggingConfig:
 @dataclass
 class Config:
     YOLO_MODEL_PATH: Path = YOLO_MODEL_PATH
-    YOLO_MODEL_PATH_SECONDARY: Path = YOLO_MODEL_PATH_SECONDARY
+    YOLO_MODEL_PATH_SECONDARY: Optional[Path] = YOLO_MODEL_PATH_SECONDARY
     INPUT_DIR: Path = INPUT_DIR
     OUTPUT_DIR: Path = OUTPUT_DIR
     LOGS_DIR: Path = LOGS_DIR

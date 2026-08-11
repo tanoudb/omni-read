@@ -14,7 +14,6 @@ import time
 import json
 import gc
 import re
-from concurrent.futures import ThreadPoolExecutor
 
 from config import config
 from utils import MemoryManager, model_context, WebtoonLogger
@@ -78,12 +77,12 @@ class TranslationPipeline:
             pass
         self.segmenter = None
         self.detector = None  # Added YOLO persistent detector
-        self.detector_secondary = None  # Ensemble v3+v4
-        
+        self.detector_secondary = None  # Ensemble multi-modèles (désactivé par défaut)
+
         self.logger.info(f"🖥️  Device: {self.device}")
-        
+
         if self.debug:
-            self.logger.info(f"🐛 Mode DEBUG activé")
+            self.logger.info("🐛 Mode DEBUG activé")
             
         MemoryManager.log_memory_status(self.logger)
         
@@ -122,8 +121,6 @@ class TranslationPipeline:
         if self.detector is not None:
             return True
         try:
-            from core import YOLODetector
-            from config import config
             self.detector = YOLODetector(config.YOLO_MODEL_PATH, self.device)
             self.logger.info(f"   🎯 YOLO loaded (persistent): {config.YOLO_MODEL_PATH.name}")
 
@@ -136,6 +133,8 @@ class TranslationPipeline:
                 except Exception as e:
                     self.logger.warning(f"   ⚠️ YOLO secondaire indisponible: {e}")
                     self.detector_secondary = None
+            else:
+                self.logger.info("   🎯 Détection mono-modèle (ensemble désactivé)")
             return True
         except Exception as e:
             self.logger.error(f"Failed to load YOLO: {e}")
@@ -145,18 +144,84 @@ class TranslationPipeline:
 
     def _detect_ensemble(self, image, logger=None) -> List[Detection]:
         """
-        Détection avec les 2 modèles (v3+v4) fusionnées + dédoublonnées par IoU.
-        Deux modèles différents prédisent rarement des boîtes ~identiques pour
-        la même bulle (contrairement aux passes multi-échelle d'un même
-        modèle) — un IoU 0.55 (pensé pour du mono-modèle) laisse passer des
-        doublons visibles (même bulle rendue deux fois, texte superposé).
-        Seuil plus permissif spécifiquement pour cette fusion inter-modèles.
+        Détection (1 modèle par défaut, 2 si un modèle secondaire est configuré),
+        suivie d'un dédoublonnage en DEUX temps :
+
+        1. par classe, seuil permissif — deux modèles/passes différents ne
+           prédisent jamais la même boîte au pixel près ;
+        2. INTER-classes — c'est celui qui manquait. Une même boîte de narration
+           sortait en "bulle" pour un modèle et en "out_text" pour l'autre ;
+           comme le dédoublonnage regroupait par classe, les deux survivaient,
+           étaient OCRisées, traduites et rendues séparément → deux (voire
+           trois) textes superposés dans la même bulle.
+
+        `detect()` applique déjà une résolution inter-classes, mais en INTERNE,
+        donc une fois par modèle : elle ne voit jamais les boîtes de l'autre
+        modèle. D'où la reprise ici, après fusion.
         """
         dets = self.detector.detect(image, logger=logger)
+
         if getattr(self, 'detector_secondary', None) is not None:
             dets_secondary = self.detector_secondary.detect(image, logger=logger)
-            dets = self._dedupe_overlap_detections(dets + dets_secondary, iou_threshold=0.35)
+            dets = dets + dets_secondary
+
+        before = len(dets)
+        dets = self._dedupe_overlap_detections(
+            dets,
+            iou_threshold=float(getattr(config.detection, 'ensemble_dedupe_iou', 0.35)),
+        )
+        dets = self._dedupe_cross_class_detections(
+            dets,
+            iou_threshold=float(getattr(config.detection, 'inter_class_iou_threshold', 0.5)),
+        )
+        if logger and before != len(dets):
+            logger.info(f"      → dédoublonnage fusion: {before} → {len(dets)} zones")
         return dets
+
+    @staticmethod
+    def _dedupe_cross_class_detections(
+        detections: List[Detection], iou_threshold: float = 0.5,
+    ) -> List[Detection]:
+        """
+        Supprime les doublons entre classes DIFFÉRENTES : deux boîtes qui se
+        recouvrent fortement décrivent la même zone de texte, quelle que soit
+        l'étiquette. On garde celle dont le score est le plus élevé.
+
+        Le recouvrement est mesuré à la fois en IoU et en taux de contenance
+        (intersection / plus petite boîte) : une petite boîte "out_text" incluse
+        dans une grande "bulle" a un IoU faible mais reste un doublon — la
+        traduire séparément écrirait deux fois le même texte.
+        """
+        if len(detections) < 2:
+            return list(detections)
+
+        from utils import ImageUtils
+
+        ordered = sorted(detections, key=lambda d: float(d.score), reverse=True)
+        kept: List[Detection] = []
+        for det in ordered:
+            duplicate = False
+            for keep in kept:
+                if keep.class_name == det.class_name:
+                    continue  # déjà traité par le dédoublonnage intra-classe
+                try:
+                    iou = float(ImageUtils.calculate_iou(keep.bbox, det.bbox))
+                except Exception:
+                    iou = 0.0
+
+                inter_w = max(0, min(keep.x2, det.x2) - max(keep.x1, det.x1))
+                inter_h = max(0, min(keep.y2, det.y2) - max(keep.y1, det.y1))
+                inter = inter_w * inter_h
+                area_a = max(1, (keep.x2 - keep.x1) * (keep.y2 - keep.y1))
+                area_b = max(1, (det.x2 - det.x1) * (det.y2 - det.y1))
+                containment = inter / float(min(area_a, area_b))
+
+                if iou >= iou_threshold or containment >= 0.80:
+                    duplicate = True
+                    break
+            if not duplicate:
+                kept.append(det)
+        return kept
 
     def _release_ocr_engine(self):
         if self.shared_ocr_engine is not None:
@@ -250,64 +315,6 @@ class TranslationPipeline:
             ordered.extend(row)
         return ordered
 
-    def _extract_text_with_retry(self, img: np.ndarray, det: Detection):
-        """OCR principal + retry ciblé si confiance faible."""
-        crop = img[det.y1:det.y2, det.x1:det.x2]
-        if crop.size == 0:
-            return None, 0.0, False, "empty_crop", [], 1.0, "none"
-
-        text, confidence, is_valid, skip_reason, text_regions, upscale_factor = self.ocr_engine.extract_text(crop)
-        if is_valid and confidence >= 0.45:
-            return text, confidence, is_valid, skip_reason, text_regions, upscale_factor, "base"
-
-        # Retry 1: crop élargi (récupère ponctuation/bords de lettres)
-        h_img, w_img = img.shape[:2]
-        margin = 8
-        x1 = max(0, det.x1 - margin)
-        y1 = max(0, det.y1 - margin)
-        x2 = min(w_img, det.x2 + margin)
-        y2 = min(h_img, det.y2 + margin)
-        crop_expand = img[y1:y2, x1:x2]
-
-        # Offset réel entre crop élargi et crop original
-        off_x = det.x1 - x1
-        off_y = det.y1 - y1
-
-        def _shift_regions(regions, dx, dy):
-            """Ramène les text_regions d'un crop décalé vers le crop original."""
-            if not regions or (dx == 0 and dy == 0):
-                return regions
-            result = []
-            for region in regions:
-                if not isinstance(region, dict):
-                    result.append(region)
-                    continue
-                pts = region.get('bbox')
-                if pts:
-                    pts = [[p[0] - dx, p[1] - dy] for p in pts]
-                result.append({**region, 'bbox': pts})
-            return result
-
-        if crop_expand.size > 0:
-            t2, c2, v2, r2, reg2, u2 = self.ocr_engine.extract_text(crop_expand)
-            if v2 and c2 >= max(0.35, confidence):
-                reg2 = _shift_regions(reg2, off_x, off_y)
-                return t2, c2, v2, r2, reg2, u2, "expanded"
-
-        # Retry 2: contraste CLAHE + sharpen (crop original → pas de décalage)
-        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-        clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
-        enhanced = clahe.apply(gray)
-        sharpen_kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]], dtype=np.float32)
-        enhanced = cv2.filter2D(enhanced, -1, sharpen_kernel)
-        enhanced_bgr = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
-
-        t3, c3, v3, r3, reg3, u3 = self.ocr_engine.extract_text(enhanced_bgr)
-        if v3 and c3 >= max(0.35, confidence):
-            return t3, c3, v3, r3, reg3, u3, "clahe_sharpen"
-
-        return text, confidence, is_valid, skip_reason, text_regions, upscale_factor, "base"
-
     @staticmethod
     def _compute_global_confidence(det_score: float, ocr_conf: float, lang_conf: float) -> float:
         """Score global [0..1] basé sur détection + OCR + langue."""
@@ -340,6 +347,149 @@ class TranslationPipeline:
             if txt not in lines:
                 lines.append(txt)
         return lines
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # OCR → DÉTECTION : chemin UNIQUE partagé par tous les modes
+    #
+    # Ces trois helpers existent parce que le post-traitement OCR était
+    # dupliqué entre `process_image` et `_process_chapters_mega_batch`, et que
+    # chaque correctif n'avait été appliqué qu'à une copie : le mode chapitre
+    # ne remettait pas les polygones OCR à l'échelle et ne segmentait pas du
+    # tout. Un seul chemin, donc un seul endroit à corriger.
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _rescale_regions_from_ocr(regions: Optional[List[Dict]], upscale_factor) -> List[Dict]:
+        """
+        Ramène les polygones OCR dans le repère du crop d'origine.
+
+        L'OCR agrandit les petits crops avant lecture (cf. preprocess_image) et
+        renvoie ses polygones dans les coordonnées AGRANDIES. Sans cette
+        division, le masque d'effacement est jusqu'à ~2.3x trop grand et
+        décalé : bavures d'inpainting sur le dessin, et texte original laissé
+        en place là où le masque n'est pas tombé.
+        """
+        try:
+            uf = float(upscale_factor or 1.0)
+        except Exception:
+            uf = 1.0
+        if not regions or uf <= 1.0:
+            return list(regions or [])
+
+        rescaled: List[Dict] = []
+        for region in regions:
+            if not isinstance(region, dict):
+                rescaled.append(region)
+                continue
+            pts = region.get('bbox')
+            if pts:
+                pts = [[p[0] / uf, p[1] / uf] for p in pts]
+            rescaled.append({**region, 'bbox': pts})
+        return rescaled
+
+    @staticmethod
+    def _ocr_mask_from_regions(
+        regions: Optional[List[Dict]], h_det: int, w_det: int, dilate: int = 11,
+    ) -> Optional[np.ndarray]:
+        """Masque binaire du texte OCR, dilaté, en coordonnées locales bbox."""
+        mask = np.zeros((h_det, w_det), dtype=np.uint8)
+        for region in regions or []:
+            pts = region.get('bbox') if isinstance(region, dict) else None
+            if not pts:
+                continue
+            arr = np.array(pts, dtype=np.int32)
+            if arr.ndim != 2 or arr.shape[0] < 3 or arr.shape[1] < 2:
+                continue
+            arr[:, 0] = np.clip(arr[:, 0], 0, max(0, w_det - 1))
+            arr[:, 1] = np.clip(arr[:, 1], 0, max(0, h_det - 1))
+            cv2.fillPoly(mask, [arr], 255)
+
+        if int(np.sum(mask)) == 0:
+            return None
+
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (dilate, dilate))
+        return cv2.dilate(mask, kernel, iterations=1)
+
+    def _build_masks_for_detection(self, img: np.ndarray, det: Detection) -> float:
+        """
+        Renseigne mask_regions / mask_binary / chirurgical_mask.
+        Retourne le temps passé (pour le bench).
+        """
+        t0 = time.perf_counter()
+        h_det = max(1, det.y2 - det.y1)
+        w_det = max(1, det.x2 - det.x1)
+
+        seg_regions, seg_binary, seg_backend = det.text_regions, None, "none"
+        if self.segmenter is not None:
+            try:
+                seg_regions, seg_binary, seg_backend = self.segmenter.segment_detection(
+                    img, det, det.text_regions,
+                )
+            except Exception as exc:
+                self.logger.debug(f"segmentation ignorée: {exc}")
+                seg_regions, seg_binary, seg_backend = det.text_regions, None, "error"
+
+        det.mask_regions = seg_regions or det.text_regions
+        det.mask_binary = seg_binary
+        det.seg_backend = seg_backend
+
+        ocr_mask = self._ocr_mask_from_regions(det.text_regions, h_det, w_det)
+        if ocr_mask is None:
+            det.chirurgical_mask = None
+            return max(0.0, time.perf_counter() - t0)
+
+        bubble = det.mask_binary
+        if bubble is not None:
+            if getattr(bubble, 'ndim', 0) == 3:
+                bubble = bubble[:, :, 0]
+            if bubble.shape[:2] != (h_det, w_det):
+                try:
+                    bubble = cv2.resize(bubble, (w_det, h_det), interpolation=cv2.INTER_NEAREST)
+                except Exception:
+                    bubble = None
+
+        if bubble is not None:
+            bubble = (bubble > 0).astype(np.uint8) * 255
+            intersection = cv2.bitwise_and(ocr_mask, bubble)
+            # L'intersection borne l'effacement à l'intérieur de la bulle (elle
+            # évite de manger le trait de contour ou le dessin voisin). Mais si
+            # le masque de bulle est trop serré, elle peut presque tout annuler
+            # — auquel cas on n'effacerait plus rien et le texte original
+            # resterait sous la traduction. On garde alors le masque OCR seul.
+            if int(np.sum(intersection)) > 0.30 * int(np.sum(ocr_mask)):
+                ocr_mask = intersection
+
+        kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        det.chirurgical_mask = cv2.morphologyEx(ocr_mask, cv2.MORPH_CLOSE, kernel_close)
+        return max(0.0, time.perf_counter() - t0)
+
+    def _apply_ocr_result(
+        self, img: np.ndarray, det: Detection, ocr_result,
+    ) -> Tuple[Optional[str], float]:
+        """
+        Applique un résultat OCR à une détection : filtres de bruit, remise à
+        l'échelle des polygones, lignes, masques.
+
+        Retourne (skip_reason ou None, secondes de segmentation).
+        """
+        text, confidence, is_valid, skip_reason, text_regions, upscale_factor = ocr_result
+
+        det.ocr_upscale_factor = upscale_factor
+        det.ocr_confidence = confidence
+        det.text_original = ""
+
+        if not is_valid or not text:
+            return (skip_reason or "invalid"), 0.0
+
+        # Artefacts OCR typiques : "ii", "HOnn"... courts ET peu confiants.
+        if float(confidence) < 0.85 and len((text or "").strip()) < 4:
+            return "ocr_noise_short", 0.0
+
+        det.text_original = text
+        det.text_regions = self._rescale_regions_from_ocr(text_regions, upscale_factor)
+        det.ocr_lines = self._extract_ocr_lines_from_regions(det.text_regions)
+        seg_seconds = self._build_masks_for_detection(img, det)
+        return None, seg_seconds
 
     @staticmethod
     def _is_render_noise_text(text: str, confidence: float) -> bool:
@@ -385,11 +535,10 @@ class TranslationPipeline:
         t0 = time.perf_counter()
         out = img.copy()
         for det in detections:
-            cls = str(getattr(det, 'class_name', '') or '').strip().lower()
-            if cls == 'system':
-                effective_regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None)
-            else:
-                effective_regions = getattr(det, 'text_regions', None) or getattr(det, 'mask_regions', None)
+            # Toujours les polygones OCR : `mask_regions` est la segmentation de
+            # la bulle entière, l'utiliser comme masque d'effacement repeindrait
+            # tout l'intérieur au lieu des seules lettres.
+            effective_regions = getattr(det, 'text_regions', None) or getattr(det, 'mask_regions', None)
             out = renderer.inpaint_region(
                 out,
                 det.x1,
@@ -402,6 +551,82 @@ class TranslationPipeline:
                 bubble_mask=getattr(det, 'mask_binary', None),
             )
         return out, max(0.0, time.perf_counter() - t0)
+
+    @staticmethod
+    def _measure_source_line_height(regions: Optional[List[Dict]]) -> Optional[float]:
+        """
+        Hauteur de ligne du texte ORIGINAL (médiane des polygones OCR).
+
+        Sert de garde-fou au dimensionnement : sans elle, le renderer remplit
+        70 % de la boîte quoi qu'il arrive, ce qui grossit un « FINALLY… »
+        discret jusqu'à saturer sa bulle. Un letterer conserve le corps de
+        texte de la planche.
+        """
+        heights: List[float] = []
+        for region in regions or []:
+            pts = region.get('bbox') if isinstance(region, dict) else None
+            if not pts or len(pts) < 3:
+                continue
+            try:
+                ys = [float(p[1]) for p in pts]
+            except Exception:
+                continue
+            h = max(ys) - min(ys)
+            if h > 2:
+                heights.append(h)
+        if not heights:
+            return None
+        heights.sort()
+        return float(heights[len(heights) // 2])
+
+    @staticmethod
+    def _prepare_render_style(renderer: TextRenderer, img: np.ndarray, det: Detection) -> None:
+        """Style, couleur, graisse et taille source — calculés sur l'image ORIGINALE."""
+        regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None)
+
+        det.text_style = renderer.infer_text_style(
+            det.text_translated,
+            det.x2 - det.x1, det.y2 - det.y1,
+            class_name=det.class_name,
+        )
+        det.text_color_rgb = renderer.extract_original_text_color(
+            img, det.x1, det.y1, det.x2, det.y2, regions,
+        )
+        det.font_hint = renderer.detect_font_hint(
+            img, det.x1, det.y1, det.x2, det.y2, regions,
+        )
+        # Mesurée sur les polygones OCR (serrés autour des lettres), pas sur le
+        # masque de segmentation qui couvre toute la bulle.
+        det.source_line_height = TranslationPipeline._measure_source_line_height(
+            getattr(det, 'text_regions', None)
+        )
+
+    @staticmethod
+    def _write_output_image(out_dir: Path, stem: str, img: np.ndarray) -> Path:
+        """
+        Écrit la planche traduite.
+
+        Défaut JPEG q95 et non PNG : sur ces planches fusionnées, le PNG pesait
+        36 Mo contre 6 Mo pour le JPEG source (~132 Mo par chapitre) sans gain
+        visible — la source est déjà du JPEG. WEBTOON_OUTPUT_FORMAT=png pour
+        revenir au sans-perte.
+        """
+        fmt = str(getattr(config.rendering, 'output_format', 'jpg')).lower().strip()
+        quality = int(getattr(config.rendering, 'output_quality', 95))
+
+        if fmt in ('jpg', 'jpeg'):
+            path = out_dir / f"{stem}_translated.jpg"
+            params = [cv2.IMWRITE_JPEG_QUALITY, max(1, min(100, quality))]
+        elif fmt == 'webp':
+            path = out_dir / f"{stem}_translated.webp"
+            params = [cv2.IMWRITE_WEBP_QUALITY, max(1, min(100, quality))]
+        else:
+            path = out_dir / f"{stem}_translated.png"
+            params = []
+
+        out_dir.mkdir(parents=True, exist_ok=True)
+        cv2.imwrite(str(path), img, params)
+        return path
 
     MEGA_BATCH_SIZE = 5  # Nombre de chapitres à accumuler avant 1 appel Gemini
 
@@ -453,18 +678,31 @@ class TranslationPipeline:
                 'out_dir': out_ch_dir,
             }
 
+            if not self._ensure_ocr_engine():
+                self.logger.error("OCR engine non initialisé")
+                chapter_data[ch_name] = ch_info
+                continue
+            self._ensure_segmenter()
+
+            def _ocr_debug_log(message):
+                self.logger.info(f"      {message}")
+
             total_dets = 0
             for img_path in sorted(imgs):
                 try:
                     img = cv2.imread(str(img_path))
                     if img is None:
                         self.logger.error(f"Impossible de charger {img_path}")
-                        ch_info['images'].append((img_path, None, 0, 0))
+                        ch_info['images'].append((img_path, 0, 0))
                         ch_info['detections'][img_path] = []
                         continue
 
                     h, w = img.shape[:2]
-                    ch_info['images'].append((img_path, img, w, h))
+                    # On ne conserve QUE les dimensions : garder les images
+                    # décodées de 5 chapitres jusqu'à la phase de rendu faisait
+                    # plus d'1.5 Go de RAM (une planche webtoon fusionnée pèse
+                    # ~90 Mo décodée). Elles sont rechargées au rendu.
+                    ch_info['images'].append((img_path, w, h))
 
                     use_black_padding = bool(
                         getattr(config.detection, 'black_bars_enabled',
@@ -524,73 +762,60 @@ class TranslationPipeline:
                     if self.debug:
                         self.save_debug_detections(img, dets, translatable, out_ch_dir, img_path.stem)
 
+                    # ── OCR + segmentation, image par image ──
+                    # Fait ici (et non en un gros lot après toutes les images)
+                    # pour que `img` puisse être libérée tout de suite.
+                    crops = []
+                    crop_indices = []
+                    for di, det in enumerate(translatable):
+                        crop = img[det.y1:det.y2, det.x1:det.x2]
+                        if crop.size == 0:
+                            continue
+                        crops.append(crop)
+                        crop_indices.append(di)
+
+                    if crops:
+                        try:
+                            ocr_results = self.ocr_engine.extract_batch(
+                                crops, debug_hook=_ocr_debug_log if self.debug else None,
+                            )
+                        except Exception as exc:
+                            self.logger.error(f"OCR échoué sur {img_path.name}: {exc}")
+                            ocr_results = [("", 0.0, False, 'ocr_error', [], 1.0)] * len(crops)
+
+                        for det_idx, ocr_res in zip(crop_indices, ocr_results):
+                            det = translatable[det_idx]
+                            # Chemin partagé : remise à l'échelle des polygones
+                            # OCR + segmentation + masque chirurgical. Aucun de
+                            # ces trois traitements n'était appliqué ici avant.
+                            skip_reason, _seg_s = self._apply_ocr_result(img, det, ocr_res)
+                            if skip_reason or not det.text_original:
+                                continue
+                            if self._is_render_noise_text(det.text_original, det.ocr_confidence):
+                                det.text_original = ""
+                                continue
+                            ch_info['valid_texts'].append(
+                                (img_path, det_idx, det.text_original,
+                                 getattr(det, 'class_name', '') or '')
+                            )
+
                 except Exception as e:
-                    self.logger.error(f"Erreur detection {img_path}: {e}")
-                    ch_info['images'].append((img_path, None, 0, 0))
+                    self.logger.error(f"Erreur detection/OCR {img_path}: {e}")
+                    ch_info['images'].append((img_path, 0, 0))
                     ch_info['detections'][img_path] = []
+                finally:
+                    img = None
+                    gc.collect()
 
-            self.logger.info(f"✅ Détection: {total_dets} zones")
+            self.logger.info(
+                f"✅ Détection: {total_dets} zones — OCR: {len(ch_info['valid_texts'])} textes valides"
+            )
             global_stats['total_detections'] += total_dets
-
-            if total_dets == 0:
-                chapter_data[ch_name] = ch_info
-                continue
-
-            if not self._ensure_ocr_engine():
-                self.logger.error("OCR engine non initialisé")
-                chapter_data[ch_name] = ch_info
-                continue
-
-            crops = []
-            crops_map = []
-            for img_path, img, w, h in ch_info['images']:
-                dets = ch_info['detections'].get(img_path, [])
-                for di, det in enumerate(dets):
-                    if img is None:
-                        continue
-                    crop = img[det.y1:det.y2, det.x1:det.x2]
-                    if crop.size == 0:
-                        continue
-                    crops.append(crop)
-                    crops_map.append((img_path, di))
-
-            self.logger.info(f"   📦 OCR: {len(crops)} crops")
-
-            ocr_results = []
-            CHUNK = 300
-            def _ocr_debug_log(message):
-                self.logger.info(f"      {message}")
-
-            for i in range(0, len(crops), CHUNK):
-                chunk = crops[i:i + CHUNK]
-                try:
-                    res = self.ocr_engine.extract_batch(chunk, debug_hook=_ocr_debug_log)
-                except Exception as e:
-                    self.logger.error(f"OCR chunk failed: {e}")
-                    res = [("", 0.0, False, 'ocr_error', [], 1.0)] * len(chunk)
-                ocr_results.extend(res)
-
-            for (img_path, det_idx), ocr_res in zip(crops_map, ocr_results):
-                det = ch_info['detections'].get(img_path, [])[det_idx]
-                text, confidence, is_valid, skip_reason, text_regions, upscale_factor = ocr_res
-                det.ocr_upscale_factor = upscale_factor
-                det.ocr_confidence = confidence
-                if not is_valid or not text:
-                    det.text_original = ""
-                    continue
-                if float(confidence) < 0.85 and len((text or "").strip()) < 4:
-                    det.text_original = ""
-                    continue
-                det.text_original = text
-                det.text_regions = text_regions or []
-                cls = getattr(det, 'class_name', '') or ''
-                ch_info['valid_texts'].append((img_path, det_idx, text, cls))
-
-            self.logger.info(f"✅ OCR: {len(ch_info['valid_texts'])} textes valides")
             chapter_data[ch_name] = ch_info
 
         try:
             self._release_ocr_engine()
+            self._release_segmenter()
         except Exception:
             pass
 
@@ -747,8 +972,11 @@ class TranslationPipeline:
 
             self.logger.info(f"   🎨 Rendering: {ch_name}")
 
-            for img_path, img, w, h in ch_info['images']:
+            for img_path, w, h in ch_info['images']:
                 dets = ch_info['detections'].get(img_path, [])
+                # Rechargée ici : les images ne sont plus gardées en mémoire
+                # entre les phases (cf. phase 1).
+                img = cv2.imread(str(img_path))
                 if img is None:
                     global_stats['failed'] += 1
                     global_stats['results'].append({
@@ -757,28 +985,16 @@ class TranslationPipeline:
                     continue
 
                 try:
-                    img_translated, inpaint_sec = self._run_pre_inpainting(img, dets, renderer)
-                except Exception:
+                    img_translated, _inpaint_sec = self._run_pre_inpainting(img, dets, renderer)
+                except Exception as exc:
+                    self.logger.warning(f"   ⚠️  Inpainting échoué sur {img_path.name}: {exc}")
                     img_translated = img.copy()
 
                 for det in dets:
                     if not getattr(det, 'text_translated', None):
                         continue
 
-                    det.text_style = renderer.infer_text_style(
-                        det.text_translated,
-                        det.x2 - det.x1, det.y2 - det.y1,
-                        class_name=det.class_name,
-                    )
-                    det.text_color_rgb = renderer.extract_original_text_color(
-                        img, det.x1, det.y1, det.x2, det.y2,
-                        getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
-                    )
-                    det.font_hint = renderer.detect_font_hint(
-                        img, det.x1, det.y1, det.x2, det.y2,
-                        getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
-                    )
-
+                    self._prepare_render_style(renderer, img, det)
                     img_translated = renderer.insert_text(
                         img_translated,
                         det.text_translated,
@@ -790,23 +1006,36 @@ class TranslationPipeline:
                         class_name=getattr(det, 'class_name', ''),
                         bubble_mask=getattr(det, 'mask_binary', None),
                         font_key=getattr(det, 'font_key', None),
+                        source_line_height=getattr(det, 'source_line_height', None),
                     )
 
-                output_path = out_ch_dir / f"{img_path.stem}_translated.png"
-                cv2.imwrite(str(output_path), img_translated)
+                output_path = self._write_output_image(out_ch_dir, img_path.stem, img_translated)
                 global_stats['processed'] += 1
                 global_stats['results'].append({
                     'image': img_path.name,
                     'success': True,
+                    'output': output_path.name,
                     'detections': len(dets),
                     'translated': sum(1 for d in dets if getattr(d, 'text_translated', None)),
                 })
 
+                img = None
+                img_translated = None
+                gc.collect()
+
         global_stats['total_time_seconds'] = time.time() - start_time
 
+        # `gemini_stats` n'était défini que dans la branche du dessus : si le
+        # traducteur n'exposait pas `stats()`, le récapitulatif plus bas levait
+        # un NameError en toute fin de run, avant l'écriture de summary.json —
+        # tout le travail était perdu.
+        gemini_stats: Dict = {}
         if is_gemini and hasattr(translator, 'stats'):
-            gemini_stats = translator.stats()
-            self.logger.info(f"\n   📊 Gemini Stats:")
+            try:
+                gemini_stats = translator.stats() or {}
+            except Exception as exc:
+                self.logger.warning(f"   ⚠️  Stats Gemini indisponibles: {exc}")
+            self.logger.info("\n   📊 Gemini Stats:")
             self.logger.info(f"      API calls: {gemini_stats.get('api_calls', 0)}")
             self.logger.info(f"      Cache hits: {gemini_stats.get('cache_hits', 0)}")
             self.logger.info(f"      Fallbacks: {gemini_stats.get('fallback_count', 0)}")
@@ -822,7 +1051,6 @@ class TranslationPipeline:
             'Appels API Gemini': gemini_stats.get('api_calls', '?') if is_gemini else 'N/A (local)',
         })
 
-        import json
         summary_path = output_dir / "summary.json"
         with open(summary_path, 'w', encoding='utf-8') as f:
             json.dump(global_stats, f, ensure_ascii=False, indent=2)
@@ -1499,160 +1727,23 @@ class TranslationPipeline:
 
             for idx, ocr_result in zip(crop_indices, batch_results):
                 det = translatable_detections[idx]
-                text, confidence, is_valid, skip_reason, text_regions, upscale_factor = ocr_result
 
-                det.ocr_upscale_factor = upscale_factor
-                det.ocr_confidence = confidence
+                # Chemin partagé avec le mode chapitre : filtres de bruit,
+                # remise à l'échelle des polygones OCR, segmentation et masque
+                # chirurgical. Ce bloc était auparavant dupliqué et divergent
+                # entre les deux modes.
+                skip_reason, seg_seconds = self._apply_ocr_result(img, det, ocr_result)
+                timings['sam2_seconds'] += seg_seconds
 
-                if not is_valid or not text:
-                    text_preview = (text or "").replace("\n", " ")
-                    if len(text_preview) > 120:
-                        text_preview = text_preview[:120] + "..."
-                    self.logger.info(
-                        f"      ⚠️  Ignoré: reason={skip_reason} conf={confidence:.2f} det={idx} text='{text_preview}'"
-                    )
+                if skip_reason:
                     stats['skipped'] += 1
                     stats['skip_reasons'][skip_reason] = stats['skip_reasons'].get(skip_reason, 0) + 1
-                    continue
-
-                # Filtre de Bruit : confiance OCR < 0.85 ET texte < 4 caractères
-                # (artefacts OCR typiques : "ii", "HOnn", etc.)
-                if float(confidence) < 0.85 and len((text or "").strip()) < 4:
-                    stats['skipped'] += 1
-                    stats['skip_reasons']['ocr_noise_short'] = (
-                        stats['skip_reasons'].get('ocr_noise_short', 0) + 1
-                    )
+                    preview = (ocr_result[0] or "").replace("\n", " ")[:120]
                     self.logger.info(
-                        f"      ⚠️  Ignoré (bruit court): conf={confidence:.2f} "
-                        f"len={len((text or '').strip())} text='{(text or '').strip()}'"
+                        f"      ⚠️  Ignoré: reason={skip_reason} "
+                        f"conf={det.ocr_confidence:.2f} det={idx} text='{preview}'"
                     )
                     continue
-
-                det.text_original = text
-                raw_regions = text_regions or []
-                uf = float(upscale_factor) if upscale_factor and float(upscale_factor) > 1.0 else 1.0
-                if uf != 1.0:
-                    remapped = []
-                    for region in raw_regions:
-                        if not isinstance(region, dict):
-                            remapped.append(region)
-                            continue
-                        pts = region.get('bbox')
-                        if pts:
-                            pts = [[p[0] / uf, p[1] / uf] for p in pts]
-                        remapped.append({**region, 'bbox': pts})
-                    det.text_regions = remapped
-                else:
-                    det.text_regions = raw_regions
-                det.ocr_lines = self._extract_ocr_lines_from_regions(det.text_regions)
-
-                if self.segmenter:
-                    seg_t0 = time.perf_counter()
-                    seg_regions, seg_binary, seg_backend = self.segmenter.segment_detection(img, det, det.text_regions)
-                    det.mask_regions = seg_regions
-                    det.mask_binary = seg_binary
-                    # Construire masques chirurgical (OCR ∩ SAM2) — si possible
-                    try:
-                        import cv2 as _cv2
-                        if det.mask_binary is None:
-                            # fallback: OCR-only mask (dilated)
-                            h_det = max(1, det.y2 - det.y1)
-                            w_det = max(1, det.x2 - det.x1)
-                            ocr_mask = np.zeros((h_det, w_det), dtype=np.uint8)
-                            for region in det.text_regions or []:
-                                pts = region.get('bbox') if isinstance(region, dict) else None
-                                if not pts:
-                                    continue
-                                arr = np.array(pts, dtype=np.int32)
-                                if arr.ndim != 2 or arr.shape[0] < 3:
-                                    continue
-                                arr[:, 0] = np.clip(arr[:, 0], 0, max(0, w_det - 1))
-                                arr[:, 1] = np.clip(arr[:, 1], 0, max(0, h_det - 1))
-                                _cv2.fillPoly(ocr_mask, [arr], 255)
-                            kernel = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (11, 11))
-                            ocr_mask_dilated = _cv2.dilate(ocr_mask, kernel, iterations=1)
-                            det.chirurgical_mask = ocr_mask_dilated
-                        else:
-                            # det.mask_binary is crop-local mask; build OCR mask same shape
-                                h_det = max(1, det.y2 - det.y1)
-                                w_det = max(1, det.x2 - det.x1)
-                                # debug shapes
-                                try:
-                                    mb_shape = det.mask_binary.shape
-                                except Exception:
-                                    mb_shape = None
-                                print(f"[DEBUG CHIR] mask_binary.shape={mb_shape} expected=({h_det},{w_det})")
-
-                                # Always build OCR mask with detection dimensions
-                                ocr_mask = np.zeros((h_det, w_det), dtype=np.uint8)
-                                for region in det.text_regions or []:
-                                    pts = region.get('bbox') if isinstance(region, dict) else None
-                                    if not pts:
-                                        continue
-                                    arr = np.array(pts, dtype=np.int32)
-                                    if arr.ndim != 2 or arr.shape[0] < 3:
-                                        continue
-                                    arr[:, 0] = np.clip(arr[:, 0], 0, max(0, ocr_mask.shape[1] - 1))
-                                    arr[:, 1] = np.clip(arr[:, 1], 0, max(0, ocr_mask.shape[0] - 1))
-                                    _cv2.fillPoly(ocr_mask, [arr], 255)
-                                kernel = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (11, 11))
-                                ocr_mask_dilated = _cv2.dilate(ocr_mask, kernel, iterations=1)
-                                # Intersection avec mask binaire SAM2 (resize mask_binary if needed)
-                                try:
-                                    mask_binary_local = det.mask_binary
-                                    if mask_binary_local is None:
-                                        det.chirurgical_mask = ocr_mask_dilated
-                                    else:
-                                        if getattr(mask_binary_local, 'ndim', 0) == 3:
-                                            mask_binary_local = mask_binary_local[:, :, 0]
-                                        if mask_binary_local.shape[:2] != (h_det, w_det):
-                                            try:
-                                                mask_binary_resized = _cv2.resize(mask_binary_local, (w_det, h_det), interpolation=_cv2.INTER_NEAREST)
-                                                print(f"[DEBUG CHIR] resized mask_binary from {mb_shape} to {(h_det,w_det)}")
-                                            except Exception:
-                                                mask_binary_resized = mask_binary_local
-                                        else:
-                                            mask_binary_resized = mask_binary_local
-                                        # ensure uint8
-                                        mask_binary_resized = (mask_binary_resized > 0).astype(np.uint8) * 255
-                                        det.chirurgical_mask = _cv2.bitwise_and(ocr_mask_dilated, mask_binary_resized)
-                                except Exception:
-                                    det.chirurgical_mask = ocr_mask_dilated
-                        # closing pour boucher trous entre lettres
-                        kernel_close = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (5, 5))
-                        if getattr(det, 'chirurgical_mask', None) is not None:
-                            det.chirurgical_mask = _cv2.morphologyEx(det.chirurgical_mask, _cv2.MORPH_CLOSE, kernel_close)
-                    except Exception:
-                        det.chirurgical_mask = getattr(det, 'mask_binary', None)
-                    det.seg_backend = seg_backend
-                    timings['sam2_seconds'] += max(0.0, time.perf_counter() - seg_t0)
-                else:
-                    det.mask_regions = det.text_regions
-                    det.mask_binary = None
-                    det.seg_backend = "none"
-                    # Construire un chirurgical_mask minimal depuis text_regions (même sans segmenter)
-                    try:
-                        import cv2 as _cv2
-                        h_det = max(1, det.y2 - det.y1)
-                        w_det = max(1, det.x2 - det.x1)
-                        ocr_mask = np.zeros((h_det, w_det), dtype=np.uint8)
-                        for _region in det.text_regions or []:
-                            _pts = _region.get('bbox') if isinstance(_region, dict) else None
-                            if not _pts:
-                                continue
-                            _arr = np.array(_pts, dtype=np.int32)
-                            if _arr.ndim != 2 or _arr.shape[0] < 3:
-                                continue
-                            _arr[:, 0] = np.clip(_arr[:, 0], 0, max(0, ocr_mask.shape[1] - 1))
-                            _arr[:, 1] = np.clip(_arr[:, 1], 0, max(0, ocr_mask.shape[0] - 1))
-                            _cv2.fillPoly(ocr_mask, [_arr], 255)
-                        if np.sum(ocr_mask) > 0:
-                            _k = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (7, 7))
-                            det.chirurgical_mask = _cv2.dilate(ocr_mask, _k, iterations=1)
-                        else:
-                            det.chirurgical_mask = None
-                    except Exception:
-                        det.chirurgical_mask = None
 
                 if self.debug:
                     self.save_debug_mask_bundle(
@@ -1665,7 +1756,10 @@ class TranslationPipeline:
                         getattr(det, 'mask_binary', None),
                     )
 
-                self.logger.info(f"      ✓ \"{text}\" ({confidence:.0%}) [{len(det.text_regions)} régions]")
+                self.logger.info(
+                    f"      OK \"{det.text_original}\" ({det.ocr_confidence:.0%}) "
+                    f"[{len(det.text_regions)} régions, seg={getattr(det, 'seg_backend', '?')}]"
+                )
         
         # Filtrer détections sans texte
         valid_detections = [d for d in translatable_detections if d.text_original]
@@ -1780,7 +1874,6 @@ class TranslationPipeline:
 
                 system_detections = [d for d in valid_detections if str(getattr(d, 'class_name', '')).lower() == 'system']
                 regular_detections = [d for d in valid_detections if str(getattr(d, 'class_name', '')).lower() != 'system']
-                translation_mode = str(getattr(config.translation, 'translation_mode', 'hybrid')).lower()
 
                 if regular_detections:
                     self.logger.info(f"\n   🌍 Traduction page entière ({len(regular_detections)} bulles)")
@@ -1816,6 +1909,11 @@ class TranslationPipeline:
                     else:
                         det.text_nllb_raw = translator.translate(det.text_original or "")
                         det.text_translated = det.text_nllb_raw
+                    # Les cartes System ont leur propre police dans FONT_MAP.
+                    # Cette boucle ne passait pas par la sélection de font_key
+                    # (réservée à `regular_detections`) : elles retombaient sur
+                    # l'heuristique par mots-clés de dossier.
+                    det.font_key = "SYSTEM"
                 
                 cache_stats = translator.get_cache_stats()
                 if cache_stats:
@@ -1851,23 +1949,8 @@ class TranslationPipeline:
             if not det.text_translated:
                 continue
 
-            det.text_style = renderer.infer_text_style(
-                det.text_translated,
-                det.x2 - det.x1,
-                det.y2 - det.y1,
-                class_name=det.class_name,
-            )
-            det.text_color_rgb = renderer.extract_original_text_color(
-                img,
-                det.x1, det.y1, det.x2, det.y2,
-                getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
-            )
-            det.font_hint = renderer.detect_font_hint(
-                img,
-                det.x1, det.y1, det.x2, det.y2,
-                getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None),
-            )
-            
+            self._prepare_render_style(renderer, img, det)
+
             self.logger.info(
                 f"   [{i+1}/{len(valid_detections)}] bbox=({det.x1},{det.y1},{det.x2},{det.y2}) class={det.class_name}"
             )
@@ -1876,7 +1959,11 @@ class TranslationPipeline:
             if self.debug:
                 before_crop = img_translated[det.y1:det.y2, det.x1:det.x2].copy()
 
-            effective_regions = getattr(det, 'mask_regions', None) or getattr(det, 'text_regions', None)
+            # Le masque d'effacement doit être celui du TEXTE (polygones OCR),
+            # pas celui de la bulle : `mask_regions` vient de la segmentation et
+            # couvre tout l'intérieur de la bulle — l'utiliser repeindrait la
+            # bulle entière.
+            effective_regions = getattr(det, 'text_regions', None) or getattr(det, 'mask_regions', None)
 
             # Inpainting
             inpaint_t0 = time.perf_counter()
@@ -1885,6 +1972,10 @@ class TranslationPipeline:
                 det.x1, det.y1, det.x2, det.y2,
                 text_regions=effective_regions,
                 class_name=getattr(det, 'class_name', ''),
+                # Ces deux masques étaient calculés puis jamais transmis : tout
+                # le travail de segmentation (OCR ∩ bulle) était perdu ici.
+                chirurgical_mask=getattr(det, 'chirurgical_mask', None),
+                bubble_mask=getattr(det, 'mask_binary', None),
             )
             timings['inpainting_seconds'] += max(0.0, time.perf_counter() - inpaint_t0)
 
@@ -1901,6 +1992,7 @@ class TranslationPipeline:
                 class_name=getattr(det, 'class_name', ''),
                 bubble_mask=getattr(det, 'mask_binary', None),
                 font_key=getattr(det, 'font_key', None),
+                source_line_height=getattr(det, 'source_line_height', None),
             )
             timings['text_render_seconds'] += max(0.0, time.perf_counter() - render_t0)
 
@@ -1912,11 +2004,8 @@ class TranslationPipeline:
             self.save_debug_render_overview(output_dir, image_stem, img, img_translated, valid_detections)
         
         # Sauvegarder
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        output_image_path = output_dir / f"{image_stem}_translated.png"
-        cv2.imwrite(str(output_image_path), img_translated)
-        
+        output_image_path = self._write_output_image(output_dir, image_stem, img_translated)
+
         self.logger.info(f"\n💾 {output_image_path.name}")
         
         # Métadonnées

@@ -10,17 +10,24 @@ Changements V3 :
 - MEGA_BATCH_HEADER : instructions pour IDs composites (CH01_001)
 ═══════════════════════════════════════════════════════════════════════════════
 """
+from pathlib import Path
 from typing import Dict
 
-# ── Font Map (inchangé) ──────────────────────────────────────────────────
+# ── Font Map ─────────────────────────────────────────────────────────────
+# Chemins relatifs au dépôt : ils étaient codés en dur en absolu (A:\omni
+# read\...), donc introuvables partout ailleurs — dans le conteneur Docker du
+# projet notamment, où `Path(p).exists()` échouait silencieusement et le choix
+# de police du LLM était ignoré au profit d'une heuristique par mots-clés.
+
+_FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 
 FONT_MAP: Dict[str, str] = {
-    "STANDARD": r"A:\omni read\assets\fonts\Bulles classiques\CCWILDWORDS-BOLD.OTF",
-    "THOUGHT":  r"A:\omni read\assets\fonts\Bulles classiques\CCMightyMouth-Regular.otf",
-    "FEAR":     r"A:\omni read\assets\fonts\Expressives (cris, creepy, peur etc.)\creepy\KOMIKA_BOO.TTF",
-    "ANGRY":    r"A:\omni read\assets\fonts\Expressives (cris, creepy, peur etc.)\cris\Roadrage-owgBd.otf",
-    "SYSTEM":   r"A:\omni read\assets\fonts\Polices système\ARGONE_NORMAL.OTF",
-    "COMBAT":   r"A:\omni read\assets\fonts\Expressives (cris, creepy, peur etc.)\cris\Fighting Spirit 2 bold.otf",
+    "STANDARD": str(_FONTS_DIR / "Bulles classiques" / "CCWILDWORDS-BOLD.OTF"),
+    "THOUGHT":  str(_FONTS_DIR / "Bulles classiques" / "CCMightyMouth-Regular.otf"),
+    "FEAR":     str(_FONTS_DIR / "Expressives (cris, creepy, peur etc.)" / "creepy" / "KOMIKA_BOO.TTF"),
+    "ANGRY":    str(_FONTS_DIR / "Expressives (cris, creepy, peur etc.)" / "cris" / "Roadrage-owgBd.otf"),
+    "SYSTEM":   str(_FONTS_DIR / "Polices système" / "ARGONE_NORMAL.OTF"),
+    "COMBAT":   str(_FONTS_DIR / "Expressives (cris, creepy, peur etc.)" / "cris" / "Fighting Spirit 2 bold.otf"),
 }
 
 
