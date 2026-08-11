@@ -58,3 +58,6 @@ temp/
 # volumineux et régénérables, pas le livrable final.
 manhwa_trad/**/debug/
 output*/**/debug/
+
+# Sorties de tests/dry_run_chapter.py : régénérées à chaque run, pas un livrable.
+tests/dry_run_out/
