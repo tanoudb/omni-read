@@ -168,8 +168,13 @@ class DetectionConfig:
     # passes. Deux modèles distincts prédisent rarement des boîtes identiques
     # au pixel près pour la même bulle, d'où un seuil plus permissif que la NMS
     # mono-modèle.
+    # Abaissé à 0.30 (était 0.35) : doublon réel mesuré à IoU=0.34 sur
+    # the_cleaner ch4 — même contenu OCR des deux côtés ("ERRRGH!!" /
+    # "FPOPGH!!", la seconde lecture bruitée de la même exclamation), donc
+    # bien la même bulle détectée deux fois, juste au-dessus de l'ancien
+    # seuil (une paire n'est éliminée que si son IoU DÉPASSE ce seuil).
     ensemble_dedupe_iou: float = float(
-        os.environ.get("WEBTOON_ENSEMBLE_DEDUPE_IOU", "0.35")
+        os.environ.get("WEBTOON_ENSEMBLE_DEDUPE_IOU", "0.30")
     )
 
     # Padding noir optionnel (hack legacy) autour de l'image avant détection
