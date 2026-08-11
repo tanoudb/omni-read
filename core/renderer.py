@@ -468,7 +468,7 @@ class TextRenderer:
         if self.lama is not None:
             try:
                 result = self._inpaint_lama(crop, local_mask)
-                if self._erasure_failed(crop, result, local_mask):
+                if self._erasure_failed(crop, result, local_mask) and self._background_is_diffusable(crop, local_mask):
                     img[crop_y1:crop_y2, crop_x1:crop_x2] = self._diffuse_fill(crop, local_mask)
                 else:
                     img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
@@ -480,7 +480,7 @@ class TextRenderer:
         if self.anime_inpainter_ready and self.anime_inpainter is not None:
             try:
                 result = self._inpaint_anime(crop, local_mask)
-                if self._erasure_failed(crop, result, local_mask):
+                if self._erasure_failed(crop, result, local_mask) and self._background_is_diffusable(crop, local_mask):
                     img[crop_y1:crop_y2, crop_x1:crop_x2] = self._diffuse_fill(crop, local_mask)
                 else:
                     img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
@@ -527,6 +527,30 @@ class TextRenderer:
 
         edge_after = float(np.mean(np.abs(cv2.Laplacian(gray_after, cv2.CV_32F, ksize=3))[m]))
         return (edge_after / edge_before) > 0.18
+
+    @staticmethod
+    def _background_is_diffusable(crop: np.ndarray, mask: np.ndarray, margin: int = 25) -> bool:
+        """
+        Le repli en diffusion pure (`_diffuse_fill`) n'a de sens QUE sur un
+        fond lisse (dégradé, halo) : il ne peut reproduire aucune texture,
+        juste étaler la couleur des pixels voisins. Sur un fond avec du vrai
+        motif (ruban, trame, bordure décorative), il produit de grosses
+        taches de couleur — mesuré sur une carte System à bordure dorée avec
+        motif : plus visible et plus faux que le fantôme que LaMa avait
+        laissé. Autant garder alors le résultat de LaMa, imparfait mais
+        crédible, plutôt que d'y substituer un artefact pire.
+
+        Test : le résidu haute fréquence (écart à un flou large) dans la
+        couronne juste hors masque. Mesuré : ~11 sur fond en dégradé (sûr
+        pour la diffusion), ~17 sur fond à motif réel (pas sûr).
+        """
+        ring = (cv2.dilate(mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (margin, margin))) > 0) & (mask == 0)
+        if not ring.any():
+            return True
+        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY).astype(np.float32)
+        blurred = cv2.GaussianBlur(gray, (0, 0), sigmaX=5)
+        residual = float(np.mean(np.abs(gray - blurred)[ring]))
+        return residual < 13.0
 
     @staticmethod
     def _diffuse_fill(crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
