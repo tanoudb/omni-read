@@ -119,6 +119,23 @@ class PromptBank:
         "- SURPRISE : Exclamations naturelles. \"Hein ?!\" \"Quoi ?!\" \"Sans dec' ?!\""
     )
 
+    # ── NARRATION EN CASCADE ──────────────────────────────────────────────
+
+    NARRATION_FLOW = (
+        "═══ NARRATION SUR PLUSIEURS CARTOUCHES ═══\n"
+        "Plusieurs cartouches de narration/voix off consécutifs forment souvent "
+        "UNE SEULE phrase coupée par la mise en page (pas par la grammaire) — ex. "
+        "\"THEY PROTECT THIS WORLD FROM THE FALLEN--\" / \"THE HUMANS WHO "
+        "CONTRACTED WITH THE EVIL...\" / \"AND TRY TO STEAL HUMAN EMOTIONS...\" "
+        "n'est pas trois phrases indépendantes, c'est une seule phrase à trois "
+        "clauses. Traduis-les comme telle : la fin d'un cartouche doit s'enchaîner "
+        "grammaticalement avec le début du suivant (accords, absence de sujet "
+        "répété, ponctuation de suspension cohérente), pas comme des phrases "
+        "complètes et fermées mises bout à bout. Un tiret ou des points de "
+        "suspension en fin de texte source signalent presque toujours cette "
+        "continuité — préserve-la dans ta traduction."
+    )
+
     # ── MEGA-BATCH HEADER ─────────────────────────────────────────────────
 
     MEGA_BATCH_HEADER = (
@@ -232,6 +249,9 @@ class PromptBank:
 
         # Émotions
         sections.append(cls.EMOTION_RULES)
+
+        # Narration en cascade sur plusieurs cartouches
+        sections.append(cls.NARRATION_FLOW)
 
         # Typo
         sections.append(cls.TYPO_RULES)

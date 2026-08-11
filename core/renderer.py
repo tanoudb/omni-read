@@ -468,10 +468,7 @@ class TextRenderer:
         if self.lama is not None:
             try:
                 result = self._inpaint_lama(crop, local_mask)
-                if self._erasure_failed(crop, result, local_mask) and self._background_is_diffusable(crop, local_mask):
-                    img[crop_y1:crop_y2, crop_x1:crop_x2] = self._diffuse_fill(crop, local_mask)
-                else:
-                    img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
+                img[crop_y1:crop_y2, crop_x1:crop_x2] = self._apply_erasure_by_group(crop, result, local_mask)
                 return img
             except Exception:
                 pass
@@ -480,10 +477,7 @@ class TextRenderer:
         if self.anime_inpainter_ready and self.anime_inpainter is not None:
             try:
                 result = self._inpaint_anime(crop, local_mask)
-                if self._erasure_failed(crop, result, local_mask) and self._background_is_diffusable(crop, local_mask):
-                    img[crop_y1:crop_y2, crop_x1:crop_x2] = self._diffuse_fill(crop, local_mask)
-                else:
-                    img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
+                img[crop_y1:crop_y2, crop_x1:crop_x2] = self._apply_erasure_by_group(crop, result, local_mask)
                 return img
             except Exception:
                 pass
@@ -495,6 +489,64 @@ class TextRenderer:
             pass
 
         return img
+
+    def _apply_erasure_by_group(
+        self, crop: np.ndarray, result: np.ndarray, mask: np.ndarray,
+    ) -> np.ndarray:
+        """
+        Décide LaMa vs diffusion PAR GROUPE de lettres, pas pour tout le
+        masque à la fois.
+
+        Un même masque peut couvrir des lignes posées sur des fonds très
+        différents — mesuré sur une carte "System" dont le filigrane de scan
+        ("CRAWLED BY MANHWACLAN.COM") est OCR dans la MÊME détection que la
+        narration en dessous : le filigrane est sur un ciel étoilé texturé
+        (pas diffusable, à raison), la narration sur l'intérieur uni de la
+        carte (diffusable). Juger le masque entier d'un bloc faisait hériter
+        la narration du refus de diffuser décidé pour le filigrane, et
+        gardait le résultat LaMa — où le filigrane restait pourtant
+        parfaitement lisible en rouge/blanc.
+
+        Regroupe les lettres proches (dilatation généreuse avant
+        `connectedComponents`, pour ne pas séparer les lignes d'un même
+        paragraphe) puis applique `_erasure_failed`/`_background_is_diffusable`
+        indépendamment à chaque groupe.
+        """
+        out = crop.copy()
+        m = mask if mask.ndim == 2 else mask[:, :, 0]
+
+        group_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (31, 31))
+        grouped = cv2.dilate(m, group_kernel, iterations=1)
+        n_labels, labels = cv2.connectedComponents(grouped, 8)
+
+        if n_labels <= 2:
+            # Un seul groupe (ou aucun) : pas de gain à fragmenter, chemin
+            # d'origine.
+            if self._erasure_failed(crop, result, m) and self._background_is_diffusable(crop, m):
+                return self._diffuse_fill(crop, m)
+            return self._blend_masked(crop, result, m)
+
+        for label in range(1, n_labels):
+            group_mask = ((labels == label) & (m > 0)).astype(np.uint8) * 255
+            if not group_mask.any():
+                continue
+            if self._erasure_failed(crop, result, group_mask) and self._background_is_diffusable(crop, group_mask):
+                diffused = self._diffuse_fill(crop, group_mask)
+                # `_diffuse_fill` recompose sur un masque ÉLARGI en interne (la
+                # frange antialiasée juste hors de l'encre stricte). Reblender
+                # ici avec `group_mask` (étroit) jette ce travail : la frange
+                # reste alors la valeur d'ORIGINE, non celle, propre, que
+                # `diffused` contient déjà à cet endroit — un fantôme fin mais
+                # bien visible du contour des lettres survit. Même élargissement
+                # que `_diffuse_fill` pour transférer aussi cette frange.
+                extra = max(6, int(round(min(group_mask.shape[:2]) * 0.02)))
+                wide_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * extra + 1, 2 * extra + 1))
+                wide_group_mask = cv2.dilate(group_mask, wide_kernel)
+                out = self._blend_masked(out, diffused, wide_group_mask)
+            else:
+                out = self._blend_masked(out, result, group_mask)
+
+        return out
 
     @staticmethod
     def _erasure_failed(crop: np.ndarray, result: np.ndarray, mask: np.ndarray) -> bool:
@@ -542,7 +594,27 @@ class TextRenderer:
             return False
         ring_color = np.median(crop[ring].reshape(-1, 3), axis=0)
         result_color = np.median(result[m].reshape(-1, 3), axis=0)
-        return float(np.max(np.abs(ring_color - result_color))) > 15.0
+        if float(np.max(np.abs(ring_color - result_color))) > 15.0:
+            return True
+
+        # Troisième signal : sur un fond très texturé (motif floral décoratif),
+        # les deux signaux ci-dessus peuvent rater un fantôme pourtant
+        # parfaitement lisible. Mesuré sur une carte System à fond fleuri :
+        # LaMa avait remplacé le texte par un contour clair de MÊME NATURE
+        # statistique que le motif environnant (fines lignes claires sur fond
+        # clair) — bord/avant ratio 0.09 (sous le seuil), écart de couleur
+        # médiane 6 (sous le seuil), et pourtant "THE HOLY SCRIPT STATES"
+        # restait entièrement lisible à l'œil. Le point commun des deux ratés :
+        # tous deux comparaient le résultat à l'ÉTAT AVANT (texte, donc très
+        # contrasté) ou à la couleur du fond — jamais à la TEXTURE naturelle
+        # du fond. Un carton correctement effacé doit rester plus LISSE que le
+        # motif décoratif qui l'entoure, pas aussi structuré que lui : ratio
+        # mesuré 0.64 pour le fantôme contre 0.05 pour un remplissage propre.
+        edge_ring = float(np.mean(np.abs(cv2.Laplacian(gray_before, cv2.CV_32F, ksize=3))[ring]))
+        if edge_ring >= 20.0 and (edge_after / edge_ring) > 0.35:
+            return True
+
+        return False
 
     @staticmethod
     def _background_is_diffusable(crop: np.ndarray, mask: np.ndarray, margin: int = 25) -> bool:
@@ -1402,6 +1474,7 @@ class TextRenderer:
         stroke_width: Optional[int] = None,
         bg_color_rgb: Optional[Tuple[int, int, int]] = None,
         angle_override: Optional[float] = None,
+        skip_inpainting: bool = False,
     ) -> np.ndarray:
         """Efface puis réécrit. `text_regions` = polygones OCR (le texte),
         `mask_regions` = segmentation de la bulle."""
@@ -1410,13 +1483,15 @@ class TextRenderer:
         if text_color_rgb is None and self.cfg.preserve_original_text_color:
             text_color_rgb = self.extract_original_text_color(img, x1, y1, x2, y2, erase_regions)
 
-        img = self.inpaint_region(
-            img, x1, y1, x2, y2,
-            text_regions=erase_regions,
-            class_name=class_name,
-            chirurgical_mask=chirurgical_mask,
-            bubble_mask=bubble_mask,
-        )
+        if not skip_inpainting:
+            img = self.inpaint_region(
+                img, x1, y1, x2, y2,
+                text_regions=erase_regions,
+                class_name=class_name,
+                chirurgical_mask=chirurgical_mask,
+                bubble_mask=bubble_mask,
+            )
+            
         return self.insert_text(
             img, text, x1, y1, x2, y2,
             text_regions=erase_regions,
@@ -1569,15 +1644,49 @@ class TextRenderer:
         bx1, by1 = cx1 + int(xs.min()), cy1 + int(ys.min())
         bx2, by2 = cx1 + int(xs.max()), cy1 + int(ys.max())
 
-        # Le contenant doit englober la détection, sinon ce n'en est pas un.
-        if bx1 > x1 + 4 or by1 > y1 + 4 or bx2 < x2 - 4 or by2 < y2 - 4:
+        # Le contenant doit recouvrir la majeure partie de la détection, sinon
+        # ce n'en est pas un. Recouvrement large plutôt qu'englobement strict :
+        # la bbox YOLO elle-même peut déborder du cadre réel (mesuré sur une
+        # bbox "System" qui remontait de 140px au-dessus du cadre visible à
+        # cause d'un filigrane de scan chevauchant juste au-dessus) — exiger
+        # un englobement parfait rejetait alors le VRAI cadre, pourtant trouvé
+        # correctement, et le rendu retombait sur la bbox imprécise (texte
+        # qui déborde du cadre en haut et en bas).
+        ix1, iy1 = max(bx1, x1), max(by1, y1)
+        ix2, iy2 = min(bx2, x2), min(by2, y2)
+        inter_area = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+        if inter_area < 0.5 * bw * bh:
             return None
         # ...et rester crédible : au-delà, on a probablement attrapé le fond
         # de la case entière.
         if (bx2 - bx1) > bw * 4 or (by2 - by1) > bh * 5:
             return None
-        if (bx2 - bx1) <= bw and (by2 - by1) <= bh:
+        # Aucun des deux ratios largeur/hauteur ne dépasse son plafond pris
+        # isolément, mais leur PRODUIT peut quand même trahir un fond uni
+        # attrapé en entier (mesuré sur une bulle SFX 489×366 dont le
+        # "contenant" trouvé faisait 799×829 : 1.63x en largeur, 2.27x en
+        # hauteur, chacun sous son plafond, mais 3.7x en aire — un vrai cadre
+        # ne grossit pas la bbox source à ce point sur les deux axes à la fois).
+        if (bx2 - bx1) * (by2 - by1) > 3.0 * bw * bh:
             return None
+        # Un contenant collé aux DEUX bords gauche/droit de la planche alors
+        # que la détection, elle, a une marge confortable des deux côtés : ce
+        # n'est pas un cadre recadré par le bord de l'image, c'est un fond
+        # uni (ciel, aplat de couleur) qui s'étend sur toute la largeur et
+        # que la recherche a pris pour un cadre. Mesuré sur une case dont le
+        # "contenant" trouvé faisait toute la largeur de la planche et
+        # laissait un vide béant sous un texte pourtant correctement placé.
+        edge_margin = 0.08 * w_img
+        if bx1 <= 2 and bx2 >= w_img - 2 and x1 > edge_margin and (w_img - x2) > edge_margin:
+            return None
+        # Anciennement rejeté ici si le contenant n'était pas plus grand que la
+        # détection dans au moins une dimension (sinon "pas d'intérêt à
+        # l'utiliser"). Mais une bbox YOLO peut être PLUS GRANDE que le cadre
+        # réel (cf. commentaire plus haut) : le contenant trouvé est alors
+        # plus petit qu'elle sur les deux axes tout en étant le bon, et ce
+        # garde-fou le rejetait à tort. Le recouvrement (check ci-dessus) et
+        # le plafond de taille (check ci-dessous) suffisent à écarter un faux
+        # positif.
 
         for ex1, ey1, ex2, ey2 in (exclude_boxes or []):
             # Chevauchement significatif avec la bbox d'une AUTRE détection :
@@ -1734,6 +1843,23 @@ class TextRenderer:
         anchor_box = None
         if use_locked_mode:
             anchor_box = self._compute_anchor_box_from_regions(ox1, oy1, ox2, oy2, text_regions)
+
+        if anchor_box is not None and container is not None:
+            # L'ancre suit les polygones OCR d'origine (`ox1,oy1,ox2,oy2`), pas
+            # le contenant : correct tant que l'OCR n'a lu QUE la carte. Sur
+            # une carte polluée par un filigrane collé juste au-dessus (même
+            # détection, même texte OCR), les polygones débordent au-dessus du
+            # cadre réel et l'ancre hérite du débordement — le texte se
+            # retrouve à cheval sur le filigrane plutôt que dans la carte.
+            # Le contenant, lui, vient d'une mesure indépendante (forme visuelle
+            # du cadre) : on borne l'ancre à son intérieur plutôt que de lui
+            # faire confiance aveuglément.
+            cx1, cy1, cx2, cy2 = container
+            clipped = (
+                max(anchor_box[0], cx1), max(anchor_box[1], cy1),
+                min(anchor_box[2], cx2), min(anchor_box[3], cy2),
+            )
+            anchor_box = clipped if clipped[2] > clipped[0] and clipped[3] > clipped[1] else None
 
         if anchor_box is not None:
             ix1, iy1, ix2, iy2 = anchor_box
