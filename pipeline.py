@@ -389,10 +389,24 @@ class TranslationPipeline:
 
     @staticmethod
     def _ocr_mask_from_regions(
-        regions: Optional[List[Dict]], h_det: int, w_det: int, dilate: int = 11,
+        regions: Optional[List[Dict]], h_det: int, w_det: int,
+        crop_bgr: Optional[np.ndarray] = None, dilate: int = 3,
     ) -> Optional[np.ndarray]:
-        """Masque binaire du texte OCR, dilaté, en coordonnées locales bbox."""
-        mask = np.zeros((h_det, w_det), dtype=np.uint8)
+        """
+        Masque des LETTRES d'origine, en coordonnées locales bbox.
+
+        Les polygones OCR délimitent des LIGNES entières, pas des glyphes.
+        Les remplir pleins puis les dilater de 11 px soudait les lignes entre
+        elles : sur une boîte de narration de 4 lignes, le masque couvrait 95 %
+        de la boîte. LaMa recevait donc un trou de la taille du bloc de texte
+        et reconstruisait une texture — d'où un fantôme flou du texte anglais
+        visible sous la traduction.
+
+        On redescend donc à l'encre : à l'intérieur de chaque polygone, on ne
+        garde que les pixels qui s'écartent du fond local, puis on dilate juste
+        assez pour attraper l'anticrénelage.
+        """
+        polygons = np.zeros((h_det, w_det), dtype=np.uint8)
         for region in regions or []:
             pts = region.get('bbox') if isinstance(region, dict) else None
             if not pts:
@@ -402,11 +416,55 @@ class TranslationPipeline:
                 continue
             arr[:, 0] = np.clip(arr[:, 0], 0, max(0, w_det - 1))
             arr[:, 1] = np.clip(arr[:, 1], 0, max(0, h_det - 1))
-            cv2.fillPoly(mask, [arr], 255)
+            cv2.fillPoly(polygons, [arr], 255)
 
-        if int(np.sum(mask)) == 0:
+        if int(np.count_nonzero(polygons)) == 0:
             return None
 
+        ink = None
+        if crop_bgr is not None and crop_bgr.size > 0:
+            try:
+                gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+                if gray.shape[:2] != (h_det, w_det):
+                    gray = cv2.resize(gray, (w_det, h_det), interpolation=cv2.INTER_AREA)
+                inside = gray[polygons > 0]
+                if inside.size > 32:
+                    # Le fond d'une ligne de texte est majoritaire ; l'encre en
+                    # est l'écart. Seuil relatif à la dispersion réelle, pour
+                    # rester valable sur bulle blanche comme sur boîte sombre.
+                    bg = float(np.median(inside))
+                    spread = float(np.percentile(np.abs(inside.astype(np.int16) - bg), 90))
+                    threshold = max(28.0, spread * 0.55)
+
+                    # On cherche l'encre un peu AU-DELÀ du polygone : les
+                    # polices script ont des jambages et des fioritures qui
+                    # sortent du rectangle OCR et laissaient un résidu coloré.
+                    search = cv2.dilate(
+                        polygons, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)),
+                    )
+                    candidate = (
+                        (np.abs(gray.astype(np.int16) - bg) > threshold) & (search > 0)
+                    ).astype(np.uint8)
+
+                    # ...mais on ne garde que ce qui touche le polygone : sinon
+                    # un bout de dessin sombre voisin serait pris pour du texte
+                    # et effacé lui aussi.
+                    n_labels, labels = cv2.connectedComponents(candidate, 8)
+                    if n_labels > 1:
+                        touching = np.unique(labels[polygons > 0])
+                        keep = np.isin(labels, touching[touching > 0])
+                        ink = keep.astype(np.uint8) * 255
+                    else:
+                        ink = None
+
+                    # Trop peu d'encre trouvée : seuillage non concluant
+                    # (dégradé, texte contourné). On reprend les polygones.
+                    if ink is not None and np.count_nonzero(ink) < 0.02 * np.count_nonzero(polygons):
+                        ink = None
+            except Exception:
+                ink = None
+
+        mask = ink if ink is not None else polygons
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (dilate, dilate))
         return cv2.dilate(mask, kernel, iterations=1)
 
@@ -433,7 +491,10 @@ class TranslationPipeline:
         det.mask_binary = seg_binary
         det.seg_backend = seg_backend
 
-        ocr_mask = self._ocr_mask_from_regions(det.text_regions, h_det, w_det)
+        ocr_mask = self._ocr_mask_from_regions(
+            det.text_regions, h_det, w_det,
+            crop_bgr=img[max(0, det.y1):det.y2, max(0, det.x1):det.x2],
+        )
         if ocr_mask is None:
             det.chirurgical_mask = None
             return max(0.0, time.perf_counter() - t0)
@@ -459,7 +520,10 @@ class TranslationPipeline:
             if int(np.sum(intersection)) > 0.30 * int(np.sum(ocr_mask)):
                 ocr_mask = intersection
 
-        kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        # Fermeture douce : boucher les trous entre les lettres d'un mot, sans
+        # souder les lignes entre elles (elles sont espacées d'une dizaine de
+        # pixels — un noyau plus large recrée le pavé plein qu'on veut éviter).
+        kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         det.chirurgical_mask = cv2.morphologyEx(ocr_mask, cv2.MORPH_CLOSE, kernel_close)
         return max(0.0, time.perf_counter() - t0)
 

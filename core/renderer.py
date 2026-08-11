@@ -450,9 +450,17 @@ class TextRenderer:
         if np.sum(local_mask) == 0:
             return img
 
-        # Fond blanc pur → simple fill
-        if self._is_white_background(crop):
-            crop[local_mask > 0] = [255, 255, 255]
+        # Fond uni autour des lettres → remplissage à plat.
+        #
+        # C'est le cas de loin le plus fréquent : du texte dans une bulle ou une
+        # boîte de narration. LaMa, lui, reconstruit une TEXTURE — sur un bloc
+        # de plusieurs lignes il laissait un fantôme gris parfaitement lisible
+        # du texte d'origine sous la traduction. Un aplat de la couleur du fond
+        # local ne peut pas produire d'artefact, et c'est exactement le geste
+        # attendu ici. LaMa reste pour le texte posé sur du dessin.
+        flat = self._flat_fill_color(crop, local_mask)
+        if flat is not None:
+            crop[self._extend_fill_mask(crop, local_mask, flat) > 0] = flat
             img[crop_y1:crop_y2, crop_x1:crop_x2] = crop
             return img
 
@@ -508,6 +516,97 @@ class TextRenderer:
         blended = crop.copy()
         blended[mask_bool] = result[mask_bool]
         return blended
+
+    @staticmethod
+    def _extend_fill_mask(
+        crop: np.ndarray, mask: np.ndarray, flat: np.ndarray, reach: int = 21,
+    ) -> np.ndarray:
+        """
+        Étend le masque, pour un remplissage à plat, à tout ce qui touche le
+        texte et s'écarte du fond.
+
+        Deux résidus que le masque strict laissait passer :
+        - le halo d'anticrénelage autour des lettres, plus large que l'encre ;
+        - la partie d'un glyphe SORTIE de la bbox de détection. Sur un cas réel,
+          le W de « NEW » était coupé par la boîte YOLO — l'OCR lisait « NEV »
+          et la moitié droite du W restait à l'écran, bien noire.
+
+        Sans risque ici : on écrit la couleur du fond local, donc élargir ne
+        peut rien abîmer tant qu'on reste sur des pixels connexes au texte.
+        """
+        try:
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (reach, reach))
+            near = cv2.dilate(mask, kernel, iterations=1) > 0
+            # Seuil très bas, et c'est voulu : mesuré sur une boîte de
+            # narration, le fond est parfaitement uni (écart-type local 0.000)
+            # tandis que le halo d'anticrénelage traîne entre 247 et 254. À un
+            # seuil de 8 ces pixels restaient en place et redessinaient le
+            # contour des lettres d'origine. `_flat_fill_color` n'a de toute
+            # façon accepté ce chemin que parce que le fond est uni : il n'y a
+            # pas de texture légitime à préserver ici.
+            deviates = np.abs(
+                crop.astype(np.int16) - flat.astype(np.int16)
+            ).max(axis=2) > 3
+
+            candidate = ((mask > 0) | (near & deviates)).astype(np.uint8)
+
+            # Uniquement les composantes qui touchent le texte détecté : un
+            # élément de dessin voisin ne doit pas être repeint au passage.
+            n_labels, labels = cv2.connectedComponents(candidate, 8)
+            if n_labels <= 1:
+                return mask
+            touching = np.unique(labels[mask > 0])
+            keep = np.isin(labels, touching[touching > 0])
+            return keep.astype(np.uint8) * 255
+        except Exception:
+            return mask
+
+    @staticmethod
+    def _flat_fill_color(
+        crop: np.ndarray, mask: np.ndarray, max_std: float = 12.0,
+    ) -> Optional[np.ndarray]:
+        """
+        Couleur de remplissage si le fond AUTOUR des lettres est uni, sinon None.
+
+        On échantillonne une couronne juste autour du masque — pas le crop
+        entier. L'ancien test portait sur tout le crop (bbox + 30 px de marge),
+        qui contient les lettres elles-mêmes et souvent un bout de dessin : il
+        ne se déclenchait donc quasiment jamais, même au milieu d'une bulle
+        parfaitement blanche.
+        """
+        try:
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
+            ring = (cv2.dilate(mask, kernel, iterations=1) > 0) & (mask == 0)
+            samples = crop[ring]
+            if samples.shape[0] < 64:
+                return None
+            samples = samples.reshape(-1, 3)
+            reference = np.median(samples.astype(np.float32), axis=0)
+
+            # Critère robuste plutôt qu'un écart-type : la couronne d'un texte
+            # multiligne attrape forcément quelques lettres de la ligne voisine,
+            # et ces pixels noirs faisaient exploser l'écart-type — le fond
+            # d'une bulle blanche était alors jugé « non uni » et repartait
+            # vers LaMa, qui y laissait un fantôme.
+            deviation = np.abs(samples.astype(np.float32) - reference).max(axis=1)
+            if float(np.mean(deviation <= max_std)) < 0.85:
+                return None
+
+            # Mode et non médiane : sur une bulle blanche bruitée par le JPEG,
+            # la médiane sort à 254 alors que le fond dominant est à 255. On
+            # repeignait donc le texte en 254 sur un fond 255 — un écart d'un
+            # seul niveau, mais réparti exactement sur la forme des lettres,
+            # donc visible comme un fantôme du texte d'origine.
+            inliers = samples[deviation <= max_std]
+            if inliers.shape[0] < 32:
+                inliers = samples
+            mode = np.array([
+                int(np.bincount(inliers[:, c], minlength=256).argmax())
+                for c in range(3)
+            ], dtype=np.uint8)
+            return mode.astype(crop.dtype)
+        except Exception:
+            return None
 
     def _inpaint_lama(self, crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
         h_orig, w_orig = crop.shape[:2]
@@ -1250,6 +1349,80 @@ class TextRenderer:
             return None
         return filled
 
+    @staticmethod
+    def _container_box(
+        img: np.ndarray, x1: int, y1: int, x2: int, y2: int,
+    ) -> Optional[Tuple[int, int, int, int]]:
+        """
+        Cherche le CONTENANT uni (bulle, boîte de narration, cartouche) dans
+        lequel la détection est posée, et renvoie ses limites.
+
+        La bbox de YOLO serre le texte SOURCE. Le français étant plus long que
+        l'anglais, l'y enfermer force à réduire la police jusqu'à ce que tout
+        rentre : sur une boîte de narration mesurée, le texte tombait à 11 px
+        dans une boîte capable d'en accueillir 22, alors que la place existait
+        juste à côté. Un letterer utilise la boîte, pas l'empreinte du texte
+        qu'il remplace.
+
+        Renvoie None si aucun contenant franc n'est trouvé (texte posé à même
+        le dessin) : on reste alors sur la bbox.
+        """
+        h_img, w_img = img.shape[:2]
+        bw, bh = x2 - x1, y2 - y1
+        if bw < 20 or bh < 20:
+            return None
+
+        px = int(bw * 0.6)
+        py = int(bh * 0.9)
+        cx1, cy1 = max(0, x1 - px), max(0, y1 - py)
+        cx2, cy2 = min(w_img, x2 + px), min(h_img, y2 + py)
+        crop = img[cy1:cy2, cx1:cx2]
+        if crop.size == 0 or crop.shape[0] < 24 or crop.shape[1] < 24:
+            return None
+
+        try:
+            gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+            # Référence prise dans la bbox : c'est là qu'est le fond du contenant.
+            inner = gray[y1 - cy1:y2 - cy1, x1 - cx1:x2 - cx1]
+            if inner.size == 0:
+                return None
+            ref = float(np.median(inner))
+            similar = (np.abs(gray.astype(np.int16) - ref) < 32).astype(np.uint8) * 255
+
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+            eroded = cv2.erode(similar, kernel, iterations=1)
+            n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(eroded, 8)
+            if n_labels < 2:
+                return None
+            biggest = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+            mask = cv2.dilate((labels == biggest).astype(np.uint8) * 255, kernel, iterations=1)
+
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if not contours:
+                return None
+            filled = np.zeros_like(mask)
+            cv2.drawContours(filled, contours, -1, 255, -1)
+        except Exception:
+            return None
+
+        ys, xs = np.nonzero(filled)
+        if xs.size == 0:
+            return None
+        bx1, by1 = cx1 + int(xs.min()), cy1 + int(ys.min())
+        bx2, by2 = cx1 + int(xs.max()), cy1 + int(ys.max())
+
+        # Le contenant doit englober la détection, sinon ce n'en est pas un.
+        if bx1 > x1 + 4 or by1 > y1 + 4 or bx2 < x2 - 4 or by2 < y2 - 4:
+            return None
+        # ...et rester crédible : au-delà, on a probablement attrapé le fond
+        # de la case entière.
+        if (bx2 - bx1) > bw * 4 or (by2 - by1) > bh * 5:
+            return None
+        if (bx2 - bx1) <= bw and (by2 - by1) <= bh:
+            return None
+
+        return (bx1, by1, bx2, by2)
+
     def _bubble_shape_mask(
         self, raw_mask: Optional[np.ndarray], crop_bgr: np.ndarray,
         box_w: int, box_h: int, is_bubble: bool,
@@ -1320,6 +1493,21 @@ class TextRenderer:
             return img
 
         is_bubble = str(class_name).lower().strip() == "bulle"
+
+        # Repère du texte SOURCE : `text_regions` y est exprimé, donc tout ce
+        # qui s'y rapporte (ancrage System, angle, recentrage du bloc tourné)
+        # doit continuer à l'utiliser.
+        ox1, oy1, ox2, oy2 = x1, y1, x2, y2
+
+        # La bbox de détection épouse le texte source. Si elle est posée dans
+        # un contenant uni plus grand (boîte de narration, cartouche), c'est
+        # LUI la zone de composition — sinon le texte français, plus long, est
+        # comprimé alors que la place existe juste à côté.
+        if not is_bubble:
+            container = self._container_box(img, x1, y1, x2, y2)
+            if container is not None:
+                x1, y1, x2, y2 = container
+
         box_h_full, box_w_full = max(1, y2 - y1), max(1, x2 - x1)
 
         mask_for_wrap = self._bubble_shape_mask(
@@ -1336,7 +1524,7 @@ class TextRenderer:
 
         anchor_box = None
         if use_locked_mode:
-            anchor_box = self._compute_anchor_box_from_regions(x1, y1, x2, y2, text_regions)
+            anchor_box = self._compute_anchor_box_from_regions(ox1, oy1, ox2, oy2, text_regions)
 
         if anchor_box is not None:
             ix1, iy1, ix2, iy2 = anchor_box
@@ -1353,8 +1541,11 @@ class TextRenderer:
             return img
 
         # ── Couleurs ──
+        # Échantillonnées sur la bbox d'origine : elle est centrée sur le texte
+        # effacé, donc représentative du fond sur lequel on va écrire. Le
+        # contenant, lui, peut mordre sur une bordure ou un dégradé de bord.
         text_color, outline_color, outline_width = self.get_text_colors(
-            img, x1, y1, x2, y2,
+            img, ox1, oy1, ox2, oy2,
             class_name=class_name,
             text_color_override=text_color_rgb,
         )
@@ -1421,7 +1612,7 @@ class TextRenderer:
 
         if angle != 0.0:
             return self._draw_rotated(
-                img, layout, angle, text_regions, x1, y1, x2, y2,
+                img, layout, angle, text_regions, ox1, oy1, ox2, oy2,
                 text_color, outline_color, outline_width,
             )
 

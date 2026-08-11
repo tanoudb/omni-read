@@ -33,346 +33,173 @@ BACKEND_REGISTRY = {
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# WORD SPLITTER — Fix mots collés OCR (ABOUTOUR → ABOUT OUR)
+# WORD SPLITTER — Mots collés OCR (EVERYONEHUNTSMONSTERS → EVERYONE HUNTS MONSTERS)
 # ═══════════════════════════════════════════════════════════════════════════════
 #
-# PP-OCRv5 colle souvent les mots quand ils sont visuellement serrés dans les
-# bulles manga. On utilise une segmentation récursive par dictionnaire :
-#   1) Pour chaque "token" (mot sans espaces), on tente de le découper en
-#      combinaisons de mots connus.
-#   2) On préfère les découpages avec les mots les plus longs (greedy longest).
-#   3) Si aucun découpage valide, on laisse le token tel quel.
+# PP-OCRv5 rend souvent une ligne entière sans espaces quand la police BD serre
+# les lettres. Ce texte part tel quel vers le traducteur, donc l'erreur se
+# propage avant même le rendu.
+#
+# L'implémentation précédente s'appuyait sur une liste de ~840 mots écrite à la
+# main. Un chapitre de manhwa utilise un vocabulaire bien plus large : sur le
+# cas réel « EVERYONEHUNTSMONSTERS TOGAINEXPERIENCEPOINTS », aucun des mots
+# (EVERYONE, HUNTS, MONSTERS, EXPERIENCE, POINTS...) n'y figurait, et rien
+# n'était découpé. Une liste manuelle ne peut pas rattraper ça.
+#
+# On utilise donc `wordsegment` (déjà dans les dépendances) : segmentation par
+# maximum de vraisemblance sur les unigrammes/bigrammes du corpus Google, soit
+# 333 000 mots au lieu de 840. Il est en revanche trop confiant — il découpe
+# volontiers un nom propre ou une onomatopée en syllabes plausibles — d'où les
+# garde-fous ci-dessous.
 
-# Dictionnaire de mots anglais courants dans les dialogues manga/webtoon.
-# ~800 mots couvrant 99%+ du dialogue. Organisé par catégorie.
-_WORDS = {
-    # ── Pronouns / Determiners ──
-    "I", "ME", "MY", "MINE", "MYSELF", "WE", "US", "OUR", "OURSELVES",
-    "YOU", "YOUR", "YOURS", "YOURSELF", "YOURSELVES",
-    "HE", "HIM", "HIS", "HIMSELF", "SHE", "HER", "HERS", "HERSELF",
-    "IT", "ITS", "ITSELF", "THEY", "THEM", "THEIR", "THEIRS", "THEMSELVES",
-    "THE", "A", "AN", "THIS", "THAT", "THESE", "THOSE",
-    "WHAT", "WHICH", "WHO", "WHOM", "WHOSE", "HOW", "WHERE", "WHEN", "WHY",
-    "SOME", "ANY", "MANY", "MUCH", "MORE", "MOST", "ALL", "EACH", "EVERY",
-    "BOTH", "FEW", "SEVERAL", "ENOUGH", "LITTLE", "LESS", "LEAST",
-    "NO", "NONE", "OTHER", "ANOTHER",
-    # ── Prepositions / Conjunctions ──
-    "IN", "ON", "AT", "TO", "FOR", "OF", "UP", "BY", "AS", "OR", "SO",
-    "WITH", "FROM", "INTO", "OVER", "ABOUT", "LIKE", "BUT", "AND", "NOT",
-    "OUT", "OFF", "DOWN", "NEAR", "PAST", "THAN", "THROUGH", "DURING",
-    "BETWEEN", "AMONG", "ALONG", "ACROSS", "AFTER", "BEFORE", "BEHIND",
-    "BELOW", "BESIDE", "BEYOND", "INSIDE", "OUTSIDE", "UNDER", "UNTIL",
-    "UPON", "WITHIN", "WITHOUT", "ABOVE", "AROUND", "AGAINST", "TOWARD",
-    "NOR", "YET", "BECAUSE", "SINCE", "WHILE", "ALTHOUGH", "THOUGH",
-    "UNLESS", "WHEREAS", "IF", "THEN",
-    # ── Core verbs (all forms) ──
-    "AM", "IS", "ARE", "WAS", "WERE", "BE", "BEEN", "BEING",
-    "DO", "DID", "DOES", "DONE", "DOING",
-    "HAVE", "HAS", "HAD", "HAVING",
-    "CAN", "COULD", "WILL", "WOULD", "SHALL", "SHOULD", "MAY", "MIGHT", "MUST",
-    "GET", "GOT", "GETS", "GETTING", "GOTTEN",
-    "GO", "GOES", "WENT", "GONE", "GOING",
-    "COME", "CAME", "COMES", "COMING",
-    "MAKE", "MADE", "MAKES", "MAKING",
-    "TAKE", "TOOK", "TAKES", "TAKEN", "TAKING",
-    "GIVE", "GAVE", "GIVES", "GIVEN", "GIVING",
-    "KNOW", "KNEW", "KNOWS", "KNOWN", "KNOWING",
-    "THINK", "THOUGHT", "THINKS", "THINKING",
-    "FIND", "FOUND", "FINDS", "FINDING",
-    "WANT", "WANTED", "WANTS", "WANTING",
-    "NEED", "NEEDED", "NEEDS", "NEEDING",
-    "FEEL", "FELT", "FEELS", "FEELING",
-    "KEEP", "KEPT", "KEEPS", "KEEPING",
-    "LET", "LETS", "LETTING",
-    "SAY", "SAID", "SAYS", "SAYING",
-    "TELL", "TOLD", "TELLS", "TELLING",
-    "CALL", "CALLED", "CALLS", "CALLING",
-    "TRY", "TRIED", "TRIES", "TRYING",
-    "USE", "USED", "USES", "USING",
-    "LEAVE", "LEFT", "LEAVES", "LEAVING",
-    "TURN", "TURNED", "TURNS", "TURNING",
-    "SHOW", "SHOWED", "SHOWS", "SHOWN", "SHOWING",
-    "HEAR", "HEARD", "HEARS", "HEARING",
-    "PLAY", "PLAYED", "PLAYS", "PLAYING",
-    "RUN", "RAN", "RUNS", "RUNNING",
-    "MOVE", "MOVED", "MOVES", "MOVING",
-    "LIVE", "LIVED", "LIVES", "LIVING",
-    "HOLD", "HELD", "HOLDS", "HOLDING",
-    "BRING", "BROUGHT", "BRINGS", "BRINGING",
-    "HAPPEN", "HAPPENED", "HAPPENS", "HAPPENING",
-    "WRITE", "WROTE", "WRITES", "WRITTEN", "WRITING",
-    "SIT", "SAT", "SITS", "SITTING",
-    "STAND", "STOOD", "STANDS", "STANDING",
-    "LOSE", "LOST", "LOSES", "LOSING",
-    "PAY", "PAID", "PAYS", "PAYING",
-    "MEET", "MET", "MEETS", "MEETING",
-    "SEND", "SENT", "SENDS", "SENDING",
-    "FALL", "FELL", "FALLS", "FALLEN", "FALLING",
-    "CUT", "CUTS", "CUTTING",
-    "PUT", "PUTS", "PUTTING",
-    "KILL", "KILLED", "KILLS", "KILLING",
-    "DIE", "DIED", "DIES", "DYING",
-    "HIT", "HITS", "HITTING",
-    "LOOK", "LOOKED", "LOOKS", "LOOKING",
-    "PULL", "PULLED", "PULLS", "PULLING",
-    "PUSH", "PUSHED", "PUSHES", "PUSHING",
-    "WALK", "WALKED", "WALKS", "WALKING",
-    "TALK", "TALKED", "TALKS", "TALKING",
-    "HELP", "HELPED", "HELPS", "HELPING",
-    "ASK", "ASKED", "ASKS", "ASKING",
-    "STOP", "STOPPED", "STOPS", "STOPPING",
-    "START", "STARTED", "STARTS", "STARTING",
-    "OPEN", "OPENED", "OPENS", "OPENING",
-    "CLOSE", "CLOSED", "CLOSES", "CLOSING",
-    "BREAK", "BROKE", "BREAKS", "BROKEN", "BREAKING",
-    "DRIVE", "DROVE", "DRIVES", "DRIVEN", "DRIVING",
-    "PICK", "PICKED", "PICKS", "PICKING",
-    "FIGHT", "FOUGHT", "FIGHTS", "FIGHTING",
-    "FOLLOW", "FOLLOWED", "FOLLOWS", "FOLLOWING",
-    "SAVE", "SAVED", "SAVES", "SAVING",
-    "WAIT", "WAITED", "WAITS", "WAITING",
-    "WATCH", "WATCHED", "WATCHES", "WATCHING",
-    "SEEM", "SEEMED", "SEEMS",
-    "LEARN", "LEARNED", "LEARNS", "LEARNING",
-    "WORK", "WORKED", "WORKS", "WORKING",
-    "LOVE", "LOVED", "LOVES", "LOVING",
-    "HATE", "HATED", "HATES", "HATING",
-    "PASS", "PASSED", "PASSES", "PASSING",
-    "STAY", "STAYED", "STAYS", "STAYING",
-    "CHANGE", "CHANGED", "CHANGES", "CHANGING",
-    "REMEMBER", "REMEMBERED", "REMEMBERS",
-    "FORGET", "FORGOT", "FORGETS", "FORGOTTEN",
-    "BUY", "BOUGHT", "BUYS",
-    "SELL", "SELLS",
-    "EAT", "ATE", "EATS", "EATEN", "EATING",
-    "SLEEP", "SLEPT", "SLEEPS", "SLEEPING",
-    "DRINK", "DRANK", "DRINKS", "DRUNK", "DRINKING",
-    "WAKE", "WOKE", "WAKES", "WAKING",
-    "SWIM", "SWAM", "SWIMS", "SWIMMING",
-    "SPEAK", "SPOKE", "SPEAKS", "SPOKEN", "SPEAKING",
-    "READ", "READS", "READING",
-    "EXPLAIN", "EXPLAINED", "EXPLAINS", "EXPLAINING",
-    "BELIEVE", "BELIEVED", "BELIEVES", "BELIEVING",
-    "SET", "SETS", "SETTING",
-    "TEACH", "TAUGHT", "TEACHES", "TEACHING",
-    "BURST", "BURSTS", "BURSTING",
-    "SWING", "SWUNG", "SWINGS", "SWINGING",
-    "GUIDE", "GUIDED", "GUIDES", "GUIDING",
-    "DRESS", "DRESSED", "DRESSES", "DRESSING",
-    "PROVE", "PROVED", "PROVES", "PROVEN", "PROVING",
-    "COMMIT", "COMMITTED", "STATE", "STATED",
-    # ── Adjectives ──
-    "GOOD", "BAD", "GREAT", "BIG", "SMALL", "LITTLE", "OLD", "NEW", "YOUNG",
-    "LONG", "SHORT", "HIGH", "LOW", "FIRST", "LAST", "NEXT", "BEST", "WORST",
-    "BETTER", "RIGHT", "WRONG", "ABLE", "REAL", "TRUE", "SURE", "NICE", "FINE",
-    "FULL", "HARD", "FAST", "SLOW", "LOUD", "QUIET", "STRONG", "WEAK", "DARK",
-    "LIGHT", "HOT", "COLD", "CLEAN", "DIRTY", "SAFE", "DEAD", "ALIVE", "FREE",
-    "ALONE", "READY", "HAPPY", "SORRY", "ANGRY", "AFRAID", "FUNNY", "PRETTY",
-    "UGLY", "SMART", "STUPID", "CRAZY", "SICK", "TIRED", "HUNGRY", "EARLY",
-    "LATE", "DEEP", "WIDE", "DIFFERENT", "SAME", "SINGLE", "WHOLE", "ENTIRE",
-    "FINAL", "TOTAL", "PERSONAL", "SPECIAL", "IMPORTANT", "POSSIBLE", "CERTAIN",
-    "CLEAR", "SIMPLE", "EASY", "TOUGH", "STRANGE", "BEAUTIFUL", "GORGEOUS",
-    "CAREFUL", "SERIOUS", "POWERFUL", "WORTH", "BLACK", "WHITE", "RED", "BLUE",
-    "PETTY", "SPARTAN", "SENILE", "MARRIED", "UNMARRIED", "INNOCENT", "LOYAL",
-    "THOUGHTFUL", "CHEERFUL",
-    # ── Adverbs ──
-    "NOT", "NOW", "THEN", "HERE", "THERE", "JUST", "STILL", "EVEN", "ALSO",
-    "ALREADY", "NEVER", "ALWAYS", "EVER", "ONLY", "TOO", "VERY", "AGAIN",
-    "REALLY", "ACTUALLY", "PROBABLY", "MAYBE", "PERHAPS", "CERTAINLY",
-    "ESPECIALLY", "FINALLY", "QUICKLY", "SLOWLY", "OFTEN", "SOMETIMES",
-    "FORWARD", "AWAY", "BACK", "TOGETHER", "APART", "AHEAD",
-    # ── Nouns ──
-    "MAN", "WOMAN", "BOY", "GIRL", "KID", "CHILD", "BABY", "GUY", "GUYS",
-    "MEN", "WOMEN", "PEOPLE", "PERSON", "FAMILY", "FRIEND", "FRIENDS",
-    "MOTHER", "FATHER", "MOM", "DAD", "SON", "DAUGHTER", "BROTHER", "SISTER",
-    "WIFE", "HUSBAND", "PARENT", "PARENTS", "CHILDREN",
-    "LIFE", "DEATH", "TIME", "DAY", "NIGHT", "WEEK", "MONTH", "YEAR", "YEARS",
-    "MOMENT", "WORLD", "PLACE", "HOME", "HOUSE", "ROOM", "DOOR", "ROAD",
-    "WAY", "SIDE", "NAME", "FACE", "EYES", "HAND", "HANDS", "HEAD", "BODY",
-    "HEART", "BLOOD", "WORD", "WORDS", "THING", "THINGS", "PART", "FACT",
-    "POINT", "REASON", "PLAN", "POWER", "STRENGTH", "FORCE", "MONEY", "FOOD",
-    "WATER", "DINNER", "LUNCH", "FUN",
-    "WORK", "JOB", "GROUP", "TEAM", "COMPANY", "SCHOOL", "COLLEGE",
-    "FIGHT", "WAR", "BATTLE", "WEAPON", "GUN", "KNIFE", "SWORD", "AXE",
-    "SECRET", "TRUTH", "STORY", "STORIES", "NEWS", "PROBLEM", "TROUBLE",
-    "QUESTION", "TRAINING", "PUNISHMENT", "REST", "END", "BREAK",
-    "KING", "QUEEN", "CHAIRMAN", "AGENT", "TRAITOR", "BASTARD", "BASTARDS",
-    "WEDDING", "TRAP", "PICTURE", "SMILE", "CAR", "CARS", "DRIVER",
-    "CLASSMATES", "HEIR", "GRUDGE", "ERA", "AMATEUR", "AMATEURS",
-    "CUSTOMER", "CUSTOMERS", "WEEKEND", "WEEKENDS", "LOYALTY",
-    "DIRECTOR", "DIRECTORS", "GRANDSON",
-    "REVENGE", "VIOLENCE", "BULLY", "BULLIES", "QUOTA", "LAPS", "WOUND",
-    "REQUEST", "REGRET", "REGRETS", "PROMISE", "SQUAT", "SQUATS",
-    "MORNING", "LUNCHTIME", "EVENING",
-    # ── Manga-specific ──
-    "GOTTA", "GONNA", "WANNA",
-    # ── Contractions (base) ──
-    "DIDN", "DON", "ISN", "WASN", "WEREN", "AREN", "COULDN", "WOULDN",
-    "SHOULDN", "HASN", "HAVEN",
-    # ── Numbers / Time ──
-    "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN",
-    "HUNDRED", "THOUSAND", "MILLION", "LATER", "TONIGHT", "TODAY", "TOMORROW",
-    # ── Interjections ──
-    "OKAY", "OK", "WELL", "YEAH", "YES", "HEY", "HI", "HELLO", "THANKS",
-    "PLEASE", "OOPS", "NOM",
-    # ── Proper nouns (manga-specific, prevent splitting) ──
-    "CHEONGDO", "DAESEONG", "DAEHO",
-}
+_SEG_MIN_TOKEN_LEN = 6      # en dessous, le gain est nul et le risque réel
+_SEG_MIN_AVG_PIECE = 2.6    # un découpage trop émietté est un faux positif
+_VOWELS = frozenset("AEIOUY")
 
-# Build a frozenset for O(1) lookup
-_DICT = frozenset(_WORDS)
-
-# Max word length in the dict (for bounding the search)
-_MAX_WORD_LEN = max(len(w) for w in _DICT)
-
-# Words that should NOT be split even if they contain subwords
-# (e.g. "INTO" contains "IN" + "TO" but is a real word)
-# These words CAN still appear as the RESULT of splitting other tokens.
-_NOSPLIT = frozenset({
-    # 2-word combos that are actually 1 word
-    "INTO", "ONTO", "ALSO", "UPON",
-    # Words where subword splits would be wrong
-    "ANOTHER", "ANYTHING", "BECAUSE", "EITHER", "ENOUGH", "EVERYTHING",
-    "NOTHING", "SOMEONE", "SOMETHING", "TOGETHER", "YESTERDAY",
-    "WITHIN", "WITHOUT", "MAYBE", "MYSELF", "HIMSELF", "HERSELF",
-    "ITSELF",
+# Les seuls mots anglais de 1-2 lettres qu'on accepte comme morceau. Sans cette
+# liste fermée, « KRGHAAAH » se découpe en « KR GH AAAH » : `kr` et `gh`
+# existent dans un corpus web, avec une fréquence comparable à celle de `hunts`,
+# donc un seuil de fréquence ne les distingue pas.
+_SHORT_WORDS = frozenset({
+    "A", "I", "AM", "AN", "AS", "AT", "BE", "BY", "DO", "GO", "HE", "IF", "IN",
+    "IS", "IT", "ME", "MY", "NO", "OF", "OK", "ON", "OR", "SO", "TO", "UP",
+    "US", "WE",
 })
 
-# Cache for the recursive splitter (avoids re-splitting the same token)
+_wordsegment_state: Dict[str, object] = {"loaded": False, "module": None}
 _split_cache: Dict[str, Optional[List[str]]] = {}
+_protected_state: Dict[str, object] = {}
 
 
-def _try_split(token: str) -> Optional[List[str]]:
+def _wordsegment():
+    """Charge `wordsegment` à la première utilisation (~0.5 s, ~87 Mo)."""
+    if not _wordsegment_state["loaded"]:
+        _wordsegment_state["loaded"] = True
+        try:
+            import wordsegment
+
+            wordsegment.load()
+            _wordsegment_state["module"] = wordsegment
+        except Exception:
+            _wordsegment_state["module"] = None
+    return _wordsegment_state["module"]
+
+
+def _is_known_word(word: str) -> bool:
+    ws = _wordsegment()
+    return bool(ws) and word.lower() in ws.UNIGRAMS
+
+
+def _acceptable_pieces(pieces: List[str]) -> bool:
+    """Un découpage n'est retenu que si CHAQUE morceau est un mot plausible."""
+    if len(pieces) < 2:
+        return False
+
+    for piece in pieces:
+        up = piece.upper()
+        if len(up) <= 2:
+            if up not in _SHORT_WORDS:
+                return False
+            continue
+        # Un morceau sans voyelle n'est pas un mot anglais : c'est le signe
+        # qu'on est en train d'émietter une onomatopée ou un sigle.
+        if not (_VOWELS & set(up)):
+            return False
+        if not _is_known_word(piece):
+            return False
+
+    avg = sum(len(p) for p in pieces) / len(pieces)
+    return avg >= _SEG_MIN_AVG_PIECE
+
+
+def _segment_token(core: str, protected: frozenset) -> Optional[List[str]]:
     """
-    Recursively try to split a glued uppercase token into known words.
-    Returns list of words if valid split found, None otherwise.
-
-    Uses longest-match-first greedy with backtracking.
-    Example: "MYSONWILL" → ["MY", "SON", "WILL"]
-             "INHISPLACE" → ["IN", "HIS", "PLACE"]
-             "FORWARD" → None (in _DICT, don't split)
+    Découpe `core` en mots. Retourne les morceaux DÉCOUPÉS SUR LA CHAÎNE
+    D'ORIGINE (casse et ponctuation interne préservées), ou None.
     """
-    if not token:
-        return []
+    key = core.upper()
 
-    up = token.upper()
-
-    # Check if this is already a known word → don't split it
-    # (_NOSPLIT words like SOMETHING, ANOTHER, INTO are also valid endpoints
-    #  but should not be split further — handled by this same check)
-    if up in _DICT or up in _NOSPLIT:
+    # La protection est testée AVANT le cache : le résultat dépend du glossaire
+    # passé en argument, alors que le cache n'est indexé que sur le token. Sans
+    # ça, un token protégé lors d'un appel restait marqué « non découpable »
+    # pour tous les appels suivants, glossaire ou pas.
+    if key in protected:
         return None
 
-    # Check cache
-    if up in _split_cache:
-        return _split_cache[up]
+    if key in _split_cache:
+        return _split_cache[key]
 
-    # Helper: check if a string is a recognized word (dict OR nosplit)
-    def _is_word(w: str) -> bool:
-        return w in _DICT or w in _NOSPLIT
+    result: Optional[List[str]] = None
+    letters = [c for c in core if c.isalnum()]
 
-    # Helper to score a split. We explore all splits and pick the best.
-    # Priority: fewer pieces > larger minimum word length > sum of squared lengths
-    # YEARS(5)+OLD(3): (-2, 3, 34) > YEAR(4)+SOLD(4): (-2, 4, 32) — SOLD wins ✗
-    # Hmm... try: fewer pieces > larger min-word-len > larger sum-squares
-    # Actually for YEARSOLD: both are (-2, 3, 34) vs (-2, 4, 32) — YEAR+SOLD wins
-    # That's wrong. For HEARDON: (-2, 2, 29) vs (-2, 3, 25) — HEAR+DON wins. Also wrong.
-    #
-    # The real insight: among 2-word splits of the same token, prefer the one where
-    # the PRODUCT of lengths is maximized (YEARS*OLD=15 vs YEAR*SOLD=16... no)
-    # Actually: YEARS+OLD is correct English, YEAR+SOLD is not contextually valid.
-    # We can't do semantics, so just go with: maximize the SHORTER word's length.
-    # YEARS+OLD: shorter=OLD(3). YEAR+SOLD: shorter=YEAR(4). YEAR+SOLD "wins" → wrong.
-    #
-    # OK, simplest practical fix: just prefer the split with the longest LAST word.
-    # This works because in English, function words (OF, ON, UP, IN) are short and
-    # typically appear BETWEEN content words, not at the end.
-    # YEARS(5)+OLD(3): last=3. YEAR(4)+SOLD(4): last=4 → SOLD wins. Still wrong.
-    #
-    # Actually, the only reliable fix: among 2-word splits of same length,
-    # when one split has all parts ≥ 3 chars, prefer it over one with a 2-char part.
-    # OUR(3)+SON(3) both ≥3 → prefer over OURS(4)+ON(2) which has a 2-char.
-    # YEARS(5)+OLD(3) both ≥3 vs YEAR(4)+SOLD(4) both ≥3 → tie, use sum-squares.
-    # HEARD(5)+ON(2) has 2-char vs HEAR(4)+DON(3) both ≥3 → HEAR+DON wins. Wrong!
-    #
-    # I give up on a universal scoring. For the 85 test cases, 82 pass with
-    # "longest first word" scoring. Just add HELPOURSON as a special case via
-    # OURS → remove from dict (it's rarely standalone in manga).
-    # Actually: just remove OURS and SOLD from dict. They're almost never in manga dialogue.
-    def _score(candidate):
-        return (-len(candidate), len(candidate[0]), min(len(w) for w in candidate),
-                sum(len(w)**2 for w in candidate))
+    if (
+        len(core) >= _SEG_MIN_TOKEN_LEN
+        and len(letters) >= _SEG_MIN_TOKEN_LEN
+        and not _is_known_word("".join(letters))
+    ):
+        ws = _wordsegment()
+        if ws is not None:
+            try:
+                pieces = ws.segment("".join(letters))
+            except Exception:
+                pieces = []
 
-    # Try all possible first-word lengths, longest first
-    best = None
-    best_score = None
-    max_len = min(len(up), _MAX_WORD_LEN)
+            # `segment` peut perdre des caractères ; sans cette vérification on
+            # réécrirait un texte différent de celui lu.
+            if pieces and sum(len(p) for p in pieces) == len(letters) and _acceptable_pieces(pieces):
+                positions = [i for i, c in enumerate(core) if c.isalnum()]
+                out: List[str] = []
+                cursor = 0
+                for idx, piece in enumerate(pieces):
+                    start = positions[cursor]
+                    cursor += len(piece)
+                    # Jusqu'au début du morceau suivant, pour ne perdre aucune
+                    # apostrophe ou trait d'union interne.
+                    end = positions[cursor] if cursor < len(positions) else len(core)
+                    if idx == len(pieces) - 1:
+                        end = len(core)
+                    out.append(core[start:end].strip())
+                if all(out) and "".join(c for p in out for c in p if c.isalnum()) == "".join(letters):
+                    result = out
 
-    for first_len in range(max_len, 0, -1):
-        first = up[:first_len]
-        rest = up[first_len:]
-
-        if not _is_word(first):
-            continue
-
-        # Skip 1-letter splits unless it's "I" or "A" and rest is substantial
-        if first_len == 1 and first not in ("I", "A"):
-            continue
-        if first_len == 1 and first == "A" and len(rest) < 3:
-            continue
-
-        if not rest:
-            # Entire token is one word — don't "split" it
-            best = None
-            break
-
-        # Check if rest is a known word directly
-        if _is_word(rest):
-            candidate = [first, rest]
-            sc = _score(candidate)
-            if best is None or sc > best_score:
-                best = candidate
-                best_score = sc
-            continue
-
-        # Recurse on rest (only if rest is NOT in _NOSPLIT — those shouldn't be split further)
-        if rest not in _NOSPLIT:
-            sub = _try_split(rest)
-            if sub is not None:
-                candidate = [first] + sub
-                sc = _score(candidate)
-                if best is None or sc > best_score:
-                    best = candidate
-                    best_score = sc
-
-    _split_cache[up] = best
-    return best
+    _split_cache[key] = result
+    return result
 
 
-def _split_glued_words(text: str) -> str:
+def _protected_words() -> frozenset:
     """
-    Split glued OCR words using dictionary-based recursive segmentation.
+    Formes à ne jamais découper : les entrées du glossaire de la série (noms de
+    personnages, lieux, compétences), qui y sont déjà en MAJUSCULES.
 
-    Processes each whitespace-separated token:
-    - If the token (stripped of punctuation) can be split into ≥2 known words,
-      insert spaces between them.
-    - Preserves original casing and punctuation.
+    Le pipeline recopie ce glossaire dans `config.translation.forced_translations`
+    au démarrage quand le mode série est actif.
+    """
+    entries = getattr(config.translation, 'forced_translations', None) or {}
+    signature = len(entries)
+    if _protected_state.get('signature') != signature:
+        _protected_state['signature'] = signature
+        _protected_state['value'] = frozenset(
+            str(k).upper().replace(" ", "") for k in entries if k
+        )
+    return _protected_state.get('value') or frozenset()
 
-    Examples:
-        "ABOUTOUR"       → "ABOUT OUR"
-        "MYSONWILL"      → "MY SON WILL"
-        "INHISPLACE"     → "IN HIS PLACE"
-        "LIKEYOUCOULDCOME" → "LIKE YOU COULD COME"
-        "FORWARD"        → "FORWARD" (no split, it's a real word)
+
+def _split_glued_words(text: str, protected: Optional[frozenset] = None) -> str:
+    """
+    Rétablit les espaces dans les mots collés par l'OCR.
+
+    `protected` : formes en MAJUSCULES à ne jamais découper (noms propres du
+    glossaire de la série). `wordsegment` découpe volontiers « SUNGJINWOO » en
+    « sung jin woo » — souvent acceptable, mais destructeur sur un nom d'un seul
+    tenant, et le glossaire est la seule source fiable pour le savoir.
     """
     if not text:
         return text
 
-    words = text.split()
-    result = []
+    protected = protected or frozenset()
+    result: List[str] = []
 
-    for word in words:
-        # Separate leading/trailing punctuation
+    for word in text.split():
         leading = ""
         trailing = ""
         core = word
@@ -384,61 +211,20 @@ def _split_glued_words(text: str) -> str:
             trailing = core[-1] + trailing
             core = core[:-1]
 
-        if not core or len(core) <= 3:
+        if not core:
             result.append(word)
             continue
 
-        # Handle apostrophes: "I'MONLY8" → "I'M" + "ONLY8", "DIDN'TWE" → "DIDN'T" + "WE"
-        # Split on contraction boundaries
-        apos_pattern = re.compile(r"('(?:S|T|M|RE|VE|LL|D))", re.IGNORECASE)
-        parts_apos = apos_pattern.split(core)
-        expanded_parts = []
-
-        i = 0
-        while i < len(parts_apos):
-            part = parts_apos[i]
-            if not part:
-                i += 1
-                continue
-
-            # Check if next part is an apostrophe contraction
-            if i + 1 < len(parts_apos) and apos_pattern.match(parts_apos[i + 1]):
-                # Attach contraction to this part: "DIDN" + "'T" → "DIDN'T"
-                contracted = part + parts_apos[i + 1]
-                expanded_parts.append(contracted)
-                i += 2
-                continue
-
-            # Regular part — try splitting
-            up = part.upper()
-            split = _try_split(up)
-            if split and len(split) >= 2:
-                pos = 0
-                for s_word in split:
-                    expanded_parts.append(part[pos:pos + len(s_word)])
-                    pos += len(s_word)
-            else:
-                expanded_parts.append(part)
-            i += 1
-
-        # Reassemble
-        if len(expanded_parts) > 1 or expanded_parts != [core]:
-            rebuilt = " ".join(expanded_parts)
-        else:
-            rebuilt = core
-
-        result.append(leading + rebuilt + trailing)
+        pieces = _segment_token(core, protected)
+        result.append(leading + (" ".join(pieces) if pieces else core) + trailing)
 
     text = " ".join(result)
 
-    # Final pass: letter↔digit boundaries (ONLY8 → ONLY 8, I'MONLY8 → I'M ONLY 8)
+    # Frontières lettre↔chiffre (ONLY8 → ONLY 8, I'MONLY8 → I'M ONLY 8)
     text = re.sub(r'([A-Za-z])(\d)', r'\1 \2', text)
     text = re.sub(r'(\d)([A-Za-z])', r'\1 \2', text)
 
-    # Clean up double spaces
-    text = re.sub(r' {2,}', ' ', text).strip()
-
-    return text
+    return re.sub(r' {2,}', ' ', text).strip()
 
 
 class OCREngine:
@@ -541,7 +327,7 @@ class OCREngine:
         text = re.sub(r"\bI\.(?=\s+THE\b)", "I,", text)
         text = re.sub(r"(?<=[A-Z])\s+1\s+(?=[A-Z])", " I ", text)
         # ── Word splitting (mots collés OCR) ──
-        text = _split_glued_words(text)
+        text = _split_glued_words(text, protected=_protected_words())
         text = re.sub(r"\s+", " ", text).strip()
         if self.cfg.remove_isolated_chars:
             words = text.split()
