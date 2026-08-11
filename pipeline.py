@@ -445,33 +445,45 @@ class TranslationPipeline:
                     inside = gray[line > 0]
                     if inside.size <= 32:
                         continue
-                    # Estimation du fond : on prend le PERCENTILE 90 des
-                    # valeurs intérieures au polygone, pas la médiane.
-                    # La médiane est biaisée par les pixels d'encre (foncés),
-                    # qui peuvent représenter 30-40 % du polygone sur du
-                    # texte dense — elle tire `bg` vers le bas, sous-estime
-                    # le fond clair, et le seuil résultant est trop petit
-                    # pour attraper le remplissage blanc des glyphes creux
-                    # et l'anticrénelage intérieur. Le p90 cible le fond
-                    # dominant (clair et majoritaire) en ignorant l'encre
-                    # (minoritaire et sombre), quelle que soit la densité
-                    # du texte et la teinte du fond.
-                    bg = float(np.percentile(inside, 90))
-                    # `spread` mesuré uniquement vers le BAS (bg - pixel),
-                    # c'est-à-dire sur les pixels foncés (encre). Les pixels
-                    # plus clairs que bg sont du fond/bruit et ne doivent pas
-                    # gonfler le seuil au risque de sur-masquer le fond.
-                    dark_dev = (bg - inside.astype(np.float32)).clip(min=0.0)
-                    spread = float(np.percentile(dark_dev, 90))
-                    threshold = max(16.0, spread * 0.55)
+
+                    # Séparation par seuil d'Otsu, PUIS le côté MINORITAIRE
+                    # est l'encre — sans supposer si l'encre est plus sombre
+                    # ou plus claire que le fond. Une estimation par
+                    # « le fond est le côté clair » (percentile haut, écart
+                    # mesuré vers le bas) est correcte pour du texte noir sur
+                    # bulle blanche (le cas très majoritaire ici), mais
+                    # s'inverse sur une carte System à texte BLANC sur fond
+                    # teal : le fond y est plus sombre que l'encre, donc
+                    # « le clair = fond » désigne alors les LETTRES comme
+                    # fond, et le seuil qui en découle ne masque plus que la
+                    # bande de fond visible entre/autour des lettres — les
+                    # lettres elles-mêmes restaient intactes. Mesuré sur une
+                    # de ces cartes : masque non-vide mais qui manquait
+                    # entièrement le remplissage blanc des glyphes.
+                    try:
+                        otsu_thr, _ = cv2.threshold(
+                            inside, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU,
+                        )
+                    except Exception:
+                        continue
+                    frac_below = float(np.mean(inside < otsu_thr))
+                    ink_is_dark_side = frac_below <= 0.5
+                    minority_frac = frac_below if ink_is_dark_side else (1.0 - frac_below)
+                    # Pas de séparation nette (quasi-uniforme, ou l'inverse :
+                    # presque tout est "encre") → ce seuillage n'est pas
+                    # concluant pour cette ligne, on la laisse aux polygones
+                    # pleins (repli plus bas).
+                    if not (0.03 <= minority_frac <= 0.55):
+                        continue
 
                     # On cherche un peu AU-DELÀ du polygone : les polices script
                     # ont des jambages et fioritures qui sortent du rectangle
                     # OCR et laissaient un résidu coloré.
                     search = cv2.dilate(line, search_kernel)
-                    candidate = (
-                        (np.abs(gray_i - bg) > threshold) & (search > 0)
-                    ).astype(np.uint8)
+                    if ink_is_dark_side:
+                        candidate = ((gray_i < otsu_thr) & (search > 0)).astype(np.uint8)
+                    else:
+                        candidate = ((gray_i >= otsu_thr) & (search > 0)).astype(np.uint8)
 
                     # ...mais on ne garde que ce qui touche le polygone : sinon
                     # un bout de dessin voisin serait pris pour du texte.

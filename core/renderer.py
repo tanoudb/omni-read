@@ -469,8 +469,9 @@ class TextRenderer:
             try:
                 result = self._inpaint_lama(crop, local_mask)
                 if self._erasure_failed(crop, result, local_mask):
-                    result = self._diffuse_fill(crop, local_mask)
-                img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
+                    img[crop_y1:crop_y2, crop_x1:crop_x2] = self._diffuse_fill(crop, local_mask)
+                else:
+                    img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
                 return img
             except Exception:
                 pass
@@ -480,16 +481,16 @@ class TextRenderer:
             try:
                 result = self._inpaint_anime(crop, local_mask)
                 if self._erasure_failed(crop, result, local_mask):
-                    result = self._diffuse_fill(crop, local_mask)
-                img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
+                    img[crop_y1:crop_y2, crop_x1:crop_x2] = self._diffuse_fill(crop, local_mask)
+                else:
+                    img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
                 return img
             except Exception:
                 pass
 
         # cv2 fallback
         try:
-            result = self._diffuse_fill(crop, local_mask)
-            img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
+            img[crop_y1:crop_y2, crop_x1:crop_x2] = self._diffuse_fill(crop, local_mask)
         except Exception:
             pass
 
@@ -536,8 +537,23 @@ class TextRenderer:
         (dégradé, halo) : Navier-Stokes converge vers un aplat lisse là où un
         modèle génératif peut « recopier » son entrée si le contexte ne lui
         donne pas prise pour halluciner autre chose.
+
+        Retourne le CROP DÉJÀ RECOMPOSÉ (pas juste le résultat brut à blender
+        avec le masque d'origine) : on diffuse ET on recompose sur un masque
+        ÉLARGI de quelques pixels. Une première version élargissait seulement
+        le calcul de diffusion en gardant `_blend_masked` sur le masque
+        étroit d'origine — insuffisant, puisque le vrai résidu visible était
+        la frange antialiasée juste à l'EXTÉRIEUR du masque étroit : cette
+        frange n'était jamais recomposée (elle restait la valeur d'origine),
+        donc son contour restait lisible quelle que soit la qualité de la
+        diffusion à l'intérieur du masque étroit lui-même. Il faut élargir la
+        zone qu'on RÉÉCRIT, pas seulement celle qu'on regarde pour diffuser.
         """
-        return cv2.inpaint(crop, mask, 20, cv2.INPAINT_NS)
+        extra = max(6, int(round(min(mask.shape[:2]) * 0.02)))
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * extra + 1, 2 * extra + 1))
+        wide_mask = cv2.dilate(mask, kernel)
+        result = cv2.inpaint(crop, wide_mask, 20, cv2.INPAINT_NS)
+        return TextRenderer._blend_masked(crop, result, wide_mask)
 
     @staticmethod
     def _blend_masked(crop: np.ndarray, result: np.ndarray, mask: np.ndarray) -> np.ndarray:
