@@ -486,7 +486,17 @@ class FilterConfig:
         r'chapter\s*\d+',
         r'page\s*\d+',
         r'read\s+on',
-        r'scan\s+by'
+        r'scan\s+by',
+        # Bandeau titre/crédits de série (format webtoon standard :
+        # "STORY | ART <nom>", parfois avec l'éditeur). Mesuré : un tel
+        # bandeau pleine largeur ("THE CLEANER — STORY | ART ZorongE YLAB")
+        # est détecté par YOLO comme n'importe quelle boîte de texte et
+        # traduit/redessiné, ce qui abîme le logo de la série. Ce n'est pas
+        # un watermark de scan pirate (déjà couvert par scan_by etc.), mais
+        # la même logique s'applique : ce n'est pas du dialogue.
+        # Séparateur toléré large (0-2 caractères) : l'OCR lit souvent le "|"
+        # comme un "I" — mesuré tel quel sur ce bandeau ("STORY I ART").
+        r'story\s{0,2}\S{0,2}\s{0,2}art',
     ])
     
     enable_sfx_filter: bool = True
