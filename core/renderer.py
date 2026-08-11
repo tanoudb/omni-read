@@ -468,6 +468,8 @@ class TextRenderer:
         if self.lama is not None:
             try:
                 result = self._inpaint_lama(crop, local_mask)
+                if self._erasure_failed(crop, result, local_mask):
+                    result = self._diffuse_fill(crop, local_mask)
                 img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
                 return img
             except Exception:
@@ -477,6 +479,8 @@ class TextRenderer:
         if self.anime_inpainter_ready and self.anime_inpainter is not None:
             try:
                 result = self._inpaint_anime(crop, local_mask)
+                if self._erasure_failed(crop, result, local_mask):
+                    result = self._diffuse_fill(crop, local_mask)
                 img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
                 return img
             except Exception:
@@ -484,12 +488,56 @@ class TextRenderer:
 
         # cv2 fallback
         try:
-            result = cv2.inpaint(crop, local_mask, 7, cv2.INPAINT_TELEA)
+            result = self._diffuse_fill(crop, local_mask)
             img[crop_y1:crop_y2, crop_x1:crop_x2] = self._blend_masked(crop, result, local_mask)
         except Exception:
             pass
 
         return img
+
+    @staticmethod
+    def _erasure_failed(crop: np.ndarray, result: np.ndarray, mask: np.ndarray) -> bool:
+        """
+        Détecte un inpainting qui n'a pas vraiment effacé le texte.
+
+        Mesuré sur une carte System (fond en dégradé holographique) : LaMa
+        rendait un résultat où le contour des lettres restait lisible — un
+        premier essai de détection par écart de pixel moyen (`|après-avant|`)
+        s'est révélé aveugle à ça : LaMa avait bien DÉCALÉ la couleur (52
+        niveaux de moyenne), mais en préservant la FORME des lettres, donc
+        toujours visibles, juste plus pâles. L'écart moyen ne capture pas
+        « est-ce que la silhouette du texte a disparu ».
+        Ce qui la capture : l'énergie de bord (Laplacien) DANS le masque,
+        avant vs après. Mesuré : avant=108, après LaMa=32 (ratio 0.30, texte
+        encore net à l'œil), après diffusion pure=6.6 (ratio 0.06, propre).
+        """
+        if result.shape[:2] != crop.shape[:2] or not mask.any():
+            return False
+        m = mask > 0
+        gray_before = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY).astype(np.float32)
+        gray_after = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY).astype(np.float32)
+
+        edge_before = float(np.mean(np.abs(cv2.Laplacian(gray_before, cv2.CV_32F, ksize=3))[m]))
+        # Peu ou pas de contraste net dans le masque au départ (texte déjà
+        # discret, halo plutôt que trait) : rien à trancher, on fait confiance
+        # au modèle plutôt que de risquer un faux positif.
+        if edge_before < 20.0:
+            return False
+
+        edge_after = float(np.mean(np.abs(cv2.Laplacian(gray_after, cv2.CV_32F, ksize=3))[m]))
+        return (edge_after / edge_before) > 0.18
+
+    @staticmethod
+    def _diffuse_fill(crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
+        """
+        Reconstruction par pure diffusion depuis les pixels voisins non
+        masqués — aucune hallucination de structure possible, contrairement à
+        LaMa. Le bon choix quand la zone à effacer est une variation douce
+        (dégradé, halo) : Navier-Stokes converge vers un aplat lisse là où un
+        modèle génératif peut « recopier » son entrée si le contexte ne lui
+        donne pas prise pour halluciner autre chose.
+        """
+        return cv2.inpaint(crop, mask, 20, cv2.INPAINT_NS)
 
     @staticmethod
     def _blend_masked(crop: np.ndarray, result: np.ndarray, mask: np.ndarray) -> np.ndarray:
@@ -1280,6 +1328,10 @@ class TextRenderer:
         bubble_mask: Optional[np.ndarray] = None,
         font_key: Optional[str] = None,
         source_line_height: Optional[float] = None,
+        stroke_color_rgb: Optional[Tuple[int, int, int]] = None,
+        stroke_width: Optional[int] = None,
+        bg_color_rgb: Optional[Tuple[int, int, int]] = None,
+        angle_override: Optional[float] = None,
     ) -> np.ndarray:
         """Efface puis réécrit. `text_regions` = polygones OCR (le texte),
         `mask_regions` = segmentation de la bulle."""
@@ -1305,6 +1357,10 @@ class TextRenderer:
             bubble_mask=bubble_mask,
             font_key=font_key,
             source_line_height=source_line_height,
+            stroke_color_rgb=stroke_color_rgb,
+            stroke_width=stroke_width,
+            bg_color_rgb=bg_color_rgb,
+            angle_override=angle_override,
         )
 
     @staticmethod
@@ -1509,6 +1565,10 @@ class TextRenderer:
         bubble_mask: Optional[np.ndarray] = None,
         font_key: Optional[str] = None,
         source_line_height: Optional[float] = None,
+        stroke_color_rgb: Optional[Tuple[int, int, int]] = None,
+        stroke_width: Optional[int] = None,
+        bg_color_rgb: Optional[Tuple[int, int, int]] = None,
+        angle_override: Optional[float] = None,
     ) -> np.ndarray:
         if not text or not str(text).strip():
             return img
@@ -1537,15 +1597,32 @@ class TextRenderer:
 
         box_h_full, box_w_full = max(1, y2 - y1), max(1, x2 - x1)
 
-        mask_for_wrap = self._bubble_shape_mask(
-            bubble_mask,
-            img[max(0, y1):y2, max(0, x1):x2],
-            box_w_full, box_h_full,
-            is_bubble=labelled_bubble and container is None,
-        )
-        # Le wrap « forme » ne sert que si la forme n'est PAS un rectangle :
-        # sur un cartouche il ne ferait qu'ajouter du bruit.
-        has_mask_wrap = mask_for_wrap is not None and self._is_non_rectangular(mask_for_wrap)
+        if container is not None:
+            # Un contenant trouvé EST la décision de forme : par construction
+            # (_container_box exige un contour qui englobe la détection sur
+            # ses 4 côtés), c'est une boîte. Inutile — et dangereux — de
+            # revérifier avec `_bubble_shape_mask` : sur un cartouche System
+            # aux bords ornementés (fioritures, volutes), la zone de couleur
+            # uniforme trouvée par cette fonction est amputée par les
+            # ornements et son taux de remplissage tombe sous le seuil de
+            # rectangularité — la carte était alors jugée « non rectangulaire »
+            # à tort. Conséquence concrète : le wrap bascule sur
+            # `_wrap_text_by_mask`, qui aplatit tous les `\n` en espaces — or
+            # c'est justement ces retours à la ligne que Gemini insère après
+            # chaque « : » (JOB:\nPRIEST) pour séparer libellé et valeur.
+            # Les écraser rendait les fiches System illisibles.
+            mask_for_wrap = None
+            has_mask_wrap = False
+        else:
+            mask_for_wrap = self._bubble_shape_mask(
+                bubble_mask,
+                img[max(0, y1):y2, max(0, x1):x2],
+                box_w_full, box_h_full,
+                is_bubble=labelled_bubble,
+            )
+            # Le wrap « forme » ne sert que si la forme n'est PAS un rectangle :
+            # sur un cartouche il ne ferait qu'ajouter du bruit.
+            has_mask_wrap = mask_for_wrap is not None and self._is_non_rectangular(mask_for_wrap)
         is_bubble = has_mask_wrap
 
         # ── Zone utile ──
@@ -1575,11 +1652,20 @@ class TextRenderer:
         # Échantillonnées sur la bbox d'origine : elle est centrée sur le texte
         # effacé, donc représentative du fond sur lequel on va écrire. Le
         # contenant, lui, peut mordre sur une bordure ou un dégradé de bord.
-        text_color, outline_color, outline_width = self.get_text_colors(
+        text_color, outline_color, outline_width_auto = self.get_text_colors(
             img, ox1, oy1, ox2, oy2,
             class_name=class_name,
             text_color_override=text_color_rgb,
         )
+        
+        if stroke_color_rgb is not None:
+            outline_color = stroke_color_rgb
+        if stroke_width is not None:
+            outline_width_auto = stroke_width
+            
+        if bg_color_rgb is not None:
+            # Remplir le fond d'une boîte opaque si bg_color_rgb est fourni
+            cv2.rectangle(img, (ox1, oy1), (ox2, oy2), bg_color_rgb[::-1], -1)
 
         # ── Style ──
         bw, bh = x2 - x1, y2 - y1
@@ -1602,7 +1688,9 @@ class TextRenderer:
         # un texte posé sur un objet du décor. C'est l'angle mesuré qui
         # tranche — les quadrilatères OCR d'un vrai ballon sont à ~0°.
         angle = 0.0
-        if self.cfg.follow_source_text_angle:
+        if angle_override is not None:
+            angle = angle_override
+        elif self.cfg.follow_source_text_angle:
             angle = self._source_text_angle(text_regions)
             if abs(angle) < float(self.cfg.min_text_angle_deg):
                 angle = 0.0
@@ -1644,13 +1732,13 @@ class TextRenderer:
         if angle != 0.0:
             return self._draw_rotated(
                 img, layout, angle, text_regions, ox1, oy1, ox2, oy2,
-                text_color, outline_color, outline_width,
+                text_color, outline_color, outline_width_auto,
             )
 
         return self._draw_block(
             img, layout,
             ix1, iy1, ix2, iy2, inner_w, inner_h,
-            text_color, outline_color, outline_width,
+            text_color, outline_color, outline_width_auto,
             top_aligned=(use_locked_mode or text_style == "system_card"),
         )
 
