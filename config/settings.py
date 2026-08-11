@@ -497,6 +497,14 @@ class FilterConfig:
         # Séparateur toléré large (0-2 caractères) : l'OCR lit souvent le "|"
         # comme un "I" — mesuré tel quel sur ce bandeau ("STORY I ART").
         r'story\s{0,2}\S{0,2}\s{0,2}art',
+        # Crédit de scan seul ("SCANS"), typique en filigrane/logo sur une
+        # page de couverture. Ancré (^...$) pour ne jamais matcher le mot
+        # "scans" employé normalement dans une phrase ("He scans the room").
+        r'^\s*scans?\s*$',
+        # Message promotionnel de plateforme ("Dear readers, dive deeper...
+        # unlock the latest chapters"). Trouvé sur une page de couverture,
+        # jamais du dialogue.
+        r'dear\s+readers?\b.{0,80}\bunlock\b',
     ])
     
     enable_sfx_filter: bool = True
