@@ -53,15 +53,6 @@ except ImportError:
 # ═════════════════════════════════════════════════════════════════════════════
 # NETTOYAGE TEXTE OCR
 # ═════════════════════════════════════════════════════════════════════════════
-def should_skip_translation(self, text: str) -> bool:
-    if not text:
-        return True
-    
-    # Skip si coréen (pas de lettres latines)
-    if not any(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' for c in text):
-        return True
-    
-    # ... reste du code
 def clean_ocr_text(text: str) -> str:
     """
     Nettoie le texte brut OCR avant traduction.
@@ -801,14 +792,20 @@ class NLLBTranslator:
         if self.device == 'cuda' and torch.cuda.is_available():
             inputs = {k: v.to('cuda') for k, v in inputs.items()}
 
+        _temperature = float(getattr(self.cfg, 'llm_temperature', 0.0))
+        _top_p = float(getattr(self.cfg, 'llm_top_p', 1.0))
         generate_kwargs = {
             'max_new_tokens': page_max_tokens,
             'repetition_penalty': float(getattr(self.cfg, 'llm_repetition_penalty', 1.05)),
             'pad_token_id': self.tokenizer.eos_token_id,
             'eos_token_id': self.tokenizer.eos_token_id,
-            'do_sample': False,
-            'temperature': float(getattr(self.cfg, 'llm_temperature', 0.0)),
         }
+        if _temperature > 0:
+            generate_kwargs['do_sample'] = True
+            generate_kwargs['temperature'] = _temperature
+            generate_kwargs['top_p'] = _top_p
+        else:
+            generate_kwargs['do_sample'] = False
 
         if self.device == 'cuda' and torch.cuda.is_available():
             gen_t0 = torch.cuda.Event(enable_timing=True)
@@ -875,11 +872,26 @@ class NLLBTranslator:
         mapped: dict = {}
 
         json_candidate = self._extract_json_candidate(raw)
+        # Clean trailing commas
+        json_candidate = re.sub(r',\s*}', '}', json_candidate)
+        json_candidate = re.sub(r',\s*\]', ']', json_candidate)
+        
         parsed = None
         try:
             parsed = json.loads(json_candidate)
         except Exception:
             parsed = None
+
+        # Convert list of dicts like [{"index": 0, "translation": "..."}] to dict
+        if isinstance(parsed, list):
+            new_parsed = {}
+            for item in parsed:
+                if isinstance(item, dict):
+                    idx = item.get("index")
+                    val = item.get("translation") or item.get("text")
+                    if idx is not None and val is not None:
+                        new_parsed[str(idx)] = val
+            parsed = new_parsed if new_parsed else None
 
         if isinstance(parsed, dict):
             for key, value in parsed.items():

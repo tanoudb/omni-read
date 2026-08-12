@@ -316,10 +316,44 @@ def main():
             send({"status": "pong", "engine": "PP-OCRv5"})
 
         elif act == "ocr_batch":
-            imgs = cmd.get("images", [])
+            # Transport par FICHIER quand `payload_path` est fourni.
+            #
+            # Historiquement, les crops (base64) transitaient dans la ligne de
+            # commande elle-même et les résultats (texte + polygones de chaque
+            # région) dans la ligne de réponse — soit plusieurs Mo dans chaque
+            # sens à travers un pipe dont le tampon OS fait ~64 Ko. Dès qu'une
+            # réponse n'était pas lue jusqu'au bout (client parti sur un
+            # timeout), ce worker restait bloqué dans `send()`, donc ne lisait
+            # plus son stdin, donc le client bloquait à son tour en écrivant la
+            # commande suivante : interblocage total, observé en pratique
+            # (pile client dans `_write_command`, pile worker dans `send`).
+            # Avec un fichier, seules quelques centaines d'octets passent par
+            # le pipe : le tampon ne peut plus se remplir, et l'interblocage
+            # devient structurellement impossible.
+            payload_path = cmd.get("payload_path")
+            result_path = cmd.get("result_path")
+            if payload_path:
+                try:
+                    with open(payload_path, "r", encoding="utf-8") as fh:
+                        imgs = json.load(fh)
+                except Exception as exc:
+                    send({"status": "error", "message": f"payload_read_error: {exc}"})
+                    continue
+            else:
+                imgs = cmd.get("images", [])
             t0 = time.time()
             try:
                 res = handle_batch(imgs)
+                if result_path:
+                    with open(result_path, "w", encoding="utf-8") as fh:
+                        json.dump(res, fh, ensure_ascii=False)
+                    send({
+                        "status": "ok",
+                        "result_path": result_path,
+                        "elapsed": round(time.time() - t0, 3),
+                        "count": len(res),
+                    })
+                    continue
                 send({
                     "status": "ok",
                     "results": res,

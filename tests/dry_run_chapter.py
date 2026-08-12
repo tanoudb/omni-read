@@ -27,7 +27,7 @@ from pipeline import TranslationPipeline
 from utils import WebtoonLogger
 
 DEFAULT_IMAGE = (
-    "manhwa/rise_of_the_dragon_overlord/Chapitre 001/Chapitre 001_merged_part01.jpg"
+    "manhwa/rise-of-the-dragon-overlord/Chapitre 001/Chapitre 001_merged_part01.jpg"
 )
 
 

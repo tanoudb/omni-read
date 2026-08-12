@@ -5,16 +5,22 @@ from .renderer import TextRenderer
 from .translation import NLLBTranslator
 # Gemini (Gemini/Google) translator
 from .translator_gemini import GeminiTranslator
+# QCheck post-render auto-repair
+try:
+    from .qcheck import QCheckEngine
+except ImportError:
+    QCheckEngine = None
 # Alias pour la compatibilité si nécessaire
-Translator = NLLBTranslator 
+Translator = NLLBTranslator
 
 __all__ = [
-    'YOLODetector', 
+    'YOLODetector',
     'Detection',
     'SmartSegmenter',
-    'OCREngine', 
+    'OCREngine',
     'TextRenderer',
-    'Translator', 
+    'Translator',
     'NLLBTranslator',
     'GeminiTranslator',
+    'QCheckEngine',
 ]

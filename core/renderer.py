@@ -20,7 +20,7 @@ Base V6 conservée :
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
-from typing import Tuple, Optional, List, Dict
+from typing import Tuple, Optional, List, Dict, Any
 from pathlib import Path
 import math
 import re
@@ -206,6 +206,12 @@ class TextRenderer:
         self.lama = None
         self.anime_inpainter = None
         self.anime_inpainter_ready = False
+
+        # QCheck : rempli par `_apply_erasure_by_group` quand un groupe reste
+        # imparfaitement effacé (LaMa a échoué ET la diffusion n'était pas sûre
+        # sur ce fond) — l'appelant (pipeline.py) le consulte pour savoir si LA
+        # détection en cours doit être signalée dans le rapport post-rendu.
+        self.qcheck_flags: List[Dict[str, Any]] = []
 
         self._init_anime_inpainter()
 
@@ -522,15 +528,24 @@ class TextRenderer:
         if n_labels <= 2:
             # Un seul groupe (ou aucun) : pas de gain à fragmenter, chemin
             # d'origine.
-            if self._erasure_failed(crop, result, m) and self._background_is_diffusable(crop, m):
+            failed = self._erasure_failed(crop, result, m)
+            if failed and self._background_is_diffusable(crop, m):
                 return self._diffuse_fill(crop, m)
+            if failed:
+                # Effacement raté ET fond jugé pas sûr à diffuser : on garde le
+                # résultat LaMa (imparfait mais le moins pire des deux), mais on
+                # le signale — c'est exactement le genre de résidu qu'un
+                # relecteur humain repère et qu'aucun signal ici ne peut
+                # corriger automatiquement sans risquer pire.
+                self.qcheck_flags.append({'type': 'ghost_residual'})
             return self._blend_masked(crop, result, m)
 
         for label in range(1, n_labels):
             group_mask = ((labels == label) & (m > 0)).astype(np.uint8) * 255
             if not group_mask.any():
                 continue
-            if self._erasure_failed(crop, result, group_mask) and self._background_is_diffusable(crop, group_mask):
+            group_failed = self._erasure_failed(crop, result, group_mask)
+            if group_failed and self._background_is_diffusable(crop, group_mask):
                 diffused = self._diffuse_fill(crop, group_mask)
                 # `_diffuse_fill` recompose sur un masque ÉLARGI en interne (la
                 # frange antialiasée juste hors de l'encre stricte). Reblender
@@ -544,6 +559,8 @@ class TextRenderer:
                 wide_group_mask = cv2.dilate(group_mask, wide_kernel)
                 out = self._blend_masked(out, diffused, wide_group_mask)
             else:
+                if group_failed:
+                    self.qcheck_flags.append({'type': 'ghost_residual'})
                 out = self._blend_masked(out, result, group_mask)
 
         return out

@@ -211,13 +211,10 @@ def main():
         config.translation.backend = "gemini"
     elif args.translation_mode:
         config.translation.translation_mode = args.translation_mode
-    elif has_gemini_key:
-        # Clé Gemini détectée (.env ou env var) → traduction cloud par défaut,
-        # gratuite/quasi-gratuite grâce au mega-batch + cascade de fallback.
-        config.translation.translation_mode = "gemini"
-        config.translation.backend = "gemini"
     else:
-        config.translation.translation_mode = "qwen"
+        # Force NLLB default for 0 API cost
+        config.translation.translation_mode = "nllb"
+        config.translation.backend = "nllb"
 
     if config.translation.translation_mode in {"hybrid", "hybrid_quality", "qwen"}:
         config.translation.backend = "local_llm"
@@ -247,20 +244,35 @@ def main():
     else:
         # En mode série, input_path = manhwa/<slug>
         if args.series and SeriesDB is not None:
-            slug = args.series.strip().lower().replace(" ", "_")
-            manhwa_dir = Path("manhwa") / slug
+            raw_series = args.series.strip().lower()
+            slug = raw_series.replace(" ", "_")
+            manhwa_base = Path("manhwa")
+            manhwa_dir = manhwa_base / slug
+            
+            # Fuzzy match si introuvable
+            if not manhwa_dir.exists() and manhwa_base.exists():
+                search_term = raw_series.replace("_", " ").replace("-", " ")
+                for d in manhwa_base.iterdir():
+                    if d.is_dir():
+                        d_name = d.name.lower().replace("_", " ").replace("-", " ")
+                        if search_term in d_name:
+                            manhwa_dir = d
+                            args.series = d.name # met à jour le nom exact pour la suite
+                            slug = d.name
+                            break
+
             if manhwa_dir.exists():
                 input_path = manhwa_dir
                 mode = "batch"
             else:
-                logger.error(f"Dossier manhwa/{slug} introuvable.")
+                logger.error(f"Dossier manhwa/{slug} (ou similaire) introuvable.")
                 sys.exit(1)
         else:
             if not args.input.exists():
-                logger.error(f"Dossier input introuvable: {args.input}")
+                logger.error(f"Dossier/Fichier input introuvable: {args.input}")
                 sys.exit(1)
             input_path = args.input
-            mode = "batch"
+            mode = "single" if input_path.is_file() else "batch"
     
     # Vérifier modèle YOLO
     if not config.YOLO_MODEL_PATH.exists():

@@ -22,7 +22,7 @@ import numpy as np
 
 from core import TextRenderer
 
-PLANCHE = Path("manhwa/rise_of_the_dragon_overlord/Chapitre 001/Chapitre 001_merged_part01.jpg")
+PLANCHE = Path("manhwa/rise-of-the-dragon-overlord/Chapitre 001/Chapitre 001_merged_part01.jpg")
 
 # (nom, x1, y1, x2, y2) — zones réelles de la planche
 CAS = [
