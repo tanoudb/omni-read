@@ -167,7 +167,7 @@ def main() -> int:
 
     # ── Effacement ──
     t0 = time.time()
-    out, _ = p._run_pre_inpainting(img, keep, renderer)
+    out, _, _ = p._run_pre_inpainting(img, keep, renderer)
     t_erase = time.time() - t0
     residues = []
     for d in keep:
@@ -211,6 +211,7 @@ def main() -> int:
             bubble_mask=getattr(d, "mask_binary", None),
             font_key=getattr(d, "font_key", None),
             source_line_height=getattr(d, "source_line_height", None),
+            sibling_boxes=[(o.x1, o.y1, o.x2, o.y2) for o in keep if o is not d],
         )
     renderer._fit_font_hard = real_fit
     t_render = time.time() - t0
