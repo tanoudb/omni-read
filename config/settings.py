@@ -142,7 +142,7 @@ class DetectionConfig:
     # ── CONFIDENCE - YOLO v3 (4 classes) ──
     # names: ['System', 'bulle', 'out_text', 'sfx']
     confidence_thresholds: Dict[str, float] = field(default_factory=lambda: {
-        'System': 0.30,
+        'System': 0.45,
         'bulle': 0.30,
         'out_text': 0.30,
         'sfx': 0.30
@@ -499,6 +499,15 @@ class FilterConfig:
         r'chapter\s*\d+',
         r'page\s*\d+',
         r'read\s+on',
+        # Bandeau promo d'agrégateur ("READ THIS SERIES FIRST AT: <site>"),
+        # variante de "read on" trouvée en filigrane diagonal plein-panneau
+        # sur une planche (vortexscans.com entre autres). "on"/"first at"
+        # tolèrent l'un ou l'autre.
+        # Le nom du site qui suit n'a pas de forme prévisible (pas toujours
+        # un ".com" explicite) : on avale la clause jusqu'à ~40 caractères
+        # après "first at" plutôt que de ne couper que l'amorce et laisser le
+        # nom de marque nu ("VORTEXSCANS") passer à la traduction.
+        r'read\s+(this\s+(series|manhwa|comic)\s+)?first\s+at\s*:?\s*[^\s.]{0,40}(\.\s{0,2}\w+)?',
         r'scan\s+by',
         # Crédit d'agrégateur ("CRAWLED BY <site>"), variante de "scan by"
         # trouvée sur des séries republiées par un site tiers plutôt que par

@@ -119,7 +119,18 @@ def _acceptable_pieces(pieces: List[str]) -> bool:
         if not _is_known_word(piece):
             return False
 
-    avg = sum(len(p) for p in pieces) / len(pieces)
+    # Moyenne calculée en EXCLUANT les morceaux de la liste blanche des mots
+    # courts : ce sont déjà des mots validés individuellement (pas une
+    # supposition), les compter pénalise à tort un découpage par ailleurs
+    # solide. Mesuré : "MYJOB" -> "MY"+"JOB" rejeté (moyenne 2.5 < 2.6) à
+    # cause du seul "MY", alors que les DEUX morceaux sont des mots réels.
+    # Les onomatopées ne profitent pas de cette exclusion : leurs fragments
+    # courts ("KR", "GH"...) ne sont pas eux-mêmes dans cette liste blanche et
+    # restent bloqués par le test morceau-par-morceau ci-dessus.
+    long_pieces = [p for p in pieces if p.upper() not in _SHORT_WORDS]
+    if not long_pieces:
+        return True
+    avg = sum(len(p) for p in long_pieces) / len(long_pieces)
     return avg >= _SEG_MIN_AVG_PIECE
 
 
@@ -127,6 +138,26 @@ def _segment_token(core: str, protected: frozenset) -> Optional[List[str]]:
     """
     Découpe `core` en mots. Retourne les morceaux DÉCOUPÉS SUR LA CHAÎNE
     D'ORIGINE (casse et ponctuation interne préservées), ou None.
+
+    Limite connue, INVESTIGUÉE ET ABANDONNÉE (ne pas retenter la même piste) :
+    un collage OCR peut coïncider avec une entrée du corpus wordsegment assez
+    fréquente pour bloquer toute tentative de découpage ("THEDAY" freq=19k,
+    "ABIT" freq=2M — tous deux restent collés). Un seuil sur la fréquence du
+    mot entier, ou sur le RATIO fréquence-découpé/fréquence-entier, semblait
+    une piste naturelle : mesuré et rejeté, aucun seuil ne sépare "theday"/
+    "abit" (doivent être découpés) de "cannot"/"forgot"/"ago"/"thereby"
+    (doivent rester collés) — le ratio de "cannot" (should NOT split) dépasse
+    largement celui de "theday" ET "abit" (should split), dans le mauvais
+    sens. Le signal n'existe simplement pas dans les fréquences lexicales
+    seules ; accepté comme limite de l'approche statistique. Idem pour un
+    garde-fou par PRÉFIXE ("my"/"the"/"a" + reste = mot connu) : "ANEW" (=
+    "a"+"new", un vrai mot à ne jamais découper) a une fréquence du même
+    ordre que "ABIT", donc indiscernable sur ce critère non plus.
+
+    Autre cas limite, distinct : "MYJOB" (5 lettres) tombe sous
+    `_SEG_MIN_TOKEN_LEN` (6) et n'est donc jamais soumis au découpage — seuil
+    délibérément conservateur (cf. son commentaire) pour ne pas déchiqueter
+    les onomatopées courtes ("BOOM", "CRACK"...), pas abaissé pour ce cas.
     """
     key = core.upper()
 

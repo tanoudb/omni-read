@@ -36,6 +36,12 @@ DOIT_DECOUPER = [
     ("GIANTHORNEDANTELOPELV.7", "GIANT HORNED ANTELOPE LV. 7"),
     ("LEVEL:29", "LEVEL: 29"),
     ("MATERIALS:FOXFUR(8", "MATERIALS: FOX FUR (8"),
+    # decoupage rejete a tort par le seuil de longueur moyenne de morceau
+    # (the-wind-mage, ch0) : "TO"/"WE" comptaient dans la moyenne au meme
+    # titre qu'un morceau incertain, alors que ce sont deja des mots courts
+    # valides (liste blanche) -- moyenne recalculee en les excluant.
+    ("TOBEGIN", "TO BEGIN"),
+    ("WEWALKED", "WE WALKED"),
 ]
 
 DOIT_LAISSER_INTACT = [
