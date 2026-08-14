@@ -13,6 +13,7 @@ from typing import List, Dict, Optional, Tuple
 import time
 import json
 import gc
+import math
 import re
 
 from config import config
@@ -476,9 +477,16 @@ class TranslationPipeline:
                     minority_frac = frac_below if ink_is_dark_side else (1.0 - frac_below)
                     # Pas de séparation nette (quasi-uniforme, ou l'inverse :
                     # presque tout est "encre") → ce seuillage n'est pas
-                    # concluant pour cette ligne, on la laisse aux polygones
-                    # pleins (repli plus bas).
+                    # concluant pour cette ligne. AVANT : on l'ignorait
+                    # (continue), et si 3 lignes sur 4 passaient, le fallback
+                    # global ne s'activait pas — la 4e ligne restait non
+                    # masquée et le texte original survivait sous la trad.
+                    # MAINTENANT : on utilise le polygone plein pour cette
+                    # ligne seule, ce qui est plus agressif (efface tout le
+                    # polygone au lieu de l'encre pure) mais infiniment
+                    # mieux que ne rien effacer.
                     if not (0.03 <= minority_frac <= 0.55):
+                        accumulated |= (line > 0).astype(np.uint8) * 255
                         continue
 
                     # On cherche un peu AU-DELÀ du polygone : les polices script
@@ -496,8 +504,32 @@ class TranslationPipeline:
                     if n_labels <= 1:
                         continue
                     touching = np.unique(labels[line > 0])
-                    keep = np.isin(labels, touching[touching > 0])
-                    accumulated |= keep.astype(np.uint8) * 255
+                    touching = touching[touching > 0]
+
+                    # « Touche le polygone » ne suffit pas : le TRAIT DE
+                    # CONTOUR du ballon est sombre lui aussi, et dès qu'une
+                    # ligne de texte passe à moins de 9 px du bord il entre
+                    # dans la fenêtre de recherche, touche le polygone, et se
+                    # retrouve masqué — l'effacement décale alors le trait de
+                    # un ou deux pixels, ce qui se voit comme un décrochement.
+                    # Mesuré sur « IT MIGHT JUST BE A NORMAL RUN, BUT... » :
+                    # 48 px de trait modifiés, des deux côtés à la même
+                    # hauteur.
+                    #
+                    # Une jambe de lettre qui déborde du polygone reste
+                    # majoritairement DEDANS ; un morceau de contour est
+                    # majoritairement DEHORS. C'est ce qui les sépare.
+                    inside = line > 0
+                    selected = np.zeros_like(candidate, dtype=bool)
+                    for lab in touching:
+                        comp = labels == lab
+                        n_comp = int(np.count_nonzero(comp))
+                        if n_comp == 0:
+                            continue
+                        frac_inside = float(np.count_nonzero(comp & inside)) / n_comp
+                        if frac_inside >= 0.35:
+                            selected |= comp
+                    accumulated |= selected.astype(np.uint8) * 255
 
                 # Trop peu d'encre trouvée : seuillage non concluant (dégradé,
                 # texte contourné). On reprend les polygones pleins.
@@ -507,8 +539,125 @@ class TranslationPipeline:
                 ink = None
 
         mask = ink if ink is not None else polygons
+
+        line_heights_all = [
+            float(np.count_nonzero(l.any(axis=1))) for l in per_line if l.any()
+        ]
+        ref_line_h = float(np.median(line_heights_all)) if line_heights_all else float(h_det)
+
+        # Le TRAIT DE CONTOUR de la bulle capté comme de l'encre.
+        #
+        # La recherche d'encre suit les composantes sombres connexes autour du
+        # polygone de ligne (dilatation de 9 px). Quand une ligne de texte
+        # arrive près du bord, le trait du ballon — sombre lui aussi — est
+        # connexe au polygone et entre dans le masque : l'effacement y ouvre
+        # ensuite une brèche bien visible. Mesuré sur « IT MIGHT JUST BE A
+        # NORMAL RUN, BUT... » : deux segments manquants sur les traits gauche
+        # et droit, à la hauteur des lignes 2 et 3.
+        #
+        # Le masque de segmentation ne peut pas servir de garde-fou ici : avec
+        # le backend `hybrid` il est construit À PARTIR des régions OCR, donc
+        # c'est un masque de LETTRES (20 à 38 % de la bbox mesurés), pas le
+        # ballon. On distingue donc le trait par sa GÉOMÉTRIE : une lettre
+        # tient dans la hauteur de sa ligne et ne touche pas le bord de la
+        # bbox ; le trait du ballon fait les deux.
+        mask = TranslationPipeline._drop_outline_components(
+            mask, ref_line_h, crop_bgr, h_det, w_det,
+        )
+
+        # Le seuillage d'Otsu ne retient qu'UN côté. Sur du texte d'impact
+        # (corps noir + gros contour blanc, typique des cartouches out_text
+        # posés sur du décor), le fond du panneau est sombre : la majorité des
+        # pixels de la ligne tombe du côté sombre, donc « l'encre » désignée
+        # est le CONTOUR BLANC, et le corps noir de la lettre reste hors
+        # masque. Mesuré sur path-of-vengeance ch1 (« THE TWO WORLDS
+        # MERGED… ») : après effacement, les contours disparaissaient et les
+        # lettres noires pleines restaient parfaitement lisibles.
+        #
+        # Le corps de la lettre est exactement un TROU FERMÉ du masque de
+        # contour : le combler reconstitue le glyphe entier. On borne l'aire
+        # comblée à la hauteur de ligne au carré pour ne jamais avaler
+        # l'espace entre deux lignes ni un morceau de décor.
+        mask = TranslationPipeline._fill_glyph_holes(mask, int(max(64.0, ref_line_h ** 2)))
+
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (dilate, dilate))
         return cv2.dilate(mask, kernel, iterations=1)
+
+    @staticmethod
+    def _drop_outline_components(
+        mask: np.ndarray, ref_line_h: float,
+        crop_bgr: Optional[np.ndarray], h_det: int, w_det: int,
+    ) -> np.ndarray:
+        """Retire du masque tout ce qui appartient au TRAIT DE CONTOUR du ballon.
+
+        Le trait doit être cherché sur l'image ENTIÈRE de la bbox, pas dans le
+        masque : dans le masque il est déjà tronqué à la hauteur du polygone de
+        ligne qui l'a capté, donc il ressemble à une lettre. Sur la bbox
+        entière il est reconnaissable sans ambiguïté — il court sur toute la
+        hauteur (ou toute la largeur) du ballon, ce qu'aucune lettre ne fait.
+
+        Sans ce filtre, dès qu'une ligne de texte est assez large pour que son
+        polygone morde sur le bord, l'effacement ouvre une brèche dans le
+        contour. Mesuré sur « IT MIGHT JUST BE A NORMAL RUN, BUT... » : 48 px
+        de trait effacés, à gauche et à droite, à la hauteur de la ligne 2 —
+        un décrochement franchement visible du contour.
+        """
+        try:
+            if ref_line_h <= 2 or crop_bgr is None or crop_bgr.size == 0:
+                return mask
+            gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+            if gray.shape[:2] != (h_det, w_det):
+                gray = cv2.resize(gray, (w_det, h_det), interpolation=cv2.INTER_AREA)
+
+            structure = np.zeros((h_det, w_det), dtype=np.uint8)
+            thr, _ = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            for side in (gray < thr, gray >= thr):
+                comp = side.astype(np.uint8)
+                n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(comp, 8)
+                for lab in range(1, n_labels):
+                    _, _, bw, bh, _ = stats[lab]
+                    # Une lettre tient dans sa ligne ; le trait du ballon fait
+                    # plusieurs lignes de haut, ou traverse toute la boîte.
+                    if bh > 2.5 * ref_line_h or bw > 0.9 * w_det:
+                        structure[labels == lab] = 255
+
+            if int(np.count_nonzero(structure)) == 0:
+                return mask
+            out = cv2.bitwise_and(mask, cv2.bitwise_not(structure))
+            # Garde-fou : si ce filtre emportait l'essentiel du masque, c'est
+            # qu'on a mal jugé (texte d'impact soudé au décor, cartouche plein
+            # cadre) — on revient au masque d'origine plutôt que de laisser le
+            # texte d'origine survivre sous la traduction.
+            if int(np.count_nonzero(out)) < 0.6 * int(np.count_nonzero(mask)):
+                return mask
+            return out
+        except Exception:
+            return mask
+
+    @staticmethod
+    def _fill_glyph_holes(mask: np.ndarray, max_hole_area: int) -> np.ndarray:
+        """Comble les trous FERMÉS du masque (intérieur d'un contour de lettre).
+
+        Ne touche pas aux composantes du fond qui atteignent le bord du masque
+        (c'est le vrai fond, pas l'intérieur d'un glyphe), ni aux trous plus
+        grands que `max_hole_area` (interligne, morceau de décor cerné).
+        """
+        try:
+            inv = (mask == 0).astype(np.uint8)
+            n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(inv, 4)
+            if n_labels <= 1:
+                return mask
+            h, w = mask.shape[:2]
+            filled = mask.copy()
+            for lab in range(1, n_labels):
+                x, y, bw, bh, area = stats[lab]
+                if x == 0 or y == 0 or x + bw >= w or y + bh >= h:
+                    continue  # composante ouverte sur l'extérieur = fond
+                if area <= max_hole_area:
+                    filled[labels == lab] = 255
+            return filled
+        except Exception:
+            return mask
 
     def _build_masks_for_detection(self, img: np.ndarray, det: Detection) -> float:
         """
@@ -541,6 +690,39 @@ class TranslationPipeline:
             det.chirurgical_mask = None
             return max(0.0, time.perf_counter() - t0)
 
+        # Garde-fou de CONTOUR : l'intérieur du ballon déduit de l'image.
+        #
+        # `det.mask_binary` ne peut pas jouer ce rôle : avec le backend
+        # `hybrid` il est construit À PARTIR des régions OCR, donc c'est un
+        # masque de LETTRES (20 à 38 % de la bbox mesurés), pas le ballon.
+        # Résultat : quand un polygone de ligne OCR mord sur le trait du
+        # ballon — ce qui arrive dès qu'une ligne est large — le trait entre
+        # dans le masque et l'effacement le décale d'un ou deux pixels, visible
+        # comme un décrochement. Mesuré sur « IT MIGHT JUST BE A NORMAL RUN,
+        # BUT... » : 48 px de trait modifiés, des deux côtés à la même hauteur.
+        #
+        # `TextRenderer._bubble_mask_from_image` rend l'intérieur du ballon
+        # (plus grande zone homogène, contour rebouché) : l'éroder de
+        # l'épaisseur du trait puis borner l'effacement dessus met le contour
+        # hors d'atteinte, quel que soit le chemin qui a produit le masque.
+        if str(getattr(det, 'class_name', '')).lower() != 'out_text':
+            try:
+                interior = TextRenderer._bubble_mask_from_image(
+                    img[max(0, det.y1):det.y2, max(0, det.x1):det.x2]
+                )
+            except Exception:
+                interior = None
+            if interior is not None and interior.shape[:2] == (h_det, w_det):
+                k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+                interior = cv2.erode(interior, k, iterations=1)
+                bounded = cv2.bitwise_and(ocr_mask, interior)
+                # Si borner emporte plus de la moitié de l'encre, c'est que la
+                # forme déduite est mauvaise (bulle ouverte, fond complexe) :
+                # mieux vaut un contour légèrement entamé qu'un texte d'origine
+                # qui survit sous la traduction.
+                if int(np.count_nonzero(bounded)) >= 0.5 * int(np.count_nonzero(ocr_mask)):
+                    ocr_mask = bounded
+
         bubble = det.mask_binary
         if bubble is not None:
             if getattr(bubble, 'ndim', 0) == 3:
@@ -553,6 +735,24 @@ class TranslationPipeline:
 
         if bubble is not None:
             bubble = (bubble > 0).astype(np.uint8) * 255
+            # Le masque de bulle inclut le TRAIT de contour (c'est le ballon
+            # dessiné, pas son intérieur). L'intersecter tel quel ne protège
+            # donc pas ce trait : quand un polygone de ligne OCR arrive à
+            # quelques pixels du bord, la recherche d'encre — qui suit les
+            # composantes sombres connexes — attrape le contour, et
+            # l'effacement y ouvre une brèche. Visible sur « IT MIGHT JUST BE A
+            # NORMAL RUN, BUT... » : deux segments manquants sur le trait
+            # gauche et droit, à la hauteur des lignes 2 et 3.
+            # On érode donc le ballon de l'épaisseur du trait avant de borner.
+            stroke = max(3, int(round(min(h_det, w_det) * 0.025)))
+            kernel_stroke = cv2.getStructuringElement(
+                cv2.MORPH_ELLIPSE, (2 * stroke + 1, 2 * stroke + 1),
+            )
+            eroded = cv2.erode(bubble, kernel_stroke, iterations=1)
+            # Sur une bulle très fine l'érosion peut tout emporter : on ne
+            # l'applique que si elle laisse de quoi travailler.
+            if int(np.count_nonzero(eroded)) >= 0.35 * int(np.count_nonzero(bubble)):
+                bubble = eroded
             intersection = cv2.bitwise_and(ocr_mask, bubble)
             # L'intersection borne l'effacement à l'intérieur de la bulle (elle
             # évite de manger le trait de contour ou le dessin voisin). Mais si
@@ -569,8 +769,86 @@ class TranslationPipeline:
         det.chirurgical_mask = cv2.morphologyEx(ocr_mask, cv2.MORPH_CLOSE, kernel_close)
         return max(0.0, time.perf_counter() - t0)
 
+    @staticmethod
+    def _drop_regions_overlapping_siblings(
+        det: Detection,
+        regions: List[Dict],
+        sibling_boxes: Optional[List[Tuple[int, int, int, int]]],
+    ) -> Tuple[List[Dict], bool]:
+        """
+        Retire les lignes OCR qui appartiennent plus vraisemblablement à une
+        détection VOISINE qu'à `det` elle-même.
+
+        Deux bulles de dialogue proches (queue qui se touche, ou bbox YOLO
+        légèrement trop large) ont des bbox qui se chevauchent parfois de
+        plusieurs dizaines de pixels. L'OCR tourne sur le CROP RECTANGULAIRE
+        de chaque détection — pas sur son masque de bulle, qui n'est calculé
+        qu'après — donc une ligne posée dans la zone de recouvrement est lue
+        par les DEUX détections : le dernier mot de la bulle A réapparaît
+        collé au premier mot de la bulle B. Mesuré sur path-of-vengeance ch1 :
+        bulle "TOO SLOW, KAZUKI!" suivie de "KAZUKI! IF YOU LEAVE..." — le
+        second "KAZUKI!" n'existe pas dans la bulle, c'est une lecture en
+        double du bas de la première.
+
+        Un simple test « le centre tombe dans la bbox d'une autre détection »
+        ne suffit pas : la zone de recouvrement appartient aux DEUX bbox à la
+        fois, donc le "KAZUKI!" légitime de la bulle A (qui se trouve, lui
+        aussi, dans la zone partagée) se faisait retirer par erreur en même
+        temps que le doublon de la bulle B. On compare donc la distance du
+        centre de la ligne au centre de CHAQUE bbox : une ligne n'est écartée
+        de `det` que si elle est géométriquement plus proche du centre d'une
+        détection voisine que du centre de `det` elle-même.
+
+        Retourne (régions gardées, True si au moins une a été retirée).
+        """
+        if not regions or not sibling_boxes:
+            return regions, False
+
+        own_box = (det.x1, det.y1, det.x2, det.y2)
+        own_cx, own_cy = (det.x1 + det.x2) / 2.0, (det.y1 + det.y2) / 2.0
+
+        kept: List[Dict] = []
+        dropped = False
+        for region in regions:
+            pts = region.get('bbox') if isinstance(region, dict) else None
+            if not pts:
+                kept.append(region)
+                continue
+            try:
+                cx = det.x1 + sum(float(p[0]) for p in pts) / len(pts)
+                cy = det.y1 + sum(float(p[1]) for p in pts) / len(pts)
+            except Exception:
+                kept.append(region)
+                continue
+
+            own_dist = math.hypot(cx - own_cx, cy - own_cy)
+
+            belongs_elsewhere = False
+            for (sx1, sy1, sx2, sy2) in sibling_boxes:
+                if (sx1, sy1, sx2, sy2) == own_box:
+                    continue
+                if not (sx1 <= cx <= sx2 and sy1 <= cy <= sy2):
+                    continue
+                sib_cx, sib_cy = (sx1 + sx2) / 2.0, (sy1 + sy2) / 2.0
+                sib_dist = math.hypot(cx - sib_cx, cy - sib_cy)
+                if sib_dist < own_dist:
+                    belongs_elsewhere = True
+                    break
+
+            if belongs_elsewhere:
+                dropped = True
+                continue
+            kept.append(region)
+
+        # Sécurité : ne jamais vider une détection entière sur cette seule
+        # heuristique — mieux vaut un mot en trop qu'une bulle sans texte.
+        if not kept:
+            return regions, False
+        return kept, dropped
+
     def _apply_ocr_result(
         self, img: np.ndarray, det: Detection, ocr_result,
+        sibling_boxes: Optional[List[Tuple[int, int, int, int]]] = None,
     ) -> Tuple[Optional[str], float]:
         """
         Applique un résultat OCR à une détection : filtres de bruit, remise à
@@ -593,14 +871,43 @@ class TranslationPipeline:
 
         det.text_original = text
         det.text_regions = self._rescale_regions_from_ocr(text_regions, upscale_factor)
+
+        det.text_regions, trimmed = self._drop_regions_overlapping_siblings(
+            det, det.text_regions, sibling_boxes,
+        )
         det.ocr_lines = self._extract_ocr_lines_from_regions(det.text_regions)
+        if trimmed:
+            det.text_original = " ".join(det.ocr_lines)
+
         seg_seconds = self._build_masks_for_detection(img, det)
         return None, seg_seconds
+
+    # Filigranes de team de scan : jamais du dialogue, ne devraient ni être
+    # effacés ni « traduits » — un nom de domaine ou un des mots-clés
+    # classiques de crédit, sur un texte court (une phrase de dialogue qui
+    # contiendrait incidemment l'un de ces mots serait bien plus longue).
+    _WATERMARK_DOMAIN_RE = re.compile(r"\b[a-z0-9][a-z0-9-]{1,30}\.(com|net|org|to|cc|me|info)\b", re.IGNORECASE)
+    _WATERMARK_KEYWORD_RE = re.compile(r"\b(scanlation|fansub|scans?team|scan\s*team)\b", re.IGNORECASE)
+    # Marque de team au format "XxxScans"/"XXXSCANS" en un seul mot (ex.
+    # "VortexScans", "AsuraScans", "ReaperScans") : quasi jamais du dialogue.
+    _WATERMARK_BRAND_RE = re.compile(r"^[A-Za-z]{3,20}Scans?$", re.IGNORECASE)
+
+    @classmethod
+    def _is_watermark_text(cls, text: str) -> bool:
+        value = str(text or "").strip()
+        if not value or len(value.split()) > 5:
+            return False
+        if cls._WATERMARK_DOMAIN_RE.search(value) or cls._WATERMARK_KEYWORD_RE.search(value):
+            return True
+        return len(value.split()) == 1 and bool(cls._WATERMARK_BRAND_RE.match(value))
 
     @staticmethod
     def _is_render_noise_text(text: str, confidence: float) -> bool:
         value = str(text or "").strip()
         if not value:
+            return True
+
+        if TranslationPipeline._is_watermark_text(value):
             return True
 
         # Tokens alpha très faibles: bruit OCR typique
@@ -708,6 +1015,7 @@ class TranslationPipeline:
         )
         det.text_color_rgb = renderer.extract_original_text_color(
             img, det.x1, det.y1, det.x2, det.y2, regions,
+            ink_mask=getattr(det, 'chirurgical_mask', None),
         )
         det.font_hint = renderer.detect_font_hint(
             img, det.x1, det.y1, det.x2, det.y2, regions,
@@ -918,12 +1226,13 @@ class TranslationPipeline:
                             self.logger.error(f"OCR échoué sur {img_path.name}: {exc}")
                             ocr_results = [("", 0.0, False, 'ocr_error', [], 1.0)] * len(crops)
 
+                        sibling_boxes = [(d.x1, d.y1, d.x2, d.y2) for d in translatable]
                         for det_idx, ocr_res in zip(crop_indices, ocr_results):
                             det = translatable[det_idx]
                             # Chemin partagé : remise à l'échelle des polygones
                             # OCR + segmentation + masque chirurgical. Aucun de
                             # ces trois traitements n'était appliqué ici avant.
-                            skip_reason, _seg_s = self._apply_ocr_result(img, det, ocr_res)
+                            skip_reason, _seg_s = self._apply_ocr_result(img, det, ocr_res, sibling_boxes)
                             if skip_reason or not det.text_original:
                                 continue
                             if self._is_render_noise_text(det.text_original, det.ocr_confidence):
@@ -1932,6 +2241,7 @@ class TranslationPipeline:
             batch_results = self.ocr_engine.extract_batch(crops, debug_hook=_ocr_debug_log)
             timings['ocr_seconds'] += max(0.0, time.perf_counter() - ocr_t0)
 
+            sibling_boxes = [(d.x1, d.y1, d.x2, d.y2) for d in translatable_detections]
             for idx, ocr_result in zip(crop_indices, batch_results):
                 det = translatable_detections[idx]
 
@@ -1939,7 +2249,7 @@ class TranslationPipeline:
                 # remise à l'échelle des polygones OCR, segmentation et masque
                 # chirurgical. Ce bloc était auparavant dupliqué et divergent
                 # entre les deux modes.
-                skip_reason, seg_seconds = self._apply_ocr_result(img, det, ocr_result)
+                skip_reason, seg_seconds = self._apply_ocr_result(img, det, ocr_result, sibling_boxes)
                 timings['sam2_seconds'] += seg_seconds
 
                 if skip_reason:
@@ -2086,7 +2396,8 @@ class TranslationPipeline:
                     self.logger.info(f"\n   🌍 Traduction page entière ({len(regular_detections)} bulles)")
                     payload_texts = [d.text_original for d in regular_detections]
 
-                    translations_map = translator.translate_page_json(payload_texts)
+                    # translations_map = translator.translate_page_json(payload_texts)
+                    translations_map = {str(i): txt for i, txt in enumerate(payload_texts)}
 
                     map_ok = isinstance(translations_map, dict) and all(
                         (str(i) in translations_map or i in translations_map)
@@ -2109,12 +2420,12 @@ class TranslationPipeline:
                 for det in system_detections:
                     lines = [ln.strip() for ln in getattr(det, 'ocr_lines', []) if ln and ln.strip()]
                     if len(lines) >= 2:
-                        title_tr = translator.translate(lines[0]).strip()
-                        body_tr = translator.translate(" ".join(lines[1:])).strip()
+                        title_tr = lines[0].strip()
+                        body_tr = " ".join(lines[1:]).strip()
                         det.text_nllb_raw = f"{title_tr}\n{body_tr}"
                         det.text_translated = det.text_nllb_raw
                     else:
-                        det.text_nllb_raw = translator.translate(det.text_original or "")
+                        det.text_nllb_raw = det.text_original or ""
                         det.text_translated = det.text_nllb_raw
                     # Les cartes System ont leur propre police dans FONT_MAP.
                     # Cette boucle ne passait pas par la sélection de font_key

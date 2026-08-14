@@ -429,7 +429,11 @@ class RenderingConfig:
     
     horizontal_align: str = "center"
     vertical_align: str = "center"
-    line_spacing_ratio: float = 0.25
+    # 0.25 ajoutait en moyenne 14,8 % de hauteur au bloc (mesuré sur 33 bulles
+    # de path-of-vengeance ch1), ce qui serrait la contrainte verticale et
+    # forçait `_fit_font_hard` à descendre d'un ou deux points de taille. Le
+    # lettrage d'origine est plus serré que ça.
+    line_spacing_ratio: float = 0.18
     word_wrap_ratio: float = 0.90
     padding_horizontal: int = 16
     padding_vertical: int = 14
@@ -458,6 +462,13 @@ class RenderingConfig:
     inpaint_mask_dilate_kernel: int = int(os.environ.get("WEBTOON_INPAINT_MASK_DILATE", "7"))
     bubble_inpaint_mask_dilate_kernel: int = min(9, int(os.environ.get("WEBTOON_BUBBLE_INPAINT_MASK_DILATE", os.environ.get("WEBTOON_INPAINT_MASK_DILATE", "7"))))
     out_text_mask_dilate_kernel: int = int(os.environ.get("WEBTOON_OUT_TEXT_DILATE", "11"))
+    # Repli « diffusion Navier-Stokes » quand l'inpainting laisse un fantôme.
+    # Désactivé : depuis que la marge de contexte donnée à LaMa suit la taille
+    # de la zone, ce repli ne fait plus qu'étaler des bandes grises là où LaMa
+    # reconstruit la trame (cf. TextRenderer._diffusion_is_safe).
+    diffusion_fallback_enabled: bool = os.environ.get(
+        "WEBTOON_DIFFUSION_FALLBACK", "false"
+    ).strip().lower() in ("1", "true", "yes")
     inpaint_pass2_enabled: bool = _env_bool("WEBTOON_INPAINT_PASS2", False)
     inpainting_model_id: str = os.environ.get("WEBTOON_INPAINTING_MODEL_ID", "dreMaz/AnimeMangaInpainting")
     inpainting_model_path: Path = INPAINTING_CACHE_DIR / "dreMaz--AnimeMangaInpainting"

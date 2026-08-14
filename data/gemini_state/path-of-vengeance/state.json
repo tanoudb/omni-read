@@ -1,0 +1,16 @@
+{
+  "glossary": {
+    "Hellverse": "Hellverse",
+    "Tokyo Makai": "Tokyo Makai",
+    "Player": "Joueur",
+    "Heavy Warrior": "Guerrier Lourd",
+    "A-Rank Player": "Joueur de rang A",
+    "Supply Run": "Mission de ravitaillement"
+  },
+  "personnages": {
+    "Kazuki Kuroi": "Jeune joueur de niveau 10 sans classe, faible mais déterminé à protéger sa sœur.",
+    "Akina Kuroi": "Sœur de Kazuki, joueuse de niveau 1, innocente et inquiète pour son frère.",
+    "Tatsuya Morishige": "Oncle de Kazuki et Akina, ancien joueur de rang A (Guerrier Lourd de niveau 30), protecteur de sa famille.",
+    "Sho": "Leader du groupe qui attaque Tatsuya, cherchant à s'emparer du 'trône' du district."
+  }
+}

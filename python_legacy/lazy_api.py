@@ -405,3 +405,386 @@ def get_job(job_id: str, offset: int = 0):
             result=job.result,
             error=job.error,
         )
+
+# --- Nouveaux endpoints pour UI étape par étape ---
+
+class DetectRequest(BaseModel):
+    image_path: str
+    classes: List[str] = []
+    debug: bool = False
+
+class OcrRequest(BaseModel):
+    image_path: str
+    bubbles: List[dict]
+
+class TranslateRequest(BaseModel):
+    bubbles: List[dict]
+    cache_enabled: bool = True
+    return_llm_debug: bool = False
+    glossary: dict = {}
+
+class RenderRequest(BaseModel):
+    image_path: str
+    bubbles: List[dict]
+    text_only: bool = False
+    skip_inpainting: bool = False
+
+class CacheRequest(BaseModel):
+    enabled: bool
+
+@app.post("/cache")
+def cache_toggle(req: CacheRequest):
+    # This is a stub for the cache toggle. In a real scenario, this would
+    # toggle a global or session-level cache setting in the backend.
+    # For now, it just echoes back the state to satisfy the UI MVP contract.
+    return {"enabled": req.enabled}
+
+@app.post("/detect")
+def detect_api(req: DetectRequest):
+    _warm_models()
+    pipeline = TranslationPipeline(logger=ApiJobLogger(lambda l, m: None), lazy_models=True)
+    if not pipeline._ensure_detector():
+        raise HTTPException(500, "Detector init failed")
+    
+    import cv2
+    import uuid
+    img = cv2.imread(req.image_path)
+    if img is None:
+        raise HTTPException(404, "Image not found")
+        
+    dets = pipeline._detect_ensemble(img)
+    bubbles = []
+    h, w = img.shape[:2]
+    for d in dets:
+        bubbles.append({
+            "id": str(uuid.uuid4()),
+            "bbox": {"x": float(d.x1), "y": float(d.y1), "w": float(d.x2 - d.x1), "h": float(d.y2 - d.y1)},
+            "class": getattr(d, 'class_name', 'bulle'),
+            "source_text": "",
+            "translated_text": "",
+            "llm_input_index": None,
+            "llm_output_index": None,
+            "detection_confidence": getattr(d, 'score', 0.0),
+            "ocr_confidence": None,
+            "errors": []
+        })
+    return {
+        "page": {"width": w, "height": h},
+        "bubbles": bubbles,
+        "errors": []
+    }
+
+@app.post("/ocr")
+def ocr_api(req: OcrRequest):
+    _warm_models()
+    pipeline = TranslationPipeline(logger=ApiJobLogger(lambda l, m: None), lazy_models=True, shared_ocr_engine=WARM_OCR_ENGINE)
+    if not pipeline._ensure_ocr_engine():
+        raise HTTPException(500, "OCR init failed")
+        
+    import cv2
+    img = cv2.imread(req.image_path)
+    if img is None:
+        raise HTTPException(404, "Image not found")
+        
+    crops = []
+    for b in req.bubbles:
+        bbox = b["bbox"]
+        x1, y1 = int(bbox["x"]), int(bbox["y"])
+        x2, y2 = x1 + int(bbox["w"]), y1 + int(bbox["h"])
+        crops.append(img[max(0,y1):y2, max(0,x1):x2])
+        
+    ocr_results = pipeline.ocr_engine.extract_batch(crops)
+    
+    out_bubbles = []
+    for b, res in zip(req.bubbles, ocr_results):
+        text, conf, valid, reason, regions, upscale = res
+        b["source_text"] = text if valid else ""
+        b["ocr_confidence"] = conf
+        if not valid:
+            b.setdefault("errors", []).append({"code": reason, "message": "OCR failed"})
+        out_bubbles.append(b)
+        
+    return {"bubbles": out_bubbles, "errors": []}
+
+@app.post("/translate")
+def translate_api(req: TranslateRequest):
+    _warm_models()
+    from core import NLLBTranslator
+    
+    texts = [b.get("source_text", "") for b in req.bubbles]
+    
+    global WARM_TRANSLATOR
+    if WARM_TRANSLATOR is None:
+        import torch
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        WARM_TRANSLATOR = NLLBTranslator(device=device)
+        
+    translator = WARM_TRANSLATOR
+    if not translator:
+        raise HTTPException(500, "Translator init failed")
+
+    translated = translator.translate_batch(texts)
+    
+    # Naive glossary post-processing
+    if req.glossary:
+        for i, (src, tgt) in enumerate(zip(texts, translated)):
+            for g_src, g_tgt in req.glossary.items():
+                if g_src.lower() in src.lower():
+                    if g_tgt.lower() not in tgt.lower():
+                        translated[i] = f"{tgt} ({g_tgt})"
+    
+    out_bubbles = []
+    parsed_mapping = []
+    for i, (b, t) in enumerate(zip(req.bubbles, translated)):
+        b["translated_text"] = t
+        b["llm_input_index"] = i
+        b["llm_output_index"] = i
+        if "errors" not in b:
+            b["errors"] = []
+        out_bubbles.append(b)
+        parsed_mapping.append({
+            "input_index": i,
+            "output_index": i,
+            "bubble_id": b.get("id", str(i))
+        })
+        
+    llm_debug = {
+        "payload": {"items": [{"index": i, "text": txt} for i, txt in enumerate(texts)]},
+        "raw_response": json.dumps({str(i): t for i, t in enumerate(translated)}),
+        "parsed_mapping": parsed_mapping
+    } if req.return_llm_debug else None
+        
+    return {
+        "bubbles": out_bubbles,
+        "llm_debug": llm_debug,
+        "errors": []
+    }
+
+@app.post("/render")
+def render_api(req: RenderRequest):
+    import time
+    start_time = time.time()
+    
+    _warm_models()
+    from core import TextRenderer
+    import cv2
+    import uuid
+    from pathlib import Path
+    
+    img = cv2.imread(req.image_path)
+    if img is None:
+        raise HTTPException(404, "Image not found")
+        
+    renderer = TextRenderer()
+    out_img = img.copy()
+    
+    for b in req.bubbles:
+        bbox = b["bbox"]
+        x1, y1 = int(bbox["x"]), int(bbox["y"])
+        x2, y2 = x1 + int(bbox["w"]), y1 + int(bbox["h"])
+        text = b.get("translated_text") or b.get("source_text") or ""
+        
+        if text:
+            style = b.get("text_style", {})
+            color = style.get("color", "#000000")
+            color_bgr = (0,0,0)
+            if color.startswith("#") and len(color) == 7:
+                color_bgr = (int(color[5:7], 16), int(color[3:5], 16), int(color[1:3], 16))
+                
+            stroke_color = style.get("stroke_color")
+            stroke_color_bgr = None
+            if stroke_color and stroke_color.startswith("#") and len(stroke_color) == 7:
+                stroke_color_bgr = (int(stroke_color[5:7], 16), int(stroke_color[3:5], 16), int(stroke_color[1:3], 16))
+                
+            bg_color = style.get("bg_color")
+            bg_color_bgr = None
+            if bg_color and bg_color.startswith("#") and len(bg_color) == 7:
+                bg_color_bgr = (int(bg_color[5:7], 16), int(bg_color[3:5], 16), int(bg_color[1:3], 16))
+                
+            stroke_width = style.get("stroke_width")
+            angle = style.get("angle")
+            
+            chirurgical_mask = None
+            mask_strokes = b.get("mask_strokes", [])
+            if mask_strokes and not (req.skip_inpainting or req.text_only):
+                # Construire le masque chirurgical local à la bbox (w, h)
+                import numpy as np
+                bw, bh = x2 - x1, y2 - y1
+                if bw > 0 and bh > 0:
+                    chirurgical_mask = np.zeros((bh, bw), dtype=np.uint8)
+                    for stroke in mask_strokes:
+                        size = int(stroke.get("size", 10))
+                        points = stroke.get("points", [])
+                        for i in range(len(points) - 1):
+                            pt1 = points[i]
+                            pt2 = points[i+1]
+                            # Les points viennent du canvas global, on les ramène au repère de la bbox
+                            cx1 = int(pt1["x"]) - x1
+                            cy1 = int(pt1["y"]) - y1
+                            cx2 = int(pt2["x"]) - x1
+                            cy2 = int(pt2["y"]) - y1
+                            cv2.line(chirurgical_mask, (cx1, cy1), (cx2, cy2), 255, size)
+                            cv2.circle(chirurgical_mask, (cx1, cy1), size // 2, 255, -1)
+                        if len(points) == 1:
+                            cx = int(points[0]["x"]) - x1
+                            cy = int(points[0]["y"]) - y1
+                            cv2.circle(chirurgical_mask, (cx, cy), size // 2, 255, -1)
+                
+            out_img = renderer.render_text(
+                out_img, text, x1, y1, x2, y2,
+                text_color_rgb=color_bgr,
+                class_name=b.get("class", ""),
+                stroke_color_rgb=stroke_color_bgr,
+                stroke_width=stroke_width,
+                bg_color_rgb=bg_color_bgr,
+                angle_override=angle,
+                skip_inpainting=req.skip_inpainting or req.text_only,
+                chirurgical_mask=chirurgical_mask
+            )
+            
+    # Sauvegarde dans le dossier previews
+    base_path = Path(req.image_path)
+    previews_dir = base_path.parent.parent / "previews" if base_path.parent.name == "originals" else base_path.parent / "previews"
+    previews_dir.mkdir(parents=True, exist_ok=True)
+    
+    preview_filename = f"{base_path.stem}_translated.png"
+    preview_path = previews_dir / preview_filename
+    cv2.imwrite(str(preview_path), out_img)
+    
+    total_ms = int((time.time() - start_time) * 1000)
+    
+    return {
+        "preview_path": str(preview_path).replace("\\", "/"),
+        "timings": {
+            "text_render_ms": total_ms,
+            "inpaint_ms": 0,
+            "total_ms": total_ms
+        },
+        "errors": []
+    }
+
+# --- Batch Processing Endpoints ---
+
+batch_status = {
+    "status": "idle", # idle, running, done, error
+    "total": 0,
+    "processed": 0,
+    "current_file": "",
+    "errors": []
+}
+
+class BatchRequest(BaseModel):
+    input_dir: str
+    output_dir: str
+
+def _run_batch(input_dir: str, output_dir: str):
+    import glob
+    from pathlib import Path
+    
+    global batch_status
+    batch_status["status"] = "running"
+    batch_status["total"] = 0
+    batch_status["processed"] = 0
+    batch_status["current_file"] = ""
+    batch_status["errors"] = []
+    
+    extensions = ("*.jpg", "*.jpeg", "*.png", "*.webp")
+    files = []
+    for ext in extensions:
+        files.extend(glob.glob(str(Path(input_dir) / "**" / ext), recursive=True))
+        
+    batch_status["total"] = len(files)
+    
+    if len(files) == 0:
+        batch_status["status"] = "done"
+        return
+        
+    _warm_models()
+    pipeline = TranslationPipeline(logger=ApiJobLogger(lambda l, m: None), lazy_models=True, shared_ocr_engine=WARM_OCR_ENGINE)
+    
+    for f in files:
+        if batch_status["status"] == "error":
+            break
+            
+        batch_status["current_file"] = f
+        try:
+            import cv2
+            img = cv2.imread(f)
+            if img is not None:
+                result = pipeline.process_image(img)
+                if result:
+                    out_path = Path(output_dir) / Path(f).relative_to(Path(input_dir))
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                    cv2.imwrite(str(out_path), result.output)
+            batch_status["processed"] += 1
+        except Exception as e:
+            batch_status["errors"].append({"file": f, "error": str(e)})
+            batch_status["processed"] += 1
+
+    batch_status["status"] = "done"
+
+@app.post("/batch")
+def start_batch(req: BatchRequest):
+    global batch_status
+    if batch_status["status"] == "running":
+        raise HTTPException(400, "A batch is already running")
+        
+    import threading
+    thread = threading.Thread(target=_run_batch, args=(req.input_dir, req.output_dir), daemon=True)
+    thread.start()
+    return {"message": "Batch started"}
+
+@app.get("/batch/status")
+def get_batch_status():
+    return batch_status
+
+# --- Export Endpoints ---
+
+class ExportRequest(BaseModel):
+    input_dir: str
+    output_path: str
+    format: str = "cbz" # cbz, zip, webp
+    watermark_text: str = ""
+    
+@app.post("/export")
+def export_api(req: ExportRequest):
+    import glob
+    import zipfile
+    from pathlib import Path
+    import cv2
+    import numpy as np
+    
+    extensions = ("*.jpg", "*.jpeg", "*.png", "*.webp")
+    files = []
+    for ext in extensions:
+        files.extend(glob.glob(str(Path(req.input_dir) / "**" / ext), recursive=True))
+        
+    files.sort()
+    
+    if not files:
+        raise HTTPException(400, "No images found in input_dir")
+        
+    if req.format in ["cbz", "zip"]:
+        # Create archive
+        with zipfile.ZipFile(req.output_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for i, f in enumerate(files):
+                img = cv2.imread(f)
+                if img is None:
+                    continue
+                    
+                # Add watermark to first page
+                if i == 0 and req.watermark_text:
+                    h, w = img.shape[:2]
+                    cv2.putText(img, req.watermark_text, (10, h - 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                    cv2.putText(img, req.watermark_text, (10, h - 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 1)
+                    
+                # Convert back to bytes
+                is_success, buffer = cv2.imencode(".jpg", img)
+                if is_success:
+                    arcname = Path(f).name
+                    zf.writestr(arcname, buffer.tobytes())
+                    
+        return {"message": f"Exported {len(files)} files to {req.output_path}"}
+    else:
+        raise HTTPException(400, "Unsupported format. Use cbz or zip.")
+

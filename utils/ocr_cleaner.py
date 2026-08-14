@@ -278,9 +278,19 @@ def _fix_parasitic_spaces(text: str) -> str:
 # ═════════════════════════════════════════════════════════════════════════════
 
 def _fix_glued_punctuation(text: str) -> str:
-    """Ajoute un espace après la ponctuation collée à une lettre."""
-    # "JOB!HIS" → "JOB! HIS", "JOB.THE" → "JOB. THE"
-    text = re.sub(r"([.!?])([A-Z])", r"\1 \2", text)
+    """Ajoute un espace après la ponctuation collée à une lettre.
+
+    Le lookbehind négatif `(?<!\\.)` exclut le dernier point d'une suite de
+    points ("..." ou "..") : trouvé sur the-frontier-count's-10th-class-outcas
+    ch1 ("...ADREAM?" -> "... A DREAM?" au lieu de "...A DREAM?", vérifié
+    contre le crop d'origine qui ne contient AUCUN espace après l'ellipse).
+    Un point isolé ("JOB.THE") n'est jamais précédé d'un autre point, donc le
+    comportement historique ("JOB.THE" -> "JOB. THE") est inchangé.
+    """
+    # "JOB!HIS" → "JOB! HIS", "JOB.THE" → "JOB. THE", mais "...ADREAM"
+    # reste "...ADREAM" à ce stade (l'ellipse n'est pas une ponctuation
+    # "collée à une lettre" manquante, c'est un style d'origine sans espace).
+    text = re.sub(r"(?<!\.)([.!?])([A-Z])", r"\1 \2", text)
     # "ATTAINEDA" pas touché car pas de ponctuation
     # "IT'S AMAGE'S" — pas de fix ici, c'est le word splitter qui gère
     return text
@@ -319,6 +329,19 @@ def _fix_apostrophe_spacing(text: str) -> str:
 
 def _fix_webtoon_specific(text: str) -> str:
     """Corrections spécifiques au contenu manhwa/webtoon."""
+
+    # PP-OCRv5 confond parfois le "Y" majuscule de cette police BD (empattée,
+    # arrondie) avec le chiffre "4" : "YOU" -> "40U", "YEAH" -> "4 EAH".
+    # Repéré sur path-of-vengeance ch1 : "I WANT TO SEE YOU WIN" -> "I WANT
+    # TO SEE 40U WIN" en sortie OCR BRUTE (confiance 0.967), reproduit à
+    # l'identique sur deux runs indépendants (lot de 1 crop et lot de 36
+    # crops) — donc un vrai biais du modèle sur cette police, pas du bruit
+    # GPU non déterministe. "YEAH,4 EAH." n'a en revanche pas pu être
+    # reproduit dans les mêmes conditions (probablement un aléa ponctuel
+    # d'une exécution antérieure) ; le fix reste ajouté par prudence, motif
+    # assez spécifique pour ne jamais matcher de texte légitime.
+    text = re.sub(r"\b40\s*U\b", "YOU", text)
+    text = re.sub(r"\b4\s*EAH\b", "YEAH", text, flags=re.IGNORECASE)
 
     # "T'LL" → "I'LL" (OCR confond I et T dans les contractions)
     text = re.sub(r"\bT'LL\b", "I'LL", text)

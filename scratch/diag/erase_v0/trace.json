@@ -1,0 +1,104 @@
+[
+  {
+    "index": 0,
+    "class": "out_text",
+    "mask_coverage": 0.4857,
+    "bbox": [
+      13,
+      1794,
+      436,
+      2078
+    ],
+    "ocr": "THE COORDINATES OF TOKYO'S 23 WARDS OVERLAPPED WITH AN OTHER",
+    "n_regions": 5,
+    "flat_fill": null,
+    "lama": true,
+    "erasure_failed": [
+      true
+    ],
+    "diffusable": [
+      false
+    ]
+  },
+  {
+    "index": 1,
+    "class": "out_text",
+    "mask_coverage": 0.3692,
+    "bbox": [
+      308,
+      3148,
+      681,
+      3376
+    ],
+    "ocr": "THETWO WORLDSMERGED, AND THE TOKYO MAKAI APPEARED",
+    "n_regions": 4,
+    "flat_fill": null,
+    "lama": true,
+    "erasure_failed": [
+      true
+    ],
+    "diffusable": [
+      false
+    ]
+  },
+  {
+    "index": 2,
+    "class": "out_text",
+    "mask_coverage": 0.3691,
+    "bbox": [
+      185,
+      8517,
+      542,
+      8726
+    ],
+    "ocr": "MONSTERS SUDDENLY BEGAN TO RUN WILD. 88",
+    "n_regions": 4,
+    "flat_fill": null,
+    "lama": true,
+    "erasure_failed": [
+      true
+    ],
+    "diffusable": [
+      false
+    ]
+  },
+  {
+    "index": 3,
+    "class": "out_text",
+    "mask_coverage": 0.3583,
+    "bbox": [
+      124,
+      10668,
+      514,
+      10884
+    ],
+    "ocr": "AND THOSE OF US IN THE CITY WERE ATTACKED",
+    "n_regions": 3,
+    "flat_fill": null,
+    "lama": true,
+    "erasure_failed": [
+      true
+    ],
+    "diffusable": [
+      false
+    ]
+  },
+  {
+    "index": 4,
+    "class": "out_text",
+    "mask_coverage": 0.3964,
+    "bbox": [
+      159,
+      13080,
+      505,
+      13224
+    ],
+    "ocr": "MY PARENTS DIDNTMAKE IT",
+    "n_regions": 2,
+    "flat_fill": null,
+    "lama": true,
+    "erasure_failed": [
+      false
+    ]
+  }
+]

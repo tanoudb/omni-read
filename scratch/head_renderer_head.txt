@@ -1,0 +1,7 @@
+"""
+═══════════════════════════════════════════════════════════════════════════════
+RENDERER v7 - ColorResolver intégré + Fix Contraste Pro + System Holo
+
+V7 CHANGELOG :
+- ColorResolver intégré : contraste WCAG réel, suppression outline si >12
+- FIX : plus jamais d'outline blanc sur fond blanc (anti

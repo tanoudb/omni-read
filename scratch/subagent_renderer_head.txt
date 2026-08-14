@@ -1,0 +1,307 @@
+Created At: 2026-08-14T14:26:06+02:00
+Completed At: 2026-08-14T14:26:06+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1 to 800
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: """
+2: ═══════════════════════════════════════════════════════════════════════════════
+3: RENDERER v7 - ColorResolver intégré + Fix Contraste Pro + System Holo
+4: 
+5: V7 CHANGELOG :
+6: - ColorResolver intégré : contraste WCAG réel, suppression outline si >12
+7: - FIX : plus jamais d'outline blanc sur fond blanc (anti-aliasing sale)
+8: - System holographique : blanc + cyan (0,180,255) automatique
+9: - get_text_colors() retourne maintenant 3 valeurs (text, outline, width)
+10: - outline_color=None → rendu SANS outline (propre)
+11: - Suppression de l'Created At: 2026-08-14T14:26:15+02:00
+Completed At: 2026-08-14T14:26:15+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1170 to 1250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1170:     def _inpaint_anime(self, crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
+1171:         image_rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
+1172:         result = self.anime_inpainter(image_rgb, mask, self._anime_config)
+1173:         if isinstance(result, np.ndarray):
+1174:             return cv2.cvtColor(result, cv2.COLOR_RGB2BGR)
+1175:         return crop
+1176: 
+1177:     # ─────────────────────────────────────────────────────────────────────────
+1178:     # MASQUES
+1179:     # ─────────────────────────────────────────────────────────Created At: 2026-08-14T14:26:21+02:00
+Completed At: 2026-08-14T14:26:21+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 539 to 585
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+539:             dilate_k = (
+540:                 self.cfg.out_text_mask_dilate_kernel
+541:                 if str(class_name).lower() == "out_text"
+542:                 else self.cfg.inpaint_mask_dilate_kernel
+543:             )
+544:             if dilate_k and dilate_k > 1:
+545:                 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (dilate_k, dilate_k))
+546:                 local_mask = cv2.dilate(local_mask, kernel, iterations=1)
+547:         elif text_regions:
+548:             local_mask = self._build_local_mask_from_regions(croCreated At: 2026-08-14T14:27:00+02:00
+Completed At: 2026-08-14T14:27:00+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 790 to 850
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+790:         return out
+791: 
+792:     @staticmethod
+793:     def _erasure_failed(crop: np.ndarray, result: np.ndarray, mask: np.ndarray) -> bool:
+794:         """
+795:         Détecte un inpainting qui n'a pas vraiment effacé le texte.
+796: 
+797:         Mesuré sur une carte System (fond en dégradé holographique) : LaMa
+798:         rendait un résultat où le contour des lettres restait lisible — un
+799:         premier essai de détection par écart de pixel moyen (`|après-avant|`)
+800:         s'est révélé aveugle à ça : LaMa avait bien DÉCALÉ la cCreated At: 2026-08-14T14:27:08+02:00
+Completed At: 2026-08-14T14:27:08+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 910 to 950
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+910:             out[m > 0] = model[m > 0]
+911:             return out
+912:         except Exception:
+913:             return None
+914: 
+915:     @staticmethod
+916:     def _diffusion_is_safe(crop: np.ndarray, mask: np.ndarray, max_ratio: float = 0.06) -> bool:
+917:         """Le repli en diffusion Navier-Stokes est-il autorisé ?
+918: 
+919:         Ce repli a été ajouté quand l'inpainting ne voyait que 30 px de
+920:         contexte autour de la zone : LaMa y laissait des fantômes, et étaler
+921:         les couleurs voisines était le moindre mal.Created At: 2026-08-14T14:27:13+02:00
+Completed At: 2026-08-14T14:27:13+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 990 to 1040
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+990:         (dégradé, halo) : Navier-Stokes converge vers un aplat lisse là où un
+991:         modèle génératif peut « recopier » son entrée si le contexte ne lui
+992:         donne pas prise pour halluciner autre chose.
+993: 
+994:         Retourne le CROP DÉJÀ RECOMPOSÉ (pas juste le résultat brut à blender
+995:         avec le masque d'origine) : on diffuse ET on recompose sur un masque
+996:         ÉLARGI de quelques pixels. Une première version élargissait seulement
+997:         le calcul de diffusion en gardant `_blend_masked` sur le masque
+99Created At: 2026-08-14T14:27:17+02:00
+Completed At: 2026-08-14T14:27:17+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1040 to 1150
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1040:         inside_box: Optional[np.ndarray] = None,
+1041:     ) -> np.ndarray:
+1042:         """
+1043:         Étend le masque, pour un remplissage à plat, à tout ce qui touche le
+1044:         texte et s'écarte du fond.
+1045: 
+1046:         Deux résidus que le masque strict laissait passer :
+1047:         - le halo d'anticrénelage autour des lettres, plus large que l'encre ;
+1048:         - la partie d'un glyphe SORTIE de la bbox de détection. Sur un cas réel,
+1049:           le W de « NEW » était coupé par la boîte YOLO — l'OCR lisait « NEV »Created At: 2026-08-14T14:27:21+02:00
+Completed At: 2026-08-14T14:27:21+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1150 to 1182
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1150:             if inliers.shape[0] < 32:
+1151:                 inliers = samples
+1152:             mode = np.array([
+1153:                 int(np.bincount(inliers[:, c], minlength=256).argmax())
+1154:                 for c in range(3)
+1155:             ], dtype=np.uint8)
+1156:             return mode.astype(crop.dtype)
+1157:         except Exception:
+1158:             return None
+1159: 
+1160:     def _inpaint_lama(self, crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
+1161:         h_orig, w_orig = crop.shape[:2]
+1162:         crop_pil = ICreated At: 2026-08-14T14:27:29+02:00
+Completed At: 2026-08-14T14:27:29+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 860 to 910
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+860:     @staticmethod
+861:     def _smooth_fill(
+862:         crop: np.ndarray, mask: np.ndarray, max_residual: float = 6.0,
+863:     ) -> Optional[np.ndarray]:
+864:         """Remplace le texte par un modèle de fond LISSE, si ce modèle est
+865:         vérifié sur les pixels voisins non masqués. Sinon None.
+866: 
+867:         Le modèle : amorce par diffusion à court rayon, puis flou large. Il ne
+868:         peut représenter qu'une variation douce — donc il ne peut pas inventer
+869:         de structure, ni recopier la forme des lettres.
+870: 
+8Created At: 2026-08-14T14:27:57+02:00
+Completed At: 2026-08-14T14:27:57+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1640 to 1700
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1640:         band = mask[y0c:y1c, :]
+1641:         if band.size == 0:
+1642:             return 0.0
+1643:         return float(np.count_nonzero(band > 0)) / float(band.shape[0])
+1644: 
+1645:     def _wrap_text_by_mask(
+1646:         self, text: str, font: ImageFont.FreeTypeFont,
+1647:         inner_w: int, inner_h: int, line_h: int, spacing: int,
+1648:         bubble_mask: np.ndarray, mask_y_offset: float, mask_x_origin: float = 0.0,
+1649:     ) -> Tuple[List[str], List[int], List[float]]:
+1650:         """
+1651:         Wrap « forme de bulle » Created At: 2026-08-14T14:28:05+02:00
+Completed At: 2026-08-14T14:28:05+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1930 to 2000
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1930:         """
+1931:         if is_round:
+1932:             return 0.08 if has_mask_wrap else 0.18
+1933:         return 0.06
+1934: 
+1935:     def _get_inner_zone(
+1936:         self, x1: int, y1: int, x2: int, y2: int, img_shape: Tuple[int, ...],
+1937:         bubble_mask: Optional[np.ndarray] = None, shrink: Optional[float] = None,
+1938:     ) -> Tuple[int, int, int, int]:
+1939:         h_img, w_img = img_shape[:2]
+1940:         x1, y1 = max(0, int(x1)), max(0, int(y1))
+1941:         x2, y2 = min(w_img, int(x2)), min(h_img, int(y2))
+1942: Created At: 2026-08-14T14:28:08+02:00
+Completed At: 2026-08-14T14:28:08+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 2720 to 2780
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2720:             retry = self._fit_font_hard(
+2721:                 text, fs, full_w, full_h,
+2722:                 bubble_mask=mask_for_wrap if angle == 0.0 else None,
+2723:                 shape_wrap=has_mask_wrap and angle == 0.0,
+2724:                 font_path=resolved_font_path,
+2725:                 mask_y_offset=(fy1 + self.cfg.padding_vertical) - y1,
+2726:                 max_font_size=size_cap,
+2727:                 mask_x_origin=x1,
+2728:                 target_lines=len(text_regions) if text_regions else None,
+2729:             )
+273Created At: 2026-08-14T14:28:13+02:00
+Completed At: 2026-08-14T14:28:13+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 2630 to 2680
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2630:             return self._draw_exact_lines(
+2631:                 img, text, text_regions,
+2632:                 text_color, outline_color, outline_width_auto,
+2633:                 resolved_font_path, text_style, source_line_height, angle,
+2634:                 ox1, oy1,
+2635:             )
+2636: 
+2637:         # === BUBBLE WRAP AVEC POLYGONE DE SURFACE ===
+2638:         use_locked_mode = bool(getattr(self.cfg, 'lock_text_to_ocr_regions', False))
+2639:         if bool(getattr(self.cfg, 'lock_text_system_only', True)) and str(class_name).loweCreated At: 2026-08-14T14:28:21+02:00
+Completed At: 2026-08-14T14:28:22+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 2560 to 2630
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2560:         if str(class_name).lower() == "out_text" and outline_color is None:
+2561:             luma = 0.299 * text_color[0] + 0.587 * text_color[1] + 0.114 * text_color[2]
+2562:             outline_color = (0, 0, 0) if luma > 128 else (255, 255, 255)
+2563:             outline_width_auto = max(2, outline_width_auto)
+2564: 
+2565:         if outline_color is not None and stroke_width is None:
+2566:             if source_line_height and source_line_height > 4:
+2567:                 outline_width_auto = max(
+2568:                     outline_width_Created At: 2026-08-14T14:28:28+02:00
+Completed At: 2026-08-14T14:28:28+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1590 to 1640
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1590:             # + le jambage, soit ~0.75 em. On VISE la taille d'origine : c'est
+1591:             # le geste du letterer. Le texte français est plus long que
+1592:             # l'anglais, donc l'ajustement final peut encore réduire — mais
+1593:             # jamais grossir au-delà du corps de la planche.
+1594:             em_source = float(source_line_height) / 0.75
+1595:             fs = min(fs, int(em_source * 1.05))
+1596: 
+1597:         # Sécurité absolue : la police ne doit jamais être plus haute que la bulle
+1598:         fs = min(fs, inCreated At: 2026-08-14T14:28:32+02:00
+Completed At: 2026-08-14T14:28:32+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1700 to 1770
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1700:         spans = [s for s in spans if s > 0]
+1701:         typical_w = float(np.median(spans)) if spans else float(inner_w)
+1702:         floor_w = int(max(inner_w * self.cfg.word_wrap_ratio * 0.60,
+1703:                           typical_w * self.cfg.word_wrap_ratio * 0.70))
+1704: 
+1705:         def _wrap_with(n_lines_assumed: int) -> Tuple[List[str], List[int], List[float]]:
+1706:             total_h = n_lines_assumed * line_h + max(0, n_lines_assumed - 1) * spacing
+1707:             ys_local = max(0, (inner_h - total_h) // 2)
+1708: 
+1709: Created At: 2026-08-14T14:28:36+02:00
+Completed At: 2026-08-14T14:28:36+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1770 to 1830
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1770:         # de l'ovale par la gauche et la droite.
+1771:         n = max(1, len(self.wrap_text(text, font, rough_w)))
+1772:         lines, allowed, centers = _wrap_with(n)
+1773:         # 3 passes ne suffisaient pas à stabiliser le point fixe sur les blocs
+1774:         # de 5 lignes et plus : on rendait alors un découpage calculé pour une
+1775:         # hauteur de bloc qui n'était pas la bonne.
+1776:         for _ in range(6):
+1777:             if len(lines) == n:
+1778:                 break
+1779:             n = len(lines)
+1780:           Created At: 2026-08-14T14:28:39+02:00
+Completed At: 2026-08-14T14:28:39+02:00
+File Path: `file:///A:/omni%20read/core/renderer.py`
+Total Lines: 3348
+Total Bytes: 167102
+Showing lines 1410 to 1490
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1410:         x1: int, y1: int, x2: int, y2: int,
+1411:         mask_regions: Optional[List[Dict]] = None,
+1412:     ) -> str:
+1413:         crop = img[y1:y2, x1:x2]
+1414:         if crop.size == 0:
+1415:             return "regular"
+1416: 
+1417:         mask = self._build_local_mask_from_regions(crop.shape[1], crop.shape[0], mask_regions)
+1418:         if np.sum(mask) == 0:
+1419:             return "regular"
+1420: 
+1421:         gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+1422:         edges = cv2.Canny(gray, 80, 180)
+1423: 
+1424:         

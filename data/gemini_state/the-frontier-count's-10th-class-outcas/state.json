@@ -1,0 +1,25 @@
+{
+  "glossary": {
+    "Royal Academy": "Académie Royale",
+    "Mana Vessel": "Réceptacle de mana",
+    "Mana Circulation": "Circulation du mana",
+    "Mana Explosion": "Explosion de mana",
+    "Magic Tower": "Tour de Magie",
+    "Mana Poisoning": "Empoisonnement au mana",
+    "War of Succession": "Guerre de Succession",
+    "The Gate": "La Porte",
+    "New Religion": "Nouvelle Religion",
+    "Unique Constitution": "Constitution unique"
+  },
+  "personnages": {
+    "Isaac von Goethe": "Jeune maître, génie, souffre d'une constitution unique provoquant des explosions de mana. Se réincarne dans son passé.",
+    "Nanny": "Nounou d'Isaac, attentionnée.",
+    "Hans": "Serviteur d'Isaac, reconnaissant envers lui pour avoir sauvé son fils.",
+    "Jonas": "Frère cadet d'Isaac, blessé à la main par une explosion de mana d'Isaac. Meurt plus tard dans le futur.",
+    "Lucas": "Attendant et garde du corps d'Isaac, loyal et dévoué, meurt d'empoisonnement au mana.",
+    "Count Goethe": "Père d'Isaac, Comte de la Frontière.",
+    "Scholar from the Magic Tower": "Érudit qui diagnostique la condition d'Isaac.",
+    "First Prince": "Impliqué dans la guerre de succession.",
+    "Second Prince": "Impliqué dans la guerre de succession."
+  }
+}

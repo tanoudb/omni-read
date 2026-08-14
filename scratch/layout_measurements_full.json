@@ -1,0 +1,1687 @@
+[
+  {
+    "index": 0,
+    "class": "bulle",
+    "bbox": [
+      457,
+      2416,
+      580,
+      2606
+    ],
+    "ocr_text": "*PANT*",
+    "source_line_height": 24.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      467,
+      2449,
+      572,
+      2580
+    ],
+    "inner_w": 73,
+    "inner_h": 103,
+    "fs_estimate": 33,
+    "font_size_final": 33,
+    "n_lines": 1,
+    "lines": [
+      "*PANT*"
+    ],
+    "line_h_px": 30,
+    "spacing_px": 7,
+    "total_h_px": 30,
+    "zone_center": [
+      519.5,
+      2514.5
+    ],
+    "block_center": [
+      516.0,
+      2514.0
+    ],
+    "dx_px": -3.5,
+    "dy_px": -0.5,
+    "fill_ratio": 0.17236334618965288
+  },
+  {
+    "index": 1,
+    "class": "bulle",
+    "bbox": [
+      514,
+      2270,
+      637,
+      2449
+    ],
+    "ocr_text": "*PANT*",
+    "source_line_height": 29.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      517,
+      2290,
+      622,
+      2416
+    ],
+    "inner_w": 73,
+    "inner_h": 98,
+    "fs_estimate": 36,
+    "font_size_final": 40,
+    "n_lines": 1,
+    "lines": [
+      "*PANT*"
+    ],
+    "line_h_px": 36,
+    "spacing_px": 9,
+    "total_h_px": 36,
+    "zone_center": [
+      569.5,
+      2353.0
+    ],
+    "block_center": [
+      571.0,
+      2353.0
+    ],
+    "dx_px": 1.5,
+    "dy_px": 0.0,
+    "fill_ratio": 0.2583170254403131
+  },
+  {
+    "index": 2,
+    "class": "bulle",
+    "bbox": [
+      11,
+      2495,
+      243,
+      2812
+    ],
+    "ocr_text": "DAMN ITI CANT LAND A SINGLE HIT",
+    "source_line_height": 48.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      23,
+      2511,
+      219,
+      2778
+    ],
+    "inner_w": 164,
+    "inner_h": 239,
+    "fs_estimate": 37,
+    "font_size_final": 44,
+    "n_lines": 5,
+    "lines": [
+      "DAMN",
+      "ITI CANT",
+      "LAND A",
+      "SINGLE",
+      "HIT"
+    ],
+    "line_h_px": 39,
+    "spacing_px": 9,
+    "total_h_px": 231,
+    "zone_center": [
+      121.0,
+      2644.5
+    ],
+    "block_center": [
+      121.0,
+      2644.5
+    ],
+    "dx_px": 0.0,
+    "dy_px": 0.0,
+    "fill_ratio": 0.32090009184610674
+  },
+  {
+    "index": 3,
+    "class": "bulle",
+    "bbox": [
+      79,
+      3606,
+      637,
+      3841
+    ],
+    "ocr_text": "KAZUKI KUROI PLAYER LEVEL: 10 JOB: NONE",
+    "source_line_height": 48.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      125,
+      3627,
+      595,
+      3826
+    ],
+    "inner_w": 438,
+    "inner_h": 171,
+    "fs_estimate": 46,
+    "font_size_final": 56,
+    "n_lines": 3,
+    "lines": [
+      "KAZUKI KUROI",
+      "PLAYER LEVEL: 10 JOB:",
+      "NONE"
+    ],
+    "line_h_px": 49,
+    "spacing_px": 12,
+    "total_h_px": 171,
+    "zone_center": [
+      360.0,
+      3726.5
+    ],
+    "block_center": [
+      359.0,
+      3726.5
+    ],
+    "dx_px": -1.0,
+    "dy_px": 0.0,
+    "fill_ratio": 0.33285267964431625
+  },
+  {
+    "index": 4,
+    "class": "bulle",
+    "bbox": [
+      231,
+      3965,
+      465,
+      4262
+    ],
+    "ocr_text": "HOW ABOUT THIS?!",
+    "source_line_height": 74.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      248,
+      3994,
+      446,
+      4245
+    ],
+    "inner_w": 166,
+    "inner_h": 223,
+    "fs_estimate": 57,
+    "font_size_final": 45,
+    "n_lines": 3,
+    "lines": [
+      "HOW",
+      "ABOUT",
+      "THIS?!"
+    ],
+    "line_h_px": 57,
+    "spacing_px": 14,
+    "total_h_px": 199,
+    "zone_center": [
+      347.0,
+      4119.5
+    ],
+    "block_center": [
+      344.6666666666667,
+      4119.5
+    ],
+    "dx_px": -2.3333333333333144,
+    "dy_px": 0.0,
+    "fill_ratio": 0.3999945972229726
+  },
+  {
+    "index": 5,
+    "class": "bulle",
+    "bbox": [
+      497,
+      5252,
+      682,
+      5546
+    ],
+    "ocr_text": "TOO SLOW, KAZUKI!",
+    "source_line_height": 56.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      509,
+      5298,
+      666,
+      5440
+    ],
+    "inner_w": 125,
+    "inner_h": 114,
+    "fs_estimate": 33,
+    "font_size_final": 25,
+    "n_lines": 3,
+    "lines": [
+      "TOO",
+      "SLOW,",
+      "KAZUKI!"
+    ],
+    "line_h_px": 32,
+    "spacing_px": 8,
+    "total_h_px": 112,
+    "zone_center": [
+      587.5,
+      5369.0
+    ],
+    "block_center": [
+      596.0,
+      5369.0
+    ],
+    "dx_px": 8.5,
+    "dy_px": 0.0,
+    "fill_ratio": 0.35943859649122806
+  },
+  {
+    "index": 6,
+    "class": "bulle",
+    "bbox": [
+      399,
+      5440,
+      654,
+      5793
+    ],
+    "ocr_text": "IF YOULEAVE YOURSELF OPEN LIKE THAT-",
+    "source_line_height": 47.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      428,
+      5546,
+      643,
+      5745
+    ],
+    "inner_w": 183,
+    "inner_h": 171,
+    "fs_estimate": 31,
+    "font_size_final": 31,
+    "n_lines": 5,
+    "lines": [
+      "IF",
+      "YOULEAVE",
+      "YOURSELF",
+      "OPEN LIKE",
+      "THAT-"
+    ],
+    "line_h_px": 28,
+    "spacing_px": 7,
+    "total_h_px": 168,
+    "zone_center": [
+      535.5,
+      5645.5
+    ],
+    "block_center": [
+      525.7,
+      5645.0
+    ],
+    "dx_px": -9.799999999999955,
+    "dy_px": -0.5,
+    "fill_ratio": 0.22925254849327326
+  },
+  {
+    "index": 7,
+    "class": "bulle",
+    "bbox": [
+      44,
+      6520,
+      512,
+      6743
+    ],
+    "ocr_text": "TATSUYA MORI SHIGE PLAYER LEVEL: 30 JOB: HEAVY WARRIOR",
+    "source_line_height": 37.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      77,
+      6538,
+      471,
+      6727
+    ],
+    "inner_w": 362,
+    "inner_h": 161,
+    "fs_estimate": 34,
+    "font_size_final": 43,
+    "n_lines": 3,
+    "lines": [
+      "TATSUYA MORI SHIGE",
+      "PLAYER LEVEL: 30 JOB:",
+      "HEAVY WARRIOR"
+    ],
+    "line_h_px": 38,
+    "spacing_px": 9,
+    "total_h_px": 132,
+    "zone_center": [
+      274.0,
+      6632.5
+    ],
+    "block_center": [
+      273.1666666666667,
+      6632.0
+    ],
+    "dx_px": -0.8333333333333144,
+    "dy_px": -0.5,
+    "fill_ratio": 0.3692735321368519
+  },
+  {
+    "index": 8,
+    "class": "bulle",
+    "bbox": [
+      254,
+      10183,
+      411,
+      10429
+    ],
+    "ocr_text": "HAHAHA!",
+    "source_line_height": 36.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      262,
+      10210,
+      395,
+      10397
+    ],
+    "inner_w": 101,
+    "inner_h": 159,
+    "fs_estimate": 56,
+    "font_size_final": 30,
+    "n_lines": 1,
+    "lines": [
+      "HAHAHA!"
+    ],
+    "line_h_px": 38,
+    "spacing_px": 9,
+    "total_h_px": 38,
+    "zone_center": [
+      328.5,
+      10303.5
+    ],
+    "block_center": [
+      332.0,
+      10303.0
+    ],
+    "dx_px": 3.5,
+    "dy_px": -0.5,
+    "fill_ratio": 0.2257301201818295
+  },
+  {
+    "index": 9,
+    "class": "bulle",
+    "bbox": [
+      196,
+      10397,
+      372,
+      10663
+    ],
+    "ocr_text": "YOU'RE STILL NO MATCH FOR ME!",
+    "source_line_height": 26.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      210,
+      10429,
+      358,
+      10638
+    ],
+    "inner_w": 116,
+    "inner_h": 181,
+    "fs_estimate": 31,
+    "font_size_final": 36,
+    "n_lines": 4,
+    "lines": [
+      "YOU'RE",
+      "STILL NO",
+      "MATCH",
+      "FOR ME!"
+    ],
+    "line_h_px": 32,
+    "spacing_px": 8,
+    "total_h_px": 152,
+    "zone_center": [
+      284.0,
+      10533.5
+    ],
+    "block_center": [
+      278.75,
+      10533.0
+    ],
+    "dx_px": -5.25,
+    "dy_px": -0.5,
+    "fill_ratio": 0.36516479329396073
+  },
+  {
+    "index": 10,
+    "class": "bulle",
+    "bbox": [
+      472,
+      11405,
+      677,
+      11753
+    ],
+    "ocr_text": "LOST AGAIN",
+    "source_line_height": 54.0,
+    "render_bail": null,
+    "is_bubble": false,
+    "has_mask_wrap": false,
+    "container": [
+      482,
+      11415,
+      670,
+      11740
+    ],
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      493,
+      11434,
+      659,
+      11721
+    ],
+    "inner_w": 134,
+    "inner_h": 259,
+    "fs_estimate": 62,
+    "font_size_final": 66,
+    "n_lines": 2,
+    "lines": [
+      "LOST",
+      "AGAIN"
+    ],
+    "line_h_px": 59,
+    "spacing_px": 14,
+    "total_h_px": 132,
+    "zone_center": [
+      576.0,
+      11577.5
+    ],
+    "block_center": [
+      576.0,
+      11577.0
+    ],
+    "dx_px": 0.0,
+    "dy_px": -0.5,
+    "fill_ratio": 0.25110931827349736
+  },
+  {
+    "index": 11,
+    "class": "bulle",
+    "bbox": [
+      94,
+      12092,
+      343,
+      12428
+    ],
+    "ocr_text": "ALRIGHT, KAZUKI' SON SUPPLY RUN DUTY AGAIN TODAY",
+    "source_line_height": 30.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      113,
+      12121,
+      324,
+      12405
+    ],
+    "inner_w": 179,
+    "inner_h": 256,
+    "fs_estimate": 32,
+    "font_size_final": 42,
+    "n_lines": 5,
+    "lines": [
+      "ALRIGHT,",
+      "KAZUKI' SON",
+      "SUPPLY RUN",
+      "DUTY AGAIN",
+      "TODAY"
+    ],
+    "line_h_px": 37,
+    "spacing_px": 9,
+    "total_h_px": 221,
+    "zone_center": [
+      218.5,
+      12263.0
+    ],
+    "block_center": [
+      218.5,
+      12262.5
+    ],
+    "dx_px": 0.0,
+    "dy_px": -0.5,
+    "fill_ratio": 0.40581354748603354
+  },
+  {
+    "index": 12,
+    "class": "bulle",
+    "bbox": [
+      323,
+      12916,
+      596,
+      13320
+    ],
+    "ocr_text": "FAILED AGAIN, HUH? you SHOULD TRY LOOKING COOL FOR ONCE!",
+    "source_line_height": 28.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      338,
+      12964,
+      569,
+      13227
+    ],
+    "inner_w": 199,
+    "inner_h": 235,
+    "fs_estimate": 33,
+    "font_size_final": 37,
+    "n_lines": 5,
+    "lines": [
+      "FAILED AGAIN,",
+      "HUH? YOU",
+      "SHOULD TRY",
+      "LOOKING COOL",
+      "FOR ONCE!"
+    ],
+    "line_h_px": 33,
+    "spacing_px": 8,
+    "total_h_px": 197,
+    "zone_center": [
+      453.5,
+      13095.5
+    ],
+    "block_center": [
+      458.9,
+      13095.5
+    ],
+    "dx_px": 5.399999999999977,
+    "dy_px": 0.0,
+    "fill_ratio": 0.36935742542499733
+  },
+  {
+    "index": 13,
+    "class": "bulle",
+    "bbox": [
+      299,
+      13227,
+      493,
+      13516
+    ],
+    "ocr_text": "ONII-CHAN!",
+    "source_line_height": 28.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      317,
+      13320,
+      481,
+      13480
+    ],
+    "inner_w": 132,
+    "inner_h": 132,
+    "fs_estimate": 43,
+    "font_size_final": 25,
+    "n_lines": 1,
+    "lines": [
+      "ONII-CHAN!"
+    ],
+    "line_h_px": 32,
+    "spacing_px": 8,
+    "total_h_px": 32,
+    "zone_center": [
+      399.0,
+      13400.0
+    ],
+    "block_center": [
+      392.5,
+      13400.0
+    ],
+    "dx_px": -6.5,
+    "dy_px": 0.0,
+    "fill_ratio": 0.18744260789715336
+  },
+  {
+    "index": 14,
+    "class": "bulle",
+    "bbox": [
+      133,
+      14351,
+      647,
+      14563
+    ],
+    "ocr_text": "AKINA KUROI PLAYER LEVEL: 1 JOB: NONE",
+    "source_line_height": 49.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      175,
+      14367,
+      607,
+      14547
+    ],
+    "inner_w": 400,
+    "inner_h": 152,
+    "fs_estimate": 43,
+    "font_size_final": 54,
+    "n_lines": 2,
+    "lines": [
+      "AKINA KUROI PLAYER",
+      "LEVEL: 1 JOB: NONE"
+    ],
+    "line_h_px": 48,
+    "spacing_px": 12,
+    "total_h_px": 108,
+    "zone_center": [
+      391.0,
+      14457.0
+    ],
+    "block_center": [
+      390.5,
+      14457.0
+    ],
+    "dx_px": -0.5,
+    "dy_px": 0.0,
+    "fill_ratio": 0.3639309210526316
+  },
+  {
+    "index": 15,
+    "class": "bulle",
+    "bbox": [
+      52,
+      14696,
+      282,
+      14963
+    ],
+    "ocr_text": "I WANT TO SEE 40 U WIN AT LEAST ONCE",
+    "source_line_height": 32.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      72,
+      14713,
+      266,
+      14938
+    ],
+    "inner_w": 162,
+    "inner_h": 197,
+    "fs_estimate": 31,
+    "font_size_final": 39,
+    "n_lines": 4,
+    "lines": [
+      "I WANT TO",
+      "SEE 40 U",
+      "WIN AT",
+      "LEAST ONCE"
+    ],
+    "line_h_px": 35,
+    "spacing_px": 8,
+    "total_h_px": 164,
+    "zone_center": [
+      169.0,
+      14825.5
+    ],
+    "block_center": [
+      169.5,
+      14825.0
+    ],
+    "dx_px": 0.5,
+    "dy_px": -0.5,
+    "fill_ratio": 0.3725010966973742
+  },
+  {
+    "index": 16,
+    "class": "bulle",
+    "bbox": [
+      424,
+      15350,
+      650,
+      15782
+    ],
+    "ocr_text": "UNCLE WAS A PLAYER ON THE FRONT LINES. I CAN'T BEAT HIM",
+    "source_line_height": 29.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      441,
+      15389,
+      631,
+      15753
+    ],
+    "inner_w": 158,
+    "inner_h": 336,
+    "fs_estimate": 33,
+    "font_size_final": 40,
+    "n_lines": 7,
+    "lines": [
+      "UNCLE",
+      "WAS A",
+      "PLAYER ON",
+      "THE FRONT",
+      "LINES. I",
+      "CAN'T BEAT",
+      "HIM"
+    ],
+    "line_h_px": 36,
+    "spacing_px": 9,
+    "total_h_px": 306,
+    "zone_center": [
+      536.0,
+      15571.0
+    ],
+    "block_center": [
+      536.8571428571429,
+      15571.0
+    ],
+    "dx_px": 0.8571428571428896,
+    "dy_px": 0.0,
+    "fill_ratio": 0.3256103074141049
+  },
+  {
+    "index": 17,
+    "class": "bulle",
+    "bbox": [
+      115,
+      15767,
+      333,
+      16066
+    ],
+    "ocr_text": "WELL... BUT FOR A SUPPLY RUN",
+    "source_line_height": 36.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      132,
+      15790,
+      316,
+      16043
+    ],
+    "inner_w": 152,
+    "inner_h": 225,
+    "fs_estimate": 37,
+    "font_size_final": 50,
+    "n_lines": 4,
+    "lines": [
+      "WELL...",
+      "BUT FOR",
+      "A SUPPLY",
+      "RUN"
+    ],
+    "line_h_px": 44,
+    "spacing_px": 11,
+    "total_h_px": 209,
+    "zone_center": [
+      224.0,
+      15916.5
+    ],
+    "block_center": [
+      224.0,
+      15916.5
+    ],
+    "dx_px": 0.0,
+    "dy_px": 0.0,
+    "fill_ratio": 0.38921052631578945
+  },
+  {
+    "index": 18,
+    "class": "bulle",
+    "bbox": [
+      199,
+      16463,
+      486,
+      16806
+    ],
+    "ocr_text": "AREN'T YOU THE HIGHEST LEVEL AMONG US, ONII-CHAN?",
+    "source_line_height": 33.0,
+    "render_bail": null,
+    "is_bubble": false,
+    "has_mask_wrap": false,
+    "container": [
+      207,
+      16467,
+      480,
+      16808
+    ],
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      223,
+      16487,
+      464,
+      16788
+    ],
+    "inner_w": 209,
+    "inner_h": 273,
+    "fs_estimate": 36,
+    "font_size_final": 43,
+    "n_lines": 6,
+    "lines": [
+      "AREN'T YOU",
+      "THE",
+      "HIGHEST",
+      "LEVEL",
+      "AMONG US,",
+      "ONII-CHAN?"
+    ],
+    "line_h_px": 38,
+    "spacing_px": 9,
+    "total_h_px": 273,
+    "zone_center": [
+      343.5,
+      16637.5
+    ],
+    "block_center": [
+      343.5,
+      16637.5
+    ],
+    "dx_px": 0.0,
+    "dy_px": 0.0,
+    "fill_ratio": 0.3313002786686997
+  },
+  {
+    "index": 19,
+    "class": "bulle",
+    "bbox": [
+      400,
+      17842,
+      684,
+      18241
+    ],
+    "ocr_text": "YEAH,4 EAH. I'M ALWAYS THE ONE GETTING BEATEN UP",
+    "source_line_height": 33.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      425,
+      17877,
+      665,
+      18214
+    ],
+    "inner_w": 208,
+    "inner_h": 309,
+    "fs_estimate": 38,
+    "font_size_final": 46,
+    "n_lines": 5,
+    "lines": [
+      "YEAH,4 EAH.",
+      "I'M ALWAYS",
+      "THE ONE",
+      "GETTING",
+      "BEATEN UP"
+    ],
+    "line_h_px": 41,
+    "spacing_px": 10,
+    "total_h_px": 245,
+    "zone_center": [
+      545.0,
+      18045.5
+    ],
+    "block_center": [
+      545.6,
+      18045.5
+    ],
+    "dx_px": 0.6000000000000227,
+    "dy_px": 0.0,
+    "fill_ratio": 0.34255974607916356
+  },
+  {
+    "index": 20,
+    "class": "bulle",
+    "bbox": [
+      170,
+      19058,
+      368,
+      19395
+    ],
+    "ocr_text": "IT MIGHT JUST BE A NORMAL RUN, BUT",
+    "source_line_height": 29.0,
+    "debug": "NO_HOOK_CAPTURED (autre chemin de rendu, ex: _draw_exact_lines hors-bulle)"
+  },
+  {
+    "index": 21,
+    "class": "bulle",
+    "bbox": [
+      45,
+      19297,
+      260,
+      19660
+    ],
+    "ocr_text": "MAKE SURE YOU COME BACK SAFE, OKAY?",
+    "source_line_height": 25.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      62,
+      19306,
+      170,
+      19611
+    ],
+    "inner_w": 76,
+    "inner_h": 277,
+    "fs_estimate": 26,
+    "font_size_final": 35,
+    "n_lines": 4,
+    "lines": [
+      "MAKE SURE",
+      "YOU COME",
+      "BACK SAFE,",
+      "OKAY?"
+    ],
+    "line_h_px": 31,
+    "spacing_px": 7,
+    "total_h_px": 145,
+    "zone_center": [
+      116.0,
+      19458.5
+    ],
+    "block_center": [
+      152.0,
+      19458.5
+    ],
+    "dx_px": 36.0,
+    "dy_px": 0.0,
+    "fill_ratio": 0.46883906517195517
+  },
+  {
+    "index": 22,
+    "class": "bulle",
+    "bbox": [
+      424,
+      20443,
+      568,
+      20664
+    ],
+    "ocr_text": "AKINA",
+    "source_line_height": 34.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      436,
+      20460,
+      558,
+      20647
+    ],
+    "inner_w": 90,
+    "inner_h": 159,
+    "fs_estimate": 47,
+    "font_size_final": 47,
+    "n_lines": 1,
+    "lines": [
+      "AKINA"
+    ],
+    "line_h_px": 42,
+    "spacing_px": 10,
+    "total_h_px": 42,
+    "zone_center": [
+      497.0,
+      20553.5
+    ],
+    "block_center": [
+      497.0,
+      20553.0
+    ],
+    "dx_px": 0.0,
+    "dy_px": -0.5,
+    "fill_ratio": 0.16771488469601678
+  },
+  {
+    "index": 23,
+    "class": "bulle",
+    "bbox": [
+      254,
+      21216,
+      465,
+      21499
+    ],
+    "ocr_text": "YOU'REMY ONLY BLOOD RELATIVE",
+    "source_line_height": 27.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      341,
+      21248,
+      442,
+      21487
+    ],
+    "inner_w": 69,
+    "inner_h": 211,
+    "fs_estimate": 24,
+    "font_size_final": 37,
+    "n_lines": 3,
+    "lines": [
+      "YOU'REMY",
+      "ONLY BLOOD",
+      "RELATIVE"
+    ],
+    "line_h_px": 33,
+    "spacing_px": 8,
+    "total_h_px": 115,
+    "zone_center": [
+      391.5,
+      21367.5
+    ],
+    "block_center": [
+      358.0,
+      21367.5
+    ],
+    "dx_px": -33.5,
+    "dy_px": 0.0,
+    "fill_ratio": 0.5854110859262311
+  },
+  {
+    "index": 24,
+    "class": "bulle",
+    "bbox": [
+      142,
+      21386,
+      341,
+      21711
+    ],
+    "ocr_text": "OFCOURSE I'M GOING TO WORRY!",
+    "source_line_height": 22.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      162,
+      21401,
+      254,
+      21674
+    ],
+    "inner_w": 60,
+    "inner_h": 245,
+    "fs_estimate": 26,
+    "font_size_final": 30,
+    "n_lines": 3,
+    "lines": [
+      "OFCOURSE I'M",
+      "GOING TO",
+      "WORRY!"
+    ],
+    "line_h_px": 27,
+    "spacing_px": 6,
+    "total_h_px": 93,
+    "zone_center": [
+      208.0,
+      21537.5
+    ],
+    "block_center": [
+      242.16666666666666,
+      21537.5
+    ],
+    "dx_px": 34.16666666666666,
+    "dy_px": 0.0,
+    "fill_ratio": 0.3765986394557823
+  },
+  {
+    "index": 25,
+    "class": "bulle",
+    "bbox": [
+      294,
+      22651,
+      465,
+      22869
+    ],
+    "ocr_text": "HEHE",
+    "source_line_height": 49.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      307,
+      22670,
+      452,
+      22854
+    ],
+    "inner_w": 113,
+    "inner_h": 156,
+    "fs_estimate": 68,
+    "font_size_final": 68,
+    "n_lines": 1,
+    "lines": [
+      "HEHE"
+    ],
+    "line_h_px": 60,
+    "spacing_px": 15,
+    "total_h_px": 60,
+    "zone_center": [
+      379.5,
+      22762.0
+    ],
+    "block_center": [
+      380.0,
+      22762.0
+    ],
+    "dx_px": 0.5,
+    "dy_px": 0.0,
+    "fill_ratio": 0.24098025867937373
+  },
+  {
+    "index": 26,
+    "class": "bulle",
+    "bbox": [
+      291,
+      23460,
+      484,
+      23706
+    ],
+    "ocr_text": "DON'T FORGET TO BRINGBACKA SOUVENIR!",
+    "source_line_height": 23.0,
+    "debug": "NO_HOOK_CAPTURED (autre chemin de rendu, ex: _draw_exact_lines hors-bulle)"
+  },
+  {
+    "index": 27,
+    "class": "bulle",
+    "bbox": [
+      414,
+      23333,
+      641,
+      23635
+    ],
+    "ocr_text": "FOR SUCH A KIND LITTLE SISTER WHO WORRIES ABOUT HERBROTHER...",
+    "source_line_height": 21.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      484,
+      23367,
+      619,
+      23621
+    ],
+    "inner_w": 103,
+    "inner_h": 226,
+    "fs_estimate": 20,
+    "font_size_final": 29,
+    "n_lines": 5,
+    "lines": [
+      "FOR SUCH A",
+      "KIND LITTLE",
+      "SISTER WHO",
+      "WORRIES ABOUT",
+      "HERBROTHER..."
+    ],
+    "line_h_px": 26,
+    "spacing_px": 6,
+    "total_h_px": 154,
+    "zone_center": [
+      551.5,
+      23494.0
+    ],
+    "block_center": [
+      524.8,
+      23494.0
+    ],
+    "dx_px": -26.700000000000045,
+    "dy_px": 0.0,
+    "fill_ratio": 0.49213849987112296
+  },
+  {
+    "index": 28,
+    "class": "bulle",
+    "bbox": [
+      181,
+      24627,
+      459,
+      24987
+    ],
+    "ocr_text": "yOu LITTLE-! YOU'RE WAY TOO CASUAL ABOUT THIS!",
+    "source_line_height": 52.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      200,
+      24663,
+      434,
+      24967
+    ],
+    "inner_w": 202,
+    "inner_h": 276,
+    "fs_estimate": 40,
+    "font_size_final": 43,
+    "n_lines": 6,
+    "lines": [
+      "YOU LITTLE-!",
+      "YOU'RE WAY",
+      "TOO",
+      "CASUAL",
+      "ABOUT",
+      "THIS!"
+    ],
+    "line_h_px": 38,
+    "spacing_px": 9,
+    "total_h_px": 273,
+    "zone_center": [
+      317.0,
+      24815.0
+    ],
+    "block_center": [
+      319.4166666666667,
+      24814.5
+    ],
+    "dx_px": 2.4166666666666856,
+    "dy_px": -0.5,
+    "fill_ratio": 0.30603386425599083
+  },
+  {
+    "index": 29,
+    "class": "out_text",
+    "bbox": [
+      254,
+      29865,
+      449,
+      30163
+    ],
+    "ocr_text": "EIGHT YEARS AGO",
+    "source_line_height": 92.0,
+    "debug": "NO_HOOK_CAPTURED (autre chemin de rendu, ex: _draw_exact_lines hors-bulle)"
+  },
+  {
+    "index": 30,
+    "class": "out_text",
+    "bbox": [
+      14,
+      31392,
+      438,
+      31676
+    ],
+    "ocr_text": "THE COORDINATES OF TOKYO'S 23 WARDS OVERLAPPED WITH AN OTHERWORLDLY DIMENSION CALLED HELL VERSE",
+    "source_line_height": 55.0,
+    "render_bail": null,
+    "is_bubble": false,
+    "has_mask_wrap": false,
+    "container": [
+      15,
+      31321,
+      483,
+      31666
+    ],
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      43,
+      31341,
+      455,
+      31646
+    ],
+    "inner_w": 380,
+    "inner_h": 277,
+    "fs_estimate": 35,
+    "font_size_final": 43,
+    "n_lines": 6,
+    "lines": [
+      "THE COORDINATES OF",
+      "TOKYO'S 23 WARDS",
+      "OVERLAPPED WITH AN",
+      "OTHERWORLDLY",
+      "DIMENSION CALLED",
+      "HELL VERSE"
+    ],
+    "line_h_px": 38,
+    "spacing_px": 9,
+    "total_h_px": 273,
+    "zone_center": [
+      249.0,
+      31493.5
+    ],
+    "block_center": [
+      249.0,
+      31493.5
+    ],
+    "dx_px": 0.0,
+    "dy_px": 0.0,
+    "fill_ratio": 0.39369181075432264
+  },
+  {
+    "index": 31,
+    "class": "out_text",
+    "bbox": [
+      315,
+      32742,
+      673,
+      32981
+    ],
+    "ocr_text": "THETWO WORLDS MERGED, AND THE TOKYO MAKAI APPEARED",
+    "source_line_height": 59.0,
+    "render_bail": null,
+    "is_bubble": false,
+    "has_mask_wrap": false,
+    "container": [
+      289,
+      32662,
+      689,
+      33132
+    ],
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      313,
+      32690,
+      665,
+      33104
+    ],
+    "inner_w": 320,
+    "inner_h": 386,
+    "fs_estimate": 52,
+    "font_size_final": 60,
+    "n_lines": 6,
+    "lines": [
+      "THETWO",
+      "WORLDS",
+      "MERGED, AND",
+      "THE TOKYO",
+      "MAKAI",
+      "APPEARED"
+    ],
+    "line_h_px": 53,
+    "spacing_px": 13,
+    "total_h_px": 383,
+    "zone_center": [
+      489.0,
+      32897.0
+    ],
+    "block_center": [
+      489.0,
+      32896.5
+    ],
+    "dx_px": 0.0,
+    "dy_px": -0.5,
+    "fill_ratio": 0.3304566062176166
+  },
+  {
+    "index": 32,
+    "class": "out_text",
+    "bbox": [
+      182,
+      38113,
+      545,
+      38326
+    ],
+    "ocr_text": "MONSTERS SUDDENLY BEGAN TO RUN WILD",
+    "source_line_height": 68.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      210,
+      38134,
+      515,
+      38313
+    ],
+    "inner_w": 273,
+    "inner_h": 151,
+    "fs_estimate": 36,
+    "font_size_final": 49,
+    "n_lines": 3,
+    "lines": [
+      "MONSTERS",
+      "SUDDENLY BEGAN",
+      "TO RUN WILD"
+    ],
+    "line_h_px": 43,
+    "spacing_px": 10,
+    "total_h_px": 149,
+    "zone_center": [
+      362.5,
+      38223.5
+    ],
+    "block_center": [
+      363.5,
+      38223.5
+    ],
+    "dx_px": 1.0,
+    "dy_px": 0.0,
+    "fill_ratio": 0.4713388157096766
+  },
+  {
+    "index": 33,
+    "class": "out_text",
+    "bbox": [
+      121,
+      39798,
+      302,
+      39850
+    ],
+    "ocr_text": "VORTEX SCANS",
+    "source_line_height": 38.480000000000004,
+    "render_bail": null,
+    "is_bubble": false,
+    "has_mask_wrap": false,
+    "container": [
+      111,
+      39766,
+      341,
+      39871
+    ],
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      124,
+      39772,
+      328,
+      39865
+    ],
+    "inner_w": 172,
+    "inner_h": 65,
+    "fs_estimate": 32,
+    "font_size_final": 32,
+    "n_lines": 2,
+    "lines": [
+      "VORTEX",
+      "SCANS"
+    ],
+    "line_h_px": 29,
+    "spacing_px": 7,
+    "total_h_px": 65,
+    "zone_center": [
+      226.0,
+      39818.5
+    ],
+    "block_center": [
+      226.0,
+      39818.5
+    ],
+    "dx_px": 0.0,
+    "dy_px": 0.0,
+    "fill_ratio": 0.24481216457960644
+  },
+  {
+    "index": 34,
+    "class": "out_text",
+    "bbox": [
+      128,
+      40269,
+      515,
+      40484
+    ],
+    "ocr_text": "AND THOSE OF US IN THE CITY WERE ATTACKED",
+    "source_line_height": 73.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      156,
+      40292,
+      483,
+      40473
+    ],
+    "inner_w": 295,
+    "inner_h": 153,
+    "fs_estimate": 35,
+    "font_size_final": 49,
+    "n_lines": 3,
+    "lines": [
+      "AND THOSE OF",
+      "US IN THE CITY",
+      "WERE ATTACKED"
+    ],
+    "line_h_px": 43,
+    "spacing_px": 10,
+    "total_h_px": 149,
+    "zone_center": [
+      319.5,
+      40382.5
+    ],
+    "block_center": [
+      321.0,
+      40382.5
+    ],
+    "dx_px": 1.5,
+    "dy_px": 0.0,
+    "fill_ratio": 0.4914146449540268
+  },
+  {
+    "index": 35,
+    "class": "out_text",
+    "bbox": [
+      157,
+      42681,
+      509,
+      42827
+    ],
+    "ocr_text": "MY PARENTS DIDN'T MAKE IT",
+    "source_line_height": 72.0,
+    "debug": "NO_HOOK_CAPTURED (autre chemin de rendu, ex: _draw_exact_lines hors-bulle)"
+  },
+  {
+    "index": 36,
+    "class": "bulle",
+    "bbox": [
+      43,
+      43076,
+      274,
+      43415
+    ],
+    "ocr_text": "GOD, PLEASE... AT LEAST SAVE AKINA",
+    "source_line_height": 32.0,
+    "render_bail": null,
+    "is_bubble": false,
+    "has_mask_wrap": false,
+    "container": [
+      46,
+      43078,
+      273,
+      43418
+    ],
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      59,
+      43098,
+      260,
+      43398
+    ],
+    "inner_w": 169,
+    "inner_h": 272,
+    "fs_estimate": 39,
+    "font_size_final": 44,
+    "n_lines": 5,
+    "lines": [
+      "GOD,",
+      "PLEASE...",
+      "AT LEAST",
+      "SAVE",
+      "AKINA"
+    ],
+    "line_h_px": 39,
+    "spacing_px": 9,
+    "total_h_px": 231,
+    "zone_center": [
+      159.5,
+      43248.0
+    ],
+    "block_center": [
+      159.5,
+      43247.5
+    ],
+    "dx_px": 0.0,
+    "dy_px": -0.5,
+    "fill_ratio": 0.27941176470588236
+  }
+]

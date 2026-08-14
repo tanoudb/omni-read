@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read", "Edit", "Write", "Glob", "Grep",
+      "Bash(.venv311/Scripts/python.exe *)",
+      "Bash(.venv_paddleocr/Scripts/python.exe *)",
+      "Bash(python *)", "Bash(py *)", "Bash(pytest *)",
+      "Bash(git status*)", "Bash(git log*)", "Bash(git diff*)", "Bash(git show*)",
+      "Bash(git add*)", "Bash(git commit*)", "Bash(git branch*)", "Bash(git stash*)",
+      "Bash(ls*)", "Bash(cat*)", "Bash(head*)", "Bash(tail*)", "Bash(wc*)",
+      "Bash(find*)", "Bash(grep*)", "Bash(sort*)", "Bash(cp*)", "Bash(mkdir*)",
+      "Bash(echo*)", "Bash(nvidia-smi*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(rm -rf *)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(curl *)",
+      "Bash(wget *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\tanou\\AppData\\Local\\Temp\\claude"
+    ]
+  }
+}

@@ -77,13 +77,49 @@ _SHORT_WORDS = frozenset({
     "LV",
 })
 
+# Bruit du corpus `wordsegment` : ces suites de lettres y figurent comme
+# "mot connu" (fragments d'URL/slang du corpus web d'origine) alors qu'elles
+# ne sont jamais un mot anglais valide dans un manhwa — sans ce denylist,
+# `_is_known_word` les laisse passer et bloque tout découpage ("INOT" reste
+# collé au lieu de "I NOT", trouvé sur un cas réel).
+# "ofcourse" : même mécanisme, trouvé sur path-of-vengeance ch1
+# ("OFCOURSE I'MGOINGTO WORRY!" reste collé) — le corpus web contient assez
+# d'occurrences du typo "ofcourse" en un seul mot (freq ~340k) pour que
+# `_is_known_word` le valide tel quel et court-circuite le découpage, alors
+# que `ws.segment('ofcourse')` proposerait correctement ['of', 'course'].
+# Lot suivant, trouvé sur the-frontier-count's-10th-class-outcas ch1 (même
+# mécanisme, vérifié un par un via `_is_known_word` avant ajout — chacun de
+# ces "mots" est bien absent de tout dictionnaire anglais réel) :
+# "ican"/"backto" ("ICAN NEVER GO BACKTO THOSE DAYS"), "fromme" ("A GIFT
+# FROMME"), "bigbrother" ("BIGBROTHER! BIGBROTHER!"), "iwas" ("WHEN IWAS
+# TEN"), "iam" ("WHO IAM"), "buti" ("BUTI HAVEN'T LOST"), "sizeof" ("THE
+# SIZEOF THAT VESSEL"), "ata" ("CIRCULATES ATA SPEED").
+_KNOWN_WORD_DENYLIST = frozenset({
+    "inot", "whatis", "founda", "ihave", "duringthe", "ofcourse",
+    "ican", "backto", "fromme", "bigbrother", "iwas", "iam", "buti",
+    "sizeof", "ata",
+})
+
 _wordsegment_state: Dict[str, object] = {"loaded": False, "module": None}
 _split_cache: Dict[str, Optional[List[str]]] = {}
 _protected_state: Dict[str, object] = {}
 
 
 def _wordsegment():
-    """Charge `wordsegment` à la première utilisation (~0.5 s, ~87 Mo)."""
+    """Charge `wordsegment` à la première utilisation (~0.5 s, ~87 Mo).
+
+    Root cause investiguée (2026-08-14) : la quasi-totalité des mots collés
+    listés comme "non rattrapés" (YOUCOMEBACK, BRINGBACKA, HEAVYWARRIOR,
+    KUROIPLAYER, WHOWORRIESABOUT, SUPPLYRUN/DUTYAGAIN, MIGHTJUST/BEANORMAL,
+    OFCOURSE/I'MGOINGTO...) segmentent CORRECTEMENT une fois `wordsegment`
+    réellement chargé — le module n'était simplement PAS installé dans
+    l'environnement `python` utilisé pour lancer le pipeline (présent dans
+    requirements.txt mais absent du site-packages actif), alors qu'il l'est
+    dans `.venv311`. L'`except Exception` ci-dessous avalait le
+    `ModuleNotFoundError` en silence : tout le découpeur de mots collés
+    tournait à vide sans qu'aucun log ne le signale. On log désormais
+    l'échec une fois pour que ça ne se reproduise plus silencieusement.
+    """
     if not _wordsegment_state["loaded"]:
         _wordsegment_state["loaded"] = True
         try:
@@ -91,14 +127,21 @@ def _wordsegment():
 
             wordsegment.load()
             _wordsegment_state["module"] = wordsegment
-        except Exception:
+        except Exception as exc:
             _wordsegment_state["module"] = None
+            print(
+                f"⚠️ wordsegment indisponible ({exc}) — le découpage des mots "
+                f"collés OCR (YOUCOMEBACK, BRINGBACKA...) est DÉSACTIVÉ. "
+                f"Vérifiez `pip show wordsegment` dans l'environnement utilisé "
+                f"pour lancer le pipeline (`pip install wordsegment==1.3.1`)."
+            )
     return _wordsegment_state["module"]
 
 
 def _is_known_word(word: str) -> bool:
     ws = _wordsegment()
-    return bool(ws) and word.lower() in ws.UNIGRAMS
+    lower = word.lower()
+    return bool(ws) and lower in ws.UNIGRAMS and lower not in _KNOWN_WORD_DENYLIST
 
 
 def _acceptable_pieces(pieces: List[str]) -> bool:
@@ -173,18 +216,59 @@ def _segment_token(core: str, protected: frozenset) -> Optional[List[str]]:
 
     result: Optional[List[str]] = None
     letters = [c for c in core if c.isalnum()]
+    joined_letters = "".join(letters)
+
+    # Cas court-circuité : "I"/"A" collé au mot suivant ("AGIFT", "ITOLD",
+    # "INOT") passe sous `_SEG_MIN_TOKEN_LEN` et n'est donc jamais tenté, alors
+    # que c'est le collage le plus fréquent sur ce pronom/article d'une seule
+    # lettre. Restreint au cas où le RESTE (sans le "I"/"A" initial) est déjà
+    # un mot connu, pour ne jamais toucher un vrai mot en I/A ("ICE", "AGE",
+    # "AND"...) ni une onomatopée courte ("AHHH", "IDK"...).
+    is_short_prefix_glue = (
+        len(letters) >= 3
+        and letters[0].upper() in ("I", "A")
+        and _is_known_word("".join(letters[1:]))
+    )
+
+    # Symétrique du cas ci-dessus, mais le pronom/article d'une lettre est
+    # collé APRÈS le mot ("ATA" = "AT"+"A", "BUTI" = "BUT"+"I") plutôt
+    # qu'avant. Trouvé sur the-frontier-count's-10th-class-outcas ch1
+    # ("MANA CIRCULATES ATA SPEED", "BUTI HAVEN'T LOST"). Même garde-fou
+    # (RESTE déjà un mot connu) pour ne jamais toucher un vrai mot en I/A
+    # final ("AREA", "IDEA", "TAXI"...) : ces mots-là sont eux-mêmes des
+    # mots connus, donc bloqués par `not _is_known_word(joined_letters)`
+    # ci-dessous avant même d'atteindre ce test.
+    is_short_suffix_glue = (
+        len(letters) >= 3
+        and letters[-1].upper() in ("I", "A")
+        and _is_known_word("".join(letters[:-1]))
+    )
 
     if (
-        len(core) >= _SEG_MIN_TOKEN_LEN
-        and len(letters) >= _SEG_MIN_TOKEN_LEN
-        and not _is_known_word("".join(letters))
-    ):
+        (
+            len(core) >= _SEG_MIN_TOKEN_LEN
+            and len(letters) >= _SEG_MIN_TOKEN_LEN
+        )
+        or is_short_prefix_glue
+        or is_short_suffix_glue
+    ) and not _is_known_word(joined_letters):
         ws = _wordsegment()
         if ws is not None:
-            try:
-                pieces = ws.segment("".join(letters))
-            except Exception:
-                pieces = []
+            if is_short_prefix_glue:
+                # `ws.segment` juge en probabilité globale : sur "ITOLD" il
+                # préfère parfois "it"+"old" à "i"+"told", les deux étant des
+                # mots connus. On a déjà vérifié que le reste après le seul
+                # "I"/"A" initial est un mot connu — trancher directement sur
+                # cette frontière-là plutôt que de laisser `segment` réémettre
+                # une autre coupe, statistiquement plausible mais fausse ici.
+                pieces = [letters[0], "".join(letters[1:])]
+            elif is_short_suffix_glue:
+                pieces = ["".join(letters[:-1]), letters[-1]]
+            else:
+                try:
+                    pieces = ws.segment("".join(letters))
+                except Exception:
+                    pieces = []
 
             # `segment` peut perdre des caractères ; sans cette vérification on
             # réécrirait un texte différent de celui lu.
@@ -226,6 +310,30 @@ def _protected_words() -> frozenset:
     return _protected_state.get('value') or frozenset()
 
 
+_CONTRACTION_GLUE = re.compile(
+    r"^(?P<head>[A-Za-z]+'(?:re|ll|ve|t|s|d|m))(?P<tail>[A-Za-z]{2,})$",
+    re.IGNORECASE,
+)
+
+
+def _split_after_contraction(core: str, protected: frozenset) -> str:
+    """Détache le mot collé DERRIÈRE une contraction ("YOU'REMY" -> "YOU'RE MY").
+
+    Repli utilisé seulement quand `_segment_token` a déjà renoncé sur le token
+    entier : lui, il concatène les lettres sans l'apostrophe et sait très bien
+    traiter "I'VEGOTIT" d'un bloc. On n'intervient donc que sur ce qu'il laisse
+    passer — mesuré sur path-of-vengeance ch1 : "YOU'REMY ONLY BLOOD RELATIVE",
+    "I'MGOINGTO WORRY!", "KAZUKI'SON SUPPLY RUN DUTY AGAIN".
+    """
+    m = _CONTRACTION_GLUE.match(core)
+    if not m:
+        return core
+    tail = m.group("tail")
+    tail_pieces = _segment_token(tail, protected)
+    tail_out = " ".join(tail_pieces) if tail_pieces else tail
+    return f"{m.group('head')} {tail_out}"
+
+
 def _split_glued_words(text: str, protected: Optional[frozenset] = None) -> str:
     """
     Rétablit les espaces dans les mots collés par l'OCR.
@@ -251,6 +359,7 @@ def _split_glued_words(text: str, protected: Optional[frozenset] = None) -> str:
     text = re.sub(r'(?<=[A-Za-z])([.:])(?=[A-Za-z0-9])', r'\1 ', text)
     text = re.sub(r'(?<=[A-Za-z0-9])(\()(?=[A-Za-z0-9])', r' \1', text)
 
+
     protected = protected or frozenset()
     result: List[str] = []
 
@@ -271,6 +380,8 @@ def _split_glued_words(text: str, protected: Optional[frozenset] = None) -> str:
             continue
 
         pieces = _segment_token(core, protected)
+        if not pieces:
+            core = _split_after_contraction(core, protected)
         result.append(leading + (" ".join(pieces) if pieces else core) + trailing)
 
     text = " ".join(result)
@@ -280,6 +391,47 @@ def _split_glued_words(text: str, protected: Optional[frozenset] = None) -> str:
     text = re.sub(r'(\d)([A-Za-z])', r'\1 \2', text)
 
     return re.sub(r' {2,}', ' ', text).strip()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WATERMARK STRIP — fix ciblé d'un bug dans utils/filters.py (hors périmètre)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# `TextFilter.strip_watermark_fragments` (utils/filters.py) termine par
+# `.strip(" .-—|")` INCONDITIONNEL, même quand AUCUN pattern watermark n'a
+# matché. Conséquence mesurée sur `scratch/render_out/pov_full_v0/bubbles_meta.json` :
+# du texte de dialogue parfaitement propre perd sa ponctuation finale
+# légitime — "AKINA..." -> "AKINA", "HEHE." -> "HEHE", "LOST AGAIN..." ->
+# "LOST AGAIN", "*PANT*.." -> "*PANT*" — alors que l'OCR brut (avant tout
+# post-traitement) contenait bien cette ponctuation (vérifié via
+# `debug_hook` sur `OCREngine.extract_batch`, texte primaire PaddleOCR
+# inchangé). `utils/filters.py` est hors périmètre pour cette tâche (un
+# autre agent y travaille en parallèle), donc on ne le corrige pas
+# directement : on réimplémente ici la même logique de suppression de
+# fragments, mais on ne strippe les bords qu'APRÈS confirmation qu'un
+# pattern watermark a réellement été substitué (sinon rien à nettoyer en
+# bordure). Comportement inchangé sur les vrais watermarks ("CRAWLED BY
+# MANHWACLAN.COM SHARDS OF OUR GOD..." -> "SHARDS OF OUR GOD" dans les
+# deux versions).
+def _strip_watermark_fragments_safe(text_filter, text: str) -> str:
+    if not text:
+        return text
+    out = text
+    matched = False
+    for pattern in text_filter.watermark_patterns:
+        if pattern.pattern.startswith('^') or pattern.pattern.endswith('$'):
+            continue
+        new_out = pattern.sub(' ', out)
+        if new_out != out:
+            matched = True
+        out = new_out
+    out = re.sub(r'\s+([.,:;])', r'\1', out)
+    out = re.sub(r'\s{2,}', ' ', out).strip()
+    if matched:
+        # Un fragment a bien été retiré : nettoyer la ponctuation/tirets
+        # orphelins qu'il a pu laisser en bordure (comportement original).
+        out = out.strip(" .-—|")
+    return out
 
 
 class OCREngine:
@@ -379,7 +531,7 @@ class OCREngine:
             pass
         text = self.text_filter.clean_text(text)
         if getattr(config.filters, 'enable_watermark_filter', True):
-            text = self.text_filter.strip_watermark_fragments(text)
+            text = _strip_watermark_fragments_safe(self.text_filter, text)
         text = re.sub(r"\b1\.(?=\s+[A-Z])", "I.", text)
         text = re.sub(r"\bI\.(?=\s+THE\b)", "I,", text)
         text = re.sub(r"(?<=[A-Z])\s+1\s+(?=[A-Z])", " I ", text)

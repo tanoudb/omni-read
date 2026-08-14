@@ -42,6 +42,24 @@ DOIT_DECOUPER = [
     # valides (liste blanche) -- moyenne recalculee en les excluant.
     ("TOBEGIN", "TO BEGIN"),
     ("WEWALKED", "WE WALKED"),
+    # "I"/"A" colle au mot suivant, en dessous de _SEG_MIN_TOKEN_LEN donc
+    # jamais tente avant (the-frontier-count's-10th-class-outcas, ch1 p1) :
+    # pronom/article d'une lettre, le collage le plus frequent.
+    ("AGIFT", "A GIFT"),
+    ("ITOLD", "I TOLD"),
+    ("INOT", "I NOT"),
+    ("WASSICK", "WAS SICK"),
+    # bruit du corpus wordsegment (denylist) : ces suites de lettres y
+    # figurent comme "mot connu" (the-frontier-count's-10th-class-outcas,
+    # ch1 p2), ce qui bloquait tout decoupage a tort.
+    ("IHAVE", "I HAVE"),
+    ("DURINGTHE", "DURING THE"),
+    # mot colle DERRIERE une contraction (path-of-vengeance ch1) : le token
+    # contient une apostrophe interne, `_segment_token` renonce, et le repli
+    # `_split_after_contraction` doit prendre le relais.
+    ("YOU'REMY", "YOU'RE MY"),
+    ("I'MGOINGTO", "I'M GOING TO"),
+    ("I'VEGOTIT", "I'VE GOT IT"),
 ]
 
 DOIT_LAISSER_INTACT = [
@@ -57,6 +75,8 @@ DOIT_LAISSER_INTACT = [
     # ne doit JAMAIS etre modifie par la pre-passe de ponctuation interne
     "3.5",              # nombre decimal
     "12:30",            # heure
+    # vrais mots en I/A a ne jamais casser (regression du fix "I"/"A" colle)
+    "ICE", "AGE", "AND", "AWAY", "IDEA", "ITEM", "ANEW",
 ]
 
 PROTEGES = frozenset({"SUNGJINWOO", "CHEONGDO"})

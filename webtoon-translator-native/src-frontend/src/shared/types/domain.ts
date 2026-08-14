@@ -12,6 +12,10 @@ export interface TextStyle {
   font_size: number;
   align: 'left' | 'center' | 'right';
   color: string;
+  stroke_color?: string;
+  stroke_width?: number;
+  bg_color?: string;
+  angle?: number;
 }
 
 export interface MaskPoint {
@@ -82,6 +86,7 @@ export interface ProjectSettings {
   source_lang: string;
   target_lang: string;
   cache_enabled: boolean;
+  glossary?: Record<string, string>;
   render?: {
     skip_inpainting_on_text_only?: boolean;
   };

@@ -1,0 +1,300 @@
+[
+  {
+    "index": 0,
+    "class": "bulle",
+    "bbox": [
+      44,
+      292,
+      257,
+      667
+    ],
+    "ocr_text": "MAKE SURE YOU COME BACK SAFE, OKAY?",
+    "source_line_height": 23.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      61,
+      299,
+      240,
+      614
+    ],
+    "inner_w": 147,
+    "inner_h": 287,
+    "fs_estimate": 32,
+    "font_size_final": 32,
+    "n_lines": 3,
+    "lines": [
+      "MAKE SURE",
+      "YOU COME BACK",
+      "SAFE, OKAY?"
+    ],
+    "line_h_px": 29,
+    "spacing_px": 7,
+    "total_h_px": 101,
+    "zone_center": [
+      150.5,
+      456.5
+    ],
+    "block_center": [
+      148.66666666666666,
+      456.5
+    ],
+    "dx_px": -1.8333333333333428,
+    "dy_px": 0.0,
+    "fill_ratio": 0.19431605394771148
+  },
+  {
+    "index": 1,
+    "class": "bulle",
+    "bbox": [
+      424,
+      1441,
+      568,
+      1659
+    ],
+    "ocr_text": "AKINA",
+    "source_line_height": 35.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      436,
+      1462,
+      558,
+      1646
+    ],
+    "inner_w": 90,
+    "inner_h": 156,
+    "fs_estimate": 49,
+    "font_size_final": 49,
+    "n_lines": 1,
+    "lines": [
+      "AKINA"
+    ],
+    "line_h_px": 43,
+    "spacing_px": 10,
+    "total_h_px": 43,
+    "zone_center": [
+      497.0,
+      1554.0
+    ],
+    "block_center": [
+      497.0,
+      1553.5
+    ],
+    "dx_px": 0.0,
+    "dy_px": -0.5,
+    "fill_ratio": 0.17962962962962964
+  },
+  {
+    "index": 2,
+    "class": "bulle",
+    "bbox": [
+      243,
+      2216,
+      466,
+      2500
+    ],
+    "ocr_text": "YOU'REMY ONLY BLOOD RELATIVE",
+    "source_line_height": 27.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      341,
+      2249,
+      444,
+      2489
+    ],
+    "inner_w": 71,
+    "inner_h": 212,
+    "fs_estimate": 24,
+    "font_size_final": 37,
+    "n_lines": 3,
+    "lines": [
+      "YOU'REMY",
+      "ONLY BLOOD",
+      "RELATIVE"
+    ],
+    "line_h_px": 33,
+    "spacing_px": 8,
+    "total_h_px": 115,
+    "zone_center": [
+      392.5,
+      2369.0
+    ],
+    "block_center": [
+      356.1666666666667,
+      2368.5
+    ],
+    "dx_px": -36.333333333333314,
+    "dy_px": -0.5,
+    "fill_ratio": 0.5662370449109753
+  },
+  {
+    "index": 3,
+    "class": "bulle",
+    "bbox": [
+      142,
+      2385,
+      341,
+      2709
+    ],
+    "ocr_text": "OF COURSE I'M GOING TO WORRY!",
+    "source_line_height": 24.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      162,
+      2400,
+      243,
+      2674
+    ],
+    "inner_w": 49,
+    "inner_h": 246,
+    "fs_estimate": 23,
+    "font_size_final": 33,
+    "n_lines": 3,
+    "lines": [
+      "OF COURSE",
+      "I'M GOING",
+      "TO WORRY!"
+    ],
+    "line_h_px": 30,
+    "spacing_px": 7,
+    "total_h_px": 104,
+    "zone_center": [
+      202.5,
+      2537.0
+    ],
+    "block_center": [
+      242.33333333333334,
+      2537.0
+    ],
+    "dx_px": 39.83333333333334,
+    "dy_px": 0.0,
+    "fill_ratio": 0.5827940932470549
+  },
+  {
+    "index": 4,
+    "class": "bulle",
+    "bbox": [
+      294,
+      3650,
+      466,
+      3870
+    ],
+    "ocr_text": "HEHE",
+    "source_line_height": 50.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      306,
+      3669,
+      452,
+      3855
+    ],
+    "inner_w": 114,
+    "inner_h": 158,
+    "fs_estimate": 70,
+    "font_size_final": 70,
+    "n_lines": 1,
+    "lines": [
+      "HEHE"
+    ],
+    "line_h_px": 61,
+    "spacing_px": 15,
+    "total_h_px": 61,
+    "zone_center": [
+      379.0,
+      3762.0
+    ],
+    "block_center": [
+      380.0,
+      3761.5
+    ],
+    "dx_px": 1.0,
+    "dy_px": -0.5,
+    "fill_ratio": 0.24650233177881412
+  },
+  {
+    "index": 5,
+    "class": "bulle",
+    "bbox": [
+      291,
+      4460,
+      487,
+      4706
+    ],
+    "ocr_text": "DON'T FORGET TO BRINGBACKA SOUVENIR!",
+    "source_line_height": 23.0,
+    "debug": "NO_HOOK_CAPTURED (autre chemin de rendu, ex: _draw_exact_lines hors-bulle)"
+  },
+  {
+    "index": 6,
+    "class": "bulle",
+    "bbox": [
+      415,
+      4332,
+      642,
+      4638
+    ],
+    "ocr_text": "FOR SUCH A KIND LITTLE SISTER WHOWORRIESABOUT HERBROTHER..",
+    "source_line_height": 21.0,
+    "render_bail": null,
+    "is_bubble": true,
+    "has_mask_wrap": true,
+    "container": null,
+    "use_locked_mode": false,
+    "angle_deg": 0.0,
+    "usable_zone": [
+      487,
+      4365,
+      619,
+      4623
+    ],
+    "inner_w": 100,
+    "inner_h": 230,
+    "fs_estimate": 21,
+    "font_size_final": 26,
+    "n_lines": 4,
+    "lines": [
+      "FOR SUCH A KIND",
+      "LITTLE SISTER",
+      "WHOWORRIESABOUT",
+      "HERBROTHER.."
+    ],
+    "line_h_px": 24,
+    "spacing_px": 6,
+    "total_h_px": 114,
+    "zone_center": [
+      553.0,
+      4494.0
+    ],
+    "block_center": [
+      525.875,
+      4494.0
+    ],
+    "dx_px": -27.125,
+    "dy_px": 0.0,
+    "fill_ratio": 0.3917826086956522
+  }
+]

@@ -25,24 +25,33 @@ export interface ProjectStoreActions {
     overrides: { source_override?: string | null; translated_override?: string | null }
   ) => void;
   saveProject: () => Promise<void>;
+  setSavingState: (isSaving: boolean, error: string | null, time?: string) => void;
+  updateGlossary: (glossary: Record<string, string>) => void;
   markDirty: () => void;
 }
 
 export interface CanvasStoreState {
   activePageId: string | null;
   activeBubbleId: string | null;
+  hoveredBubbleId: string | null;
   tool: ToolMode;
   viewport: ViewportState;
   showTranslated: boolean;
+  showOriginal: boolean;
   zoomEnabled: boolean;
+  drawingRect: { x: number; y: number; w: number; h: number } | null;
 }
 
 export interface CanvasStoreActions {
   setTool: (tool: ToolMode) => void;
   setActivePage: (pageId: string | null) => void;
   setActiveBubble: (bubbleId: string | null) => void;
+  setHoveredBubble: (id: string | null) => void;
   setViewport: (viewport: Partial<ViewportState>) => void;
   setZoomEnabled: (enabled: boolean) => void;
+  setShowOriginal: (show: boolean) => void;
+  toggleShowOriginal: () => void;
+  setDrawingRect: (rect: { x: number; y: number; w: number; h: number } | null) => void;
 }
 
 export interface JobsStoreState {

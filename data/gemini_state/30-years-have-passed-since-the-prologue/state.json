@@ -1,0 +1,42 @@
+{
+  "glossary": {
+    "Mana System": "Système de mana",
+    "Allied Kingdom": "Royaume Allié",
+    "International University": "Université internationale",
+    "Yansk University": "Université de Yansk",
+    "Demon King": "Roi Démon",
+    "Hero's Party": "groupe du Héros",
+    "academy story": "histoire d'académie",
+    "Status Window": "Fenêtre de statut",
+    "List of Candidate Transmigration Works": "Liste des œuvres de transmigration candidates",
+    "conscript": "conscript",
+    "regular army": "armée régulière",
+    "Hero": "Héros",
+    "RPG": "RPG",
+    "hero story": "histoire de héros",
+    "Extermination Squad": "Escouade d'Extermination",
+    "Isekai": "Isekai",
+    "slice-of-life": "slice-of-life"
+  },
+  "personnages": {
+    "Kim Sun Woo": "Un citoyen de la République de Corée, transmigré dans un autre monde. Ancien critique de web-romans.",
+    "Dmitri": "Un personnage qui semble connaître Kim Sun Woo (Ivan) et lui apporte une lettre.",
+    "Princesse": "Son Altesse la Princesse, en difficulté politique.",
+    "Elizaveta Kirillovna Krasilov": "La Princesse, surnommée \"Liza au sang de fer\".",
+    "Aleksandr": "Le Prince héritier, frère de la Princesse, qui tente de diviser le pays.",
+    "Grand Roi": "Le Roi actuel, qui reste passif face aux problèmes du royaume.",
+    "Isabelle": "Fille du héros Maximilian, étudiante à l'Université de Yansk.",
+    "Maximilian": "Héros, père d'Isabelle.",
+    "Oscar": "Fils du chevalier Gilles VCDT, étudiant à l'Université de Yansk.",
+    "Gilles VCDT": "Chevalier, père d'Oscar.",
+    "Elphina Era": "Fille de Mauldululin, étudiante à l'Université de Yansk.",
+    "Mauldululin": "Père d'Elphina Era.",
+    "Hecydis": "Fille du Berserker Einar, étudiante à l'Université de Yansk.",
+    "Einar": "Berserker, père d'Hecydis.",
+    "Lucia": "Disciple du Voleur Enrique, étudiante à l'Université de Yansk.",
+    "Enrique": "Voleur, maître de Lucia.",
+    "Patricia": "L'ancienne Sainte du groupe du Héros, nouvelle cheffe de département à l'Université de Yansk.",
+    "Ivan Petrovich": "Le garçon dont Kim Sun Woo a pris le corps. Fils de métayers, devenu soldat.",
+    "Vasilisa": "Nom de l'orphelinat fondé par Ivan."
+  }
+}

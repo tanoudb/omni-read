@@ -1,0 +1,10 @@
+{
+  "name": "Hellogin",
+  "slug": "hellogin",
+  "source_lang": "en",
+  "target_lang": "fr",
+  "genre": "fantasy",
+  "tone_general": "variable selon le chapitre",
+  "characters": [],
+  "world_terms": {}
+}

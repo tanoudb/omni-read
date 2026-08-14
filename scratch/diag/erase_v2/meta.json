@@ -1,0 +1,68 @@
+[
+  {
+    "index": 0,
+    "class": "out_text",
+    "bbox": [
+      13,
+      1794,
+      436,
+      2078
+    ],
+    "text": "THE COORDINATES OF TOKYO'S 23 WARDS OVERLAPPED WITH AN OTHER"
+  },
+  {
+    "index": 1,
+    "class": "out_text",
+    "bbox": [
+      308,
+      3148,
+      681,
+      3376
+    ],
+    "text": "THETWO WORLDS MERGED, AND THE TOKYO MAKAI APPEARED"
+  },
+  {
+    "index": 2,
+    "class": "out_text",
+    "bbox": [
+      185,
+      8517,
+      542,
+      8726
+    ],
+    "text": "MONSTERS SUDDENLY BEGAN TO RUN WILD. 88"
+  },
+  {
+    "index": 3,
+    "class": "out_text",
+    "bbox": [
+      123,
+      10207,
+      307,
+      10243
+    ],
+    "text": "VORTEX SCANS"
+  },
+  {
+    "index": 4,
+    "class": "out_text",
+    "bbox": [
+      124,
+      10668,
+      514,
+      10884
+    ],
+    "text": "AND THOSE OF US IN THE CITY WERE ATTACKED"
+  },
+  {
+    "index": 5,
+    "class": "out_text",
+    "bbox": [
+      159,
+      13080,
+      505,
+      13224
+    ],
+    "text": "MY PARENTS DIDNT MAKE IT"
+  }
+]
