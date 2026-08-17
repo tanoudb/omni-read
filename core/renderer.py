@@ -343,12 +343,37 @@ class TextRenderer:
         ("narration", "thin"): ["CCWILDWORDS-REGULAR", "ANIME_ACE_2.0"],
     }
 
+    @staticmethod
+    def _find_font_by_fragment(fragment: str) -> Optional[str]:
+        """Chemin de la première police dont le nom contient `fragment`."""
+        try:
+            import glob
+            frag = fragment.lower()
+            for path in glob.glob("assets/fonts/**/*.*", recursive=True):
+                if not path.lower().endswith((".ttf", ".otf")):
+                    continue
+                if frag in Path(path).name.lower():
+                    return path
+        except Exception:
+            pass
+        return None
+
     def _preferred_font(self, style: str, font_hint: str) -> Optional[str]:
         """Première police de `PREFERRED_FONTS` réellement disponible, ou None.
 
         `system_card` est volontairement absent : le rendu HUD de ces cartes
         assume sa police techno, zéro barré compris.
         """
+        # Court-circuit d'essai : `WEBTOON_FONT_FORCE` impose une police par
+        # fragment de nom, pour comparer des candidats sur les mêmes crops sans
+        # toucher au code. Sert au A/B de `scratch/ab_fonts.py`.
+        import os as _os
+        forced = _os.environ.get("WEBTOON_FONT_FORCE", "").strip()
+        if forced:
+            hit = self._find_font_by_fragment(forced)
+            if hit:
+                return hit
+
         names = self.PREFERRED_FONTS.get((style, (font_hint or "regular").lower()))
         if not names:
             names = self.PREFERRED_FONTS.get((style, "regular"))
@@ -725,11 +750,13 @@ class TextRenderer:
                     self._erasure_failed(crop, erased, local_mask)
                     or self._ghost_remains(erased, local_mask)
                 ):
-                    # La lueur peut s'étendre bien au-delà du bloc calculé sur
-                    # les polygones : on élargit franchement pour la seconde
-                    # passe, c'est le seul moyen d'emporter le halo entier.
-                    grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25))
-                    wider = cv2.dilate(cv2.bitwise_or(local_mask, block_mask), grow)
+                    # La lueur s'étend bien au-delà du bloc calculé sur les
+                    # polygones. On l'attrape en suivant sa RAMPE plutôt qu'en
+                    # dilatant à l'aveugle : la croissance s'arrête sur les
+                    # arêtes du décor au lieu de les manger.
+                    wider = self._halo_grow(
+                        crop, cv2.bitwise_or(local_mask, block_mask), max_radius=30,
+                    )
                     retry = self._inpaint_lama(crop, wider)
                     erased2 = crop.copy()
                     erased2[wider > 0] = retry[wider > 0]
@@ -903,6 +930,68 @@ class TextRenderer:
             return True
 
         return False
+
+    @staticmethod
+    def _halo_grow(crop: np.ndarray, ink_mask: np.ndarray, max_radius: int = 30) -> np.ndarray:
+        """Étend le masque le long de la RAMPE du halo, en s'arrêtant aux arêtes.
+
+        Une dilatation aveugle de N pixels emporte tout ce qui se trouve autour
+        du texte, décor compris : sur « JUST KILL ME ALREADY!! », les 25 px
+        nécessaires pour couvrir la lueur magenta mordaient aussi les pointes
+        violettes du rideau.
+
+        Or les deux se distinguent physiquement :
+        - un HALO est une rampe monotone — son écart au fond DÉCROÎT à mesure
+          qu'on s'éloigne du glyphe, sans discontinuité ;
+        - un élément de DÉCOR commence par une arête — un saut de gradient.
+
+        On fait donc croître le masque pixel par pixel depuis l'encre, en
+        n'acceptant un voisin que s'il se rapproche du fond (rampe) et qu'il ne
+        porte pas d'arête. La croissance s'arrête d'elle-même sur le décor.
+        """
+        try:
+            m = ink_mask if ink_mask.ndim == 2 else ink_mask[:, :, 0]
+            grown = m > 0
+            if not grown.any():
+                return (grown.astype(np.uint8)) * 255
+
+            gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY).astype(np.float32)
+
+            # Niveau du fond, mesuré LOIN du texte.
+            k_far = cv2.getStructuringElement(
+                cv2.MORPH_ELLIPSE, (2 * max_radius + 1, 2 * max_radius + 1),
+            )
+            far = cv2.dilate(m, k_far) == 0
+            bg = float(np.median(gray[far])) if far.any() else float(np.median(gray))
+
+            deviation = np.abs(gray - bg)
+
+            gx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+            gy = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+            edge = cv2.magnitude(gx, gy)
+            # Seuil d'arête calibré sur le décor lui-même, pas sur une constante.
+            edge_thr = float(np.percentile(edge[far], 90)) if far.any() else float(edge.mean() * 2)
+            edge_thr = max(edge_thr, 8.0)
+
+            # En deçà de cette tolérance, on est revenu au fond : plus rien à prendre.
+            tol = max(4.0, 0.05 * float(deviation[grown].mean()))
+
+            k3 = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+            for _ in range(int(max_radius)):
+                g8 = grown.astype(np.uint8)
+                cand = (cv2.dilate(g8, k3) > 0) & (~grown)
+                if not cand.any():
+                    break
+                # Écart au fond du voisin DÉJÀ retenu : la rampe doit descendre.
+                neigh = cv2.dilate(np.where(grown, deviation, 0.0).astype(np.float32), k3)
+                ok = cand & (deviation < neigh) & (deviation > tol) & (edge < edge_thr)
+                if not ok.any():
+                    break
+                grown |= ok
+
+            return (grown.astype(np.uint8)) * 255
+        except Exception:
+            return ink_mask
 
     @staticmethod
     def _ghost_remains(erased: np.ndarray, mask: np.ndarray, ratio: float = 1.6) -> bool:
@@ -2699,6 +2788,25 @@ class TextRenderer:
         if str(class_name).lower() == "out_text":
             font_hint = "bold"
         resolved_font_path = self._resolve_font_path(font_key, text_style, font_hint)
+
+        # Cartouches et cartes System : police CONDENSÉE ET GRASSE.
+        #
+        # Comparée sur cartouches réels contre quatre candidates, `Allegre Sans`
+        # est la seule à rendre le poids de la planche. Chiffres mesurés
+        # (largeur par caractère rapportée à la hauteur de casse / part d'encre
+        # dans la boîte du H) : Allegre 0,51 / 0,72 — CCDynamicDuo 0,53 / 0,77 —
+        # Graphique 0,48 / 0,58 — TwoFisted 0,42 / 0,44 — CCWildWords (avant)
+        # 0,80. Le cartouche « THE REALM OF A DEMIGOD, THE 9TH CIRCLE » tient
+        # désormais en 2 lignes au lieu de 3, avec des lettres plus hautes.
+        #
+        # La GRAISSE compte autant que la largeur : les polices les plus proches
+        # du ratio de la source (TwoFisted à 0,42) rendent mal parce qu'elles
+        # sont maigres. Les bulles de dialogue gardent volontairement une police
+        # plus large et plus ronde, plus lisible en petit corps.
+        if str(class_name).lower() in ("out_text", "system"):
+            caption_font = self._find_font_by_fragment("Al__gre_Sans")
+            if caption_font:
+                resolved_font_path = caption_font
 
         # ── Forme ──
         # `_container_box` cherche la BOÎTE qui contient le texte (cartouche,
