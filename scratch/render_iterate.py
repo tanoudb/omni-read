@@ -107,6 +107,7 @@ def run(image_path: Path, out_dir: Path, margin: int = 10):
                 int(d.x1), int(d.y1), int(d.x2), int(d.y2),
                 text_regions=getattr(d, 'text_regions', None),
                 text_color_rgb=getattr(d, 'text_color_rgb', None),
+                outline_width_px=getattr(d, 'measured_outline_px', None),
                 text_style=getattr(d, 'text_style', 'dialogue'),
                 font_hint=getattr(d, 'font_hint', 'regular'),
                 class_name=str(d.class_name),
@@ -142,6 +143,15 @@ def run(image_path: Path, out_dir: Path, margin: int = 10):
             "bbox": [int(d.x1), int(d.y1), int(d.x2), int(d.y2)],
             "ocr_text": getattr(d, 'text_original', '') or '',
             "ghost_risk": i in ghost_set,
+            # Polygones de ligne OCR, en coordonnees LOCALES a la bbox.
+            # Sans eux, toute analyse ulterieure doit deviner ou est le texte
+            # dans la boite — et se trompe : la mesure des FX prenait la bbox
+            # entiere pour de l'encre, d'ou des epaisseurs de trait de 67 px.
+            "text_regions": [
+                {"bbox": [[int(p[0]), int(p[1])] for p in (r.get('bbox') or [])]}
+                for r in (getattr(d, 'text_regions', None) or [])
+                if r.get('bbox')
+            ],
         })
 
     with open(out_dir / "bubbles_meta.json", "w", encoding="utf-8") as f:

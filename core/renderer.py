@@ -932,6 +932,79 @@ class TextRenderer:
         return False
 
     @staticmethod
+    def _outline_by_normals(crop, ink, max_len=12, n_samples=400):
+        """Largeur du contour, mesuree LE LONG DE LA NORMALE au bord du glyphe.
+    
+        Les anneaux concentriques ne peuvent pas voir un contour : l'anti-crenelage
+        fait varier la couleur a chaque pixel de distance, donc aucun "plateau" ne
+        survit a une comparaison anneau par anneau. Mesure precedente : 1 px sur les
+        34 bulles, ecart-type nul, avec deux logiques opposees — le signe que la
+        geometrie de lecture etait en cause, pas le seuil.
+    
+        Ici on tire des profils 1D perpendiculaires au bord, on cherche sur chacun
+        le plateau de couleur entre le glyphe et le fond, et on prend la MEDIANE des
+        largeurs trouvees. Un profil bruite ou ambigu ne fait que deplacer la
+        mediane a la marge, la ou il cassait tout dans la version par anneaux.
+        """
+        edges = cv2.Canny((ink > 0).astype(np.uint8) * 255, 50, 150)
+        ys, xs = np.nonzero(edges)
+        if len(xs) < 12:
+            return 0, None
+    
+        # Normale = gradient de la carte de distance a l'encre.
+        dist = cv2.distanceTransform((ink == 0).astype(np.uint8), cv2.DIST_L2, 5)
+        gx = cv2.Sobel(dist, cv2.CV_32F, 1, 0, ksize=3)
+        gy = cv2.Sobel(dist, cv2.CV_32F, 0, 1, ksize=3)
+    
+        h, w = ink.shape[:2]
+        lab = cv2.cvtColor(crop, cv2.COLOR_BGR2LAB).astype(np.float32)
+    
+        idx = np.linspace(0, len(xs) - 1, min(n_samples, len(xs))).astype(int)
+        widths, colors = [], []
+        for i in idx:
+            x0, y0 = int(xs[i]), int(ys[i])
+            vx, vy = float(gx[y0, x0]), float(gy[y0, x0])
+            n = (vx * vx + vy * vy) ** 0.5
+            if n < 1e-3:
+                continue
+            vx, vy = vx / n, vy / n
+    
+            prof = []
+            for t in range(1, max_len + 1):
+                xx, yy = int(round(x0 + vx * t)), int(round(y0 + vy * t))
+                if not (0 <= xx < w and 0 <= yy < h):
+                    break
+                prof.append(lab[yy, xx])
+            if len(prof) < 5:
+                continue
+            prof = np.array(prof)
+    
+            # Fond = fin du profil ; contour = prefixe qui en reste loin ET reste
+            # proche de lui-meme. On saute le premier pixel, toujours anti-crenele.
+            bg = np.median(prof[-3:], axis=0)
+            far = [float(np.linalg.norm(pv - bg)) for pv in prof]
+            if far[1] < 12.0:
+                continue
+            ref = prof[1]
+            wdt = 0
+            for t in range(1, len(prof)):
+                if far[t] < 12.0 or float(np.linalg.norm(prof[t] - ref)) > 14.0:
+                    break
+                wdt = t
+            if wdt:
+                widths.append(wdt)
+                colors.append(crop[
+                    min(h - 1, max(0, int(round(y0 + vy * max(1, wdt // 2))))),
+                    min(w - 1, max(0, int(round(x0 + vx * max(1, wdt // 2))))),
+                ])
+    
+        if len(widths) < 8:
+            return 0, None
+        med = int(round(float(np.median(widths))))
+        col = np.median(np.array(colors), axis=0)
+        return med, col
+
+    @staticmethod
     def _halo_grow(crop: np.ndarray, ink_mask: np.ndarray, max_radius: int = 30) -> np.ndarray:
         """Étend le masque le long de la RAMPE du halo, en s'arrêtant aux arêtes.
 
@@ -2735,6 +2808,10 @@ class TextRenderer:
         bg_color_rgb: Optional[Tuple[int, int, int]] = None,
         angle_override: Optional[float] = None,
         sibling_boxes: Optional[List[Tuple[int, int, int, int]]] = None,
+        # Largeur de contour MESURÉE sur la planche d'origine, en pixels.
+        # Doit être calculée en amont : ici l'image est déjà effacée, le texte
+        # source n'existe plus.
+        outline_width_px: Optional[int] = None,
     ) -> np.ndarray:
         if not text or not str(text).strip():
             return img
@@ -2765,7 +2842,15 @@ class TextRenderer:
             outline_color = (0, 0, 0) if luma > 128 else (255, 255, 255)
             outline_width_auto = max(2, outline_width_auto)
 
-        if outline_color is not None and stroke_width is None:
+        # Contour MESURÉ prioritaire sur le forfait, pour les cartouches.
+        if (
+            outline_color is not None
+            and stroke_width is None
+            and outline_width_px
+            and str(class_name).lower() in ("out_text", "system")
+        ):
+            outline_width_auto = max(1, min(int(outline_width_px), 8))
+        elif outline_color is not None and stroke_width is None:
             if source_line_height and source_line_height > 4:
                 outline_width_auto = max(
                     outline_width_auto, int(round(float(source_line_height) * 0.075)),

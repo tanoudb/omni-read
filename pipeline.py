@@ -1013,6 +1013,25 @@ class TranslationPipeline:
             det.x2 - det.x1, det.y2 - det.y1,
             class_name=det.class_name,
         )
+        # Contour MESURÉ sur la planche, pas déduit d'un forfait.
+        #
+        # Doit se faire ICI : `insert_text` reçoit l'image déjà effacée, où le
+        # texte d'origine n'existe plus. Mesuré le long de la normale au bord du
+        # glyphe (cf. `_outline_by_normals`) — 2 px médian sur deux séries, 4 px
+        # sur la troisième, écart-type ~1,2 : une vraie dispersion, là où
+        # l'ancien forfait 0,075 × hauteur de ligne ignorait le lettrage réel.
+        det.measured_outline_px = None
+        try:
+            ink = getattr(det, 'chirurgical_mask', None)
+            if isinstance(ink, np.ndarray) and ink.size > 0:
+                crop = img[max(0, det.y1):det.y2, max(0, det.x1):det.x2]
+                if crop.size and ink.shape[:2] == crop.shape[:2]:
+                    w_px, _ = renderer._outline_by_normals(crop, ink)
+                    if w_px:
+                        det.measured_outline_px = int(w_px)
+        except Exception:
+            pass
+
         det.text_color_rgb = renderer.extract_original_text_color(
             img, det.x1, det.y1, det.x2, det.y2, regions,
             ink_mask=getattr(det, 'chirurgical_mask', None),
@@ -1476,6 +1495,7 @@ class TranslationPipeline:
                             det.x1, det.y1, det.x2, det.y2,
                             text_regions=getattr(det, 'text_regions', None),
                             text_color_rgb=getattr(det, 'text_color_rgb', None),
+                        outline_width_px=getattr(det, 'measured_outline_px', None),
                             text_style=getattr(det, 'text_style', 'dialogue'),
                             font_hint=getattr(det, 'font_hint', 'regular'),
                             class_name=getattr(det, 'class_name', ''),
