@@ -470,7 +470,13 @@ class TextRenderer:
         # cartouche avec une marge de 2x la hauteur de boîte : la part masquée
         # du crop tombe de 39 % à 6 %, et la reconstruction redevient plausible.
         # On l'indexe donc sur la taille de la zone, pas sur une constante.
-        if str(class_name).lower() == "out_text":
+        # `System` traité comme `out_text` : ce sont aussi des cartouches de
+        # texte d'impact posés sur du décor, souvent avec halo. Mesuré sur le
+        # panneau ouvragé « THE RED DRAGON, SOVEREIGN VALDROVA. » : avec un
+        # masque au glyphe, LaMa laissait des fantômes de lettres bien
+        # lisibles (essayé à 5, 9 et 15 px de dilatation, tous mauvais) alors
+        # que le masque au BLOC rendait le panneau propre.
+        if str(class_name).lower() in ("out_text", "system"):
             m = max(self.CROP_MARGIN * 2, 2 * bubble_h)
         else:
             m = max(self.CROP_MARGIN, bubble_h)
@@ -497,13 +503,19 @@ class TextRenderer:
         # fond noir comme sur les rayures rouges ou les éclairs. Le surcoût est
         # faible (7 % → 13 % du crop masqué) parce que la marge de crop donne à
         # LaMa largement de quoi reconstruire.
+        # Le masque au bloc est calculé pour TOUTES les classes : même quand il
+        # ne sert pas d'emblée, il sert de repli si un fantôme subsiste après la
+        # première passe (cf. la deuxième passe plus bas). Le texte à lueur
+        # n'est pas l'apanage des classes `out_text`/`System` — « JUST KILL ME
+        # ALREADY!! » est classé `bulle`.
         block_mask = None
-        if str(class_name).lower() == "out_text" and text_regions:
+        if text_regions:
             block_mask = self._block_mask_from_regions(
                 crop_w, crop_h, text_regions, x1 - crop_x1, y1 - crop_y1,
             )
 
-        if block_mask is not None and int(np.count_nonzero(block_mask)) > 0:
+        use_block_first = str(class_name).lower() in ("out_text", "system")
+        if use_block_first and block_mask is not None and int(np.count_nonzero(block_mask)) > 0:
             local_mask = block_mask
         elif chirurgical_mask is not None and isinstance(chirurgical_mask, np.ndarray) and chirurgical_mask.size > 0:
             # chirurgical_mask est construit local à la bbox de détection (det_h x det_w),
@@ -538,7 +550,7 @@ class TextRenderer:
             # pour ce cas mais n'était jamais lu.
             dilate_k = (
                 self.cfg.out_text_mask_dilate_kernel
-                if str(class_name).lower() == "out_text"
+                if str(class_name).lower() in ("out_text", "system")
                 else self.cfg.inpaint_mask_dilate_kernel
             )
             if dilate_k and dilate_k > 1:
@@ -690,7 +702,38 @@ class TextRenderer:
         if self.lama is not None:
             try:
                 result = self._inpaint_lama(crop, local_mask)
-                img[crop_y1:crop_y2, crop_x1:crop_x2] = self._apply_erasure_by_group(crop, result, local_mask, class_name)
+                erased = self._apply_erasure_by_group(crop, result, local_mask, class_name)
+
+                # Deuxième passe au BLOC si un fantôme subsiste.
+                #
+                # Sur du texte à LUEUR, le masque d'encre ne retient que le
+                # cœur clair des lettres ; le halo, lui, reste — et il en
+                # redessine la forme. Mesuré sur « JUST KILL ME ALREADY!! »
+                # (lettrage blanc à lueur magenta sur fond noir) : le blanc
+                # partait, la lueur rose restait parfaitement lisible, et la
+                # traduction se posait par-dessus, illisible.
+                #
+                # Le routage par CLASSE ne suffit pas — cette case-là est
+                # classée `bulle`, pas `out_text`. On mesure donc le résultat :
+                # s'il reste un fantôme, on recommence avec le masque au bloc,
+                # qui emporte le glyphe ET son halo d'un coup.
+                if block_mask is not None and (
+                    self._erasure_failed(crop, erased, local_mask)
+                    or self._ghost_remains(erased, local_mask)
+                ):
+                    # La lueur peut s'étendre bien au-delà du bloc calculé sur
+                    # les polygones : on élargit franchement pour la seconde
+                    # passe, c'est le seul moyen d'emporter le halo entier.
+                    grow = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25))
+                    wider = cv2.dilate(cv2.bitwise_or(local_mask, block_mask), grow)
+                    retry = self._inpaint_lama(crop, wider)
+                    erased2 = crop.copy()
+                    erased2[wider > 0] = retry[wider > 0]
+                    # On garde la passe qui laisse le MOINS de structure.
+                    if self._ghost_score(erased2, wider) < self._ghost_score(erased, local_mask):
+                        erased = erased2
+
+                img[crop_y1:crop_y2, crop_x1:crop_x2] = erased
                 return img
             except Exception:
                 pass
@@ -856,6 +899,67 @@ class TextRenderer:
             return True
 
         return False
+
+    @staticmethod
+    def _ghost_remains(erased: np.ndarray, mask: np.ndarray, ratio: float = 1.6) -> bool:
+        """Reste-t-il une STRUCTURE là où le texte était ?
+
+        `_erasure_failed` compare l'avant et l'après : il conclut « effacé »
+        dès que la zone a beaucoup changé. Or sur du texte à lueur, elle change
+        énormément — le cœur blanc disparaît — tout en laissant un halo qui
+        redessine les lettres. Mesuré sur « JUST KILL ME ALREADY!! » : blanc
+        parti, lueur magenta parfaitement lisible, et « effacement réussi »
+        selon ce critère.
+
+        On regarde donc le RÉSULTAT seul : si la zone effacée porte encore
+        beaucoup plus d'énergie de contours que le fond juste autour, c'est
+        qu'une forme y subsiste. Un fond réellement texturé (trames de vitesse,
+        rideau) fait monter les deux côtés et ne déclenche pas.
+        """
+        try:
+            m = mask if mask.ndim == 2 else mask[:, :, 0]
+            inside = m > 0
+            if int(np.count_nonzero(inside)) < 200:
+                return False
+            k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (31, 31))
+            ring = (cv2.dilate(m, k) > 0) & (~inside)
+            if int(np.count_nonzero(ring)) < 200:
+                return False
+
+            gray = cv2.cvtColor(erased, cv2.COLOR_BGR2GRAY).astype(np.float32)
+            gx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+            gy = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+            energy = cv2.magnitude(gx, gy)
+
+            e_in = float(np.mean(energy[inside]))
+            e_out = float(np.mean(energy[ring]))
+            return (e_in / max(e_out, 1.0)) > ratio
+        except Exception:
+            return False
+
+    @staticmethod
+    def _ghost_score(erased: np.ndarray, mask: np.ndarray) -> float:
+        """Énergie de contours dans la zone effacée, rapportée à son pourtour.
+
+        Sert à ACCEPTER ou non une deuxième passe : on garde le résultat qui
+        laisse le moins de structure, plutôt que de le juger sur
+        `_erasure_failed` — lequel répond « effacé » dès que la zone a changé,
+        ce qui est toujours vrai et ne dit rien du fantôme restant.
+        """
+        try:
+            m = mask if mask.ndim == 2 else mask[:, :, 0]
+            inside = m > 0
+            k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (31, 31))
+            ring = (cv2.dilate(m, k) > 0) & (~inside)
+            if int(np.count_nonzero(inside)) < 200 or int(np.count_nonzero(ring)) < 200:
+                return 0.0
+            gray = cv2.cvtColor(erased, cv2.COLOR_BGR2GRAY).astype(np.float32)
+            gx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+            gy = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+            energy = cv2.magnitude(gx, gy)
+            return float(np.mean(energy[inside])) / max(float(np.mean(energy[ring])), 1.0)
+        except Exception:
+            return 0.0
 
     @staticmethod
     def _smooth_fill(
@@ -2632,7 +2736,33 @@ class TextRenderer:
             print(f"[RENDER_DEBUG] insert_text text={text[:30]!r} class={class_name} is_bubble={is_bubble} container={container} angle={angle} n_regions={len(text_regions or [])}")
 
         # === LINE-BY-LINE REPLACEMENT POUR TEXTE HORS-BULLE ===
-        if not is_bubble and container is None and text_regions and len(text_regions) > 0:
+        #
+        # Ce chemin repose sur une hypothèse : les polygones OCR décrivent
+        # fidèlement les lignes de la planche. Quand l'OCR en fusionne plusieurs
+        # — deux régions pour six lignes réelles, mesuré sur la carte System
+        # « FUELED BY REVENGE, I REACHED THE 6TH CIRCLE… » de
+        # i-married-the-dragon — tout le texte doit tenir dans la hauteur de ces
+        # deux régions : le corps s'effondre et les lignes débordent largement
+        # du cadre. On vérifie donc d'abord que le texte tient dans l'enveloppe
+        # des régions à une taille proche de celle d'origine ; sinon on remet en
+        # page normalement dans la boîte.
+        exact_lines_ok = bool(text_regions)
+        if exact_lines_ok and source_line_height and source_line_height > 4:
+            xs = [p[0] for r in text_regions for p in (r.get('bbox') or [])]
+            ys = [p[1] for r in text_regions for p in (r.get('bbox') or [])]
+            if xs and ys:
+                env_w = max(1, int(max(xs) - min(xs)))
+                env_h = max(1, int(max(ys) - min(ys)))
+                cap = int((float(source_line_height) / 0.75) * 1.05)
+                probe = self._fit_font_hard(
+                    text, cap, env_w, env_h,
+                    bubble_mask=None, shape_wrap=False,
+                    font_path=resolved_font_path, max_font_size=cap,
+                )
+                if probe is None or probe.get('size', 0) < 0.6 * cap:
+                    exact_lines_ok = False
+
+        if not is_bubble and container is None and exact_lines_ok:
             return self._draw_exact_lines(
                 img, text, text_regions,
                 text_color, outline_color, outline_width_auto,
@@ -2654,6 +2784,31 @@ class TextRenderer:
                 anchor_box = (max(anchor_box[0], cx1), max(anchor_box[1], cy1),
                               min(anchor_box[2], cx2), min(anchor_box[3], cy2))
                 if anchor_box[2] <= anchor_box[0] or anchor_box[3] <= anchor_box[1]: anchor_box = None
+
+            # L'ancrage sur les polygones OCR ne vaut que si ces polygones
+            # décrivent VRAIMENT le bloc de texte d'origine. Quand l'OCR fusionne
+            # plusieurs lignes en une seule région — ou n'en rend que deux pour
+            # six lignes réelles, mesuré sur la carte System « FUELED BY REVENGE,
+            # I REACHED THE 6TH CIRCLE… » de i-married-the-dragon — la boîte
+            # d'ancrage est bien plus BASSE que le texte, et tout doit tenir dans
+            # cette hauteur : le corps s'effondre et le texte déborde du cadre.
+            #
+            # On vérifie donc que le texte peut tenir dans cette boîte à une
+            # taille proche de celle de la planche. Sinon on abandonne l'ancrage
+            # et on remet en page dans le cadre, comme pour n'importe quel autre
+            # texte.
+            if anchor_box is not None and source_line_height and source_line_height > 4:
+                a_w = max(1, anchor_box[2] - anchor_box[0])
+                a_h = max(1, anchor_box[3] - anchor_box[1])
+                cap = int((float(source_line_height) / 0.75) * 1.05)
+                probe = self._fit_font_hard(
+                    text, cap, a_w, a_h,
+                    bubble_mask=None, shape_wrap=False,
+                    font_path=resolved_font_path, max_font_size=cap,
+                )
+                if probe is None or probe.get('size', 0) < 0.6 * cap:
+                    anchor_box = None
+                    use_locked_mode = False
 
         if anchor_box is not None:
             ix1, iy1, ix2, iy2 = anchor_box
