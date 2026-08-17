@@ -203,6 +203,10 @@ class TextRenderer:
     # Repli seulement : la marge intérieure réelle est décidée par
     # `_shrink_ratio_for()` selon la classe et la disponibilité du masque.
     SHRINK_RATIO = 0.18
+    # Marge de débordement autorisée aux cartouches (cf. _draw_exact_lines).
+    CAPTION_WIDTH_ALLOWANCE = 1.22
+    CAPTION_SIZE_ALLOWANCE = 1.30
+
     CROP_MARGIN = 30
     INPAINT_MIN_HEIGHT = 20
 
@@ -3114,7 +3118,17 @@ class TextRenderer:
             # plus petits que l'original, donc difficiles à lire. La hauteur du
             # polygone, elle, reste la vraie référence : c'est elle qui
             # conserve le corps de texte de la planche.
-            rw = max(rw, int(block_w * 0.98))
+            # Les cartouches ont le DROIT DE DÉBORDER de la largeur d'origine.
+            #
+            # Notre police de lettrage est plus large par caractère que celle
+            # des studios : à hauteur de casse égale il faut plus de place, donc
+            # plus de lignes, donc un corps plus petit — les cartouches
+            # sortaient systématiquement plus maigres que l'original. Puisque
+            # ces textes sont posés sur du décor et non enfermés dans une bulle,
+            # les laisser dépasser un peu rend la taille et le poids de la
+            # planche, ce qui compte davantage que de respecter au pixel près
+            # l'encombrement d'origine.
+            rw = max(rw, int(block_w * self.CAPTION_WIDTH_ALLOWANCE))
             
             # Recherche dichotomique pour trouver la taille qui rentre (largeur ET hauteur)
             lo = self.cfg.min_font_size
@@ -3188,7 +3202,11 @@ class TextRenderer:
         lo = int(self.cfg.min_font_size)
         hi = int(self.cfg.max_font_size)
         if source_line_height and source_line_height > 4:
-            hi = min(hi, int((float(source_line_height) / 0.75) * 1.05))
+            # Plafond relevé pour les cartouches : autoriser le débordement en
+            # LARGEUR ne servait à rien tant que la taille restait bornée à celle
+            # de la planche (mesuré : aucun changement visible). Ce qui manquait
+            # n'était pas la place mais le CORPS.
+            hi = min(hi, int((float(source_line_height) / 0.75) * self.CAPTION_SIZE_ALLOWANCE))
         hi = max(lo, hi)
 
         best: Optional[Tuple[int, List[str]]] = None
@@ -3233,12 +3251,17 @@ class TextRenderer:
         ys = [p[1] + region_offset_y for p in pts]
         xs = [p[0] + region_offset_x for p in pts]
         rh = max(1, int(max(ys)) - int(min(ys)))
-        rw = max(max(1, int(max(xs)) - int(min(xs))), int(block_w * 0.98))
+        rw = max(max(1, int(max(xs)) - int(min(xs))),
+                 int(block_w * self.CAPTION_WIDTH_ALLOWANCE))
 
         lo = int(self.cfg.min_font_size)
         hi = int(self.cfg.max_font_size)
         if source_line_height and source_line_height > 4:
-            hi = min(hi, int((float(source_line_height) / 0.75) * 1.05))
+            # Plafond relevé pour les cartouches : autoriser le débordement en
+            # LARGEUR ne servait à rien tant que la taille restait bornée à celle
+            # de la planche (mesuré : aucun changement visible). Ce qui manquait
+            # n'était pas la place mais le CORPS.
+            hi = min(hi, int((float(source_line_height) / 0.75) * self.CAPTION_SIZE_ALLOWANCE))
         hi = max(lo, hi)
 
         best = lo
@@ -3250,7 +3273,7 @@ class TextRenderer:
             _, ink_w = self._line_extents(f, line)
             bb = f.getbbox(line)
             ink_h = bb[3] - bb[1]
-            if ink_w <= rw and ink_h <= rh * 1.10:
+            if ink_w <= rw and ink_h <= rh * 1.25:
                 best = mid
                 lo = mid + 1
             else:
