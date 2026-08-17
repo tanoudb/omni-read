@@ -197,6 +197,29 @@ if HF_AVAILABLE:
         pass
 
 
+_HYPHEN_STATE: Dict[str, object] = {"loaded": False, "dic": None}
+
+
+def _hyphenator(lang: str = "fr_FR"):
+    """Dictionnaire de césure `pyphen`, chargé une seule fois.
+
+    On coupe selon les RÈGLES DE LA LANGUE, pas selon la place disponible : une
+    coupure géométrique donnerait « RAVITA-ILLEMENT ». Pyphen s'appuie sur les
+    motifs de césure Hunspell/LibreOffice et rend « ra-vi-taille-ment ».
+    Changer `lang` suffit pour l'allemand ou l'espagnol.
+    """
+    if not _HYPHEN_STATE["loaded"]:
+        _HYPHEN_STATE["loaded"] = True
+        try:
+            import pyphen
+            _HYPHEN_STATE["dic"] = pyphen.Pyphen(lang=lang)
+        except Exception as exc:
+            _HYPHEN_STATE["dic"] = None
+            print(f"⚠️ pyphen indisponible ({exc}) — césure des mots longs DÉSACTIVÉE.")
+    return _HYPHEN_STATE["dic"]
+
+
+
 class TextRenderer:
     """Rendu texte avec LaMa inpainting local + ColorResolver V2"""
 
@@ -1806,6 +1829,56 @@ class TextRenderer:
     # SIZING
     # ─────────────────────────────────────────────────────────────────────────
 
+
+    # Un fragment plus court que ça en début ou fin de mot est illisible et
+    # laid : mieux vaut renoncer à couper.
+    HYPHEN_MIN_PIECE = 3
+    HYPHEN_MIN_WORD = 8
+
+    def _hyphenate_to_fit(
+        self, word: str, font: ImageFont.FreeTypeFont, max_width: int,
+    ) -> Optional[Tuple[str, str]]:
+        """(début + trait d'union, reste) si le mot peut être coupé, sinon None.
+
+        Un mot est INSÉCABLE au sens de la mise en page : il doit tenir sur une
+        ligne. Quand il n'y tient pas, tout le bloc rétrécit pour lui. Mesuré
+        sur « RAVITAILLEMENT... » dans une bulle de 156 px : il plafonnait la
+        bulle entière à 16 px, alors que le reste du texte tenait bien plus
+        gros. La césure lève ce plafond.
+        """
+        core = word.strip()
+        if len(core) < self.HYPHEN_MIN_WORD:
+            return None
+        dic = _hyphenator()
+        if dic is None:
+            return None
+
+        # La ponctuation collée (« ... ») ne se coupe pas : on l'isole.
+        head_letters = "".join(c for c in core if c.isalpha())
+        if len(head_letters) < self.HYPHEN_MIN_WORD:
+            return None
+        try:
+            positions = [i for i in dic.positions(head_letters.lower())]
+        except Exception:
+            return None
+        if not positions:
+            return None
+
+        best = None
+        for pos in positions:
+            if pos < self.HYPHEN_MIN_PIECE or len(head_letters) - pos < self.HYPHEN_MIN_PIECE:
+                continue
+            piece = head_letters[:pos] + "-"
+            if self._line_extents(font, piece)[1] <= max_width:
+                best = pos
+            else:
+                break
+        if best is None:
+            return None
+
+        cut = core.find(head_letters[best - 1]) if False else best
+        return (core[:cut] + "-", core[cut:])
+
     def wrap_text(self, text: str, font: ImageFont.FreeTypeFont, max_width: int) -> List[str]:
         raw = (text or "").strip()
         if not raw:
@@ -1827,9 +1900,24 @@ class TextRenderer:
                 if self._line_extents(font, test)[1] <= max_width:
                     current.append(word)
                 else:
-                    if current:
-                        lines.append(' '.join(current))
-                    current = [word]
+                    # Le mot ne rentre pas : on tente la césure AVANT de le
+                    # renvoyer seul sur la ligne suivante, où il imposerait sa
+                    # largeur à tout le bloc.
+                    placed = False
+                    if self._line_extents(font, word)[1] > max_width:
+                        room = max_width
+                        if current:
+                            room -= self._line_extents(font, ' '.join(current) + ' ')[1]
+                        cut = self._hyphenate_to_fit(word, font, room) if room > 20 else None
+                        if cut:
+                            head, tail = cut
+                            lines.append(' '.join(current + [head]) if current else head)
+                            current = [tail]
+                            placed = True
+                    if not placed:
+                        if current:
+                            lines.append(' '.join(current))
+                        current = [word]
             if current:
                 lines.append(' '.join(current))
         return lines if lines else [""]
@@ -2026,12 +2114,32 @@ class TextRenderer:
                 if self._line_extents(font, test)[1] <= current_w:
                     current.append(word)
                 else:
-                    if current:
-                        lines.append(' '.join(current))
-                        allowed.append(current_w)
-                        centers.append(current_c)
-                    current = [word]
-                    current_w, current_c = _row_metrics(len(lines))
+                    # Césure AVANT de renvoyer le mot seul sur la ligne
+                    # suivante. C'est ce chemin-ci qu'empruntent les bulles —
+                    # `wrap_text` ne sert qu'aux zones rectangulaires — donc
+                    # c'est ici que la césure doit agir pour lever le plafond
+                    # qu'un mot long impose à toute la bulle.
+                    placed = False
+                    if self._line_extents(font, word)[1] > current_w:
+                        room = current_w
+                        if current:
+                            room -= self._line_extents(font, ' '.join(current) + ' ')[1]
+                        cut = self._hyphenate_to_fit(word, font, room) if room > 20 else None
+                        if cut:
+                            head, tail = cut
+                            lines.append(' '.join(current + [head]) if current else head)
+                            allowed.append(current_w)
+                            centers.append(current_c)
+                            current = [tail]
+                            current_w, current_c = _row_metrics(len(lines))
+                            placed = True
+                    if not placed:
+                        if current:
+                            lines.append(' '.join(current))
+                            allowed.append(current_w)
+                            centers.append(current_c)
+                        current = [word]
+                        current_w, current_c = _row_metrics(len(lines))
             if current:
                 lines.append(' '.join(current))
                 allowed.append(current_w)
