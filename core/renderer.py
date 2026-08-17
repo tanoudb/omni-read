@@ -1879,6 +1879,40 @@ class TextRenderer:
         cut = core.find(head_letters[best - 1]) if False else best
         return (core[:cut] + "-", core[cut:])
 
+
+    def _hyphenate_word(
+        self, word: str, font: ImageFont.FreeTypeFont,
+        first_width: int, next_width: int, max_pieces: int = 4,
+    ) -> Optional[List[str]]:
+        """Découpe un mot en morceaux qui tiennent TOUS dans leur ligne.
+
+        Deux défauts d'une première version, tous deux mesurés sur
+        « RAVITAILLEMENT... » dans une bulle de 157 px de large :
+
+        - une seule coupure était tentée. À 28 px, la première césure possible
+          donne « RAVI- » et laisse « TAILLEMENT... » large de 198 px — soit
+          une ligne qui déborde, donc une mise en page rejetée, donc le moteur
+          qui redescend en taille. Il faut recouper le RESTE tant qu'il ne
+          tient pas.
+        - la coupure n'était tentée que dans la place restante sur la ligne
+          courante. Quand cette place est trop petite, il faut repartir sur une
+          ligne NEUVE et couper sur toute sa largeur, au lieu d'abandonner.
+        """
+        pieces: List[str] = []
+        rest = word
+        width = first_width
+        for _ in range(max_pieces):
+            if self._line_extents(font, rest)[1] <= width:
+                pieces.append(rest)
+                return pieces if len(pieces) > 1 else None
+            cut = self._hyphenate_to_fit(rest, font, width)
+            if not cut:
+                return None
+            head, rest = cut
+            pieces.append(head)
+            width = next_width
+        return None
+
     def wrap_text(self, text: str, font: ImageFont.FreeTypeFont, max_width: int) -> List[str]:
         raw = (text or "").strip()
         if not raw:
@@ -2124,13 +2158,46 @@ class TextRenderer:
                         room = current_w
                         if current:
                             room -= self._line_extents(font, ' '.join(current) + ' ')[1]
-                        cut = self._hyphenate_to_fit(word, font, room) if room > 20 else None
-                        if cut:
-                            head, tail = cut
+                        nxt = _row_metrics(len(lines) + 1)[0]
+                        # Si la place restante est trop courte, on coupe sur une
+                        # ligne NEUVE plutot que de renoncer.
+                        if room <= 20:
+                            if current:
+                                lines.append(' '.join(current))
+                                allowed.append(current_w)
+                                centers.append(current_c)
+                                current = []
+                                current_w, current_c = _row_metrics(len(lines))
+                            room = current_w
+                        chunks = self._hyphenate_word(word, font, room, nxt or current_w)
+                        if not chunks and current:
+                            # La place restante ne permettait pas de couper. On
+                            # vide la ligne et on retente sur une ligne NEUVE,
+                            # à pleine largeur. Sans ça, le mot partait entier
+                            # sur la ligne suivante et la faisait déborder — ce
+                            # qui rendait le prédicat « ça tient » NON MONOTONE
+                            # (mesuré : 24 px échouait alors que 28 px tenait,
+                            # la césure ne se déclenchant qu'à partir de 28) et
+                            # faisait manquer la bonne taille à la dichotomie.
+                            lines.append(' '.join(current))
+                            allowed.append(current_w)
+                            centers.append(current_c)
+                            current = []
+                            current_w, current_c = _row_metrics(len(lines))
+                            chunks = self._hyphenate_word(
+                                word, font, current_w, nxt or current_w,
+                            )
+                        if chunks:
+                            head, tail = chunks[0], chunks[1:]
                             lines.append(' '.join(current + [head]) if current else head)
                             allowed.append(current_w)
                             centers.append(current_c)
-                            current = [tail]
+                            for piece in tail[:-1]:
+                                current_w, current_c = _row_metrics(len(lines))
+                                lines.append(piece)
+                                allowed.append(current_w)
+                                centers.append(current_c)
+                            current = [tail[-1]]
                             current_w, current_c = _row_metrics(len(lines))
                             placed = True
                     if not placed:
