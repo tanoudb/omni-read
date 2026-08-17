@@ -104,8 +104,20 @@ def load_model() -> bool:
         #   limit_side_len=640/min -> CER 0,063 ; 960/min -> 0,073 ;
         #   unclip_ratio=1,2 -> 0,075 ; box_thresh=0,5 -> aucun effet ;
         #   agrandissement du crop x2 -> 0,077, x3 -> 0,107.
-        det_model = os.environ.get("PADDLE_DET_MODEL", "").strip() or "PP-OCRv5_server_det"
-        rec_model = os.environ.get("PADDLE_REC_MODEL", "").strip() or "latin_PP-OCRv5_mobile_rec"
+        # PP-OCRv6 si la version de paddleocr le permet (>= 3.7), sinon on
+        # retombe sur le meilleur couple disponible en 3.4.
+        try:
+            import paddleocr as _po
+            _ver = tuple(int(x) for x in str(_po.__version__).split(".")[:2])
+        except Exception:
+            _ver = (0, 0)
+        if _ver >= (3, 7):
+            _def_det, _def_rec = "PP-OCRv6_medium_det", "PP-OCRv6_medium_rec"
+        else:
+            _def_det, _def_rec = "PP-OCRv5_server_det", "latin_PP-OCRv5_mobile_rec"
+
+        det_model = os.environ.get("PADDLE_DET_MODEL", "").strip() or _def_det
+        rec_model = os.environ.get("PADDLE_REC_MODEL", "").strip() or _def_rec
         sys.stderr.write("[paddle_worker] modeles: %s / %s\n" % (det_model, rec_model))
 
         _ocr = PaddleOCR(

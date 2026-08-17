@@ -358,6 +358,41 @@ le benchmark comporte une catégorie « texte artistique » — exactement notre
 Le venv `.venv_paddleocr` est en **3.4.0** : la mise à jour n'a pas été faite
 sans accord, elle touche un environnement qui fonctionne.
 
+## O7 — PP-OCRv6, et le piège du parsing sur PaddleOCR-VL
+
+Nouveau venv `.venv_paddle_next` (PaddleOCR 3.7.0 + PaddlePaddle GPU 3.2.2) ;
+`.venv_paddleocr` (3.4.0) laissé intact. `PADDLE_VENV` permet de basculer, et le
+worker choisit PP-OCRv6 si la version le permet, sinon le latin PP-OCRv5.
+
+| configuration | exacts | CER |
+|---|---|---|
+| **PP-OCRv6 détection + reconnaissance** | **13/16** | **0,0401** |
+| PaddleOCR-VL 1.6 | 12/16 | 0,0681 |
+| PP-OCRv6 reconnaissance seule | 11/16 | 0,0384 |
+| latin PP-OCRv5 | 10/16 | 0,0489 |
+| PP-OCRv5 server (config d'origine) | 7/16 | 0,0733 |
+
+**Le piège** : PaddleOCR-VL rendait VIDE sur les 16 bulles au premier essai — ce
+qui confirmait à la fois le commentaire du code (« ne marche PAS sur des crops »)
+et la recherche documentaire (~89 % d'erreur sur crops de bulles). Conclusion
+toute faite… et fausse : **c'était le code de lecture des résultats**. VL ne
+renvoie pas `rec_texts` mais `parsing_res_list[].block_content`. Corrigé, il fait
+12/16 et réussit `DAMN IT... I CAN'T LAND A SINGLE HIT.` exactement, apostrophe
+et points de suspension compris, là où toutes les versions de PP-OCR échouent.
+Écarté malgré tout : il **hallucine** (un « も… » japonais surgi de nulle part,
+un « RUN, BL » ailleurs) — quand un VLM se trompe, il invente du texte plausible
+au lieu de rendre du charabia repérable.
+
+Ce que PP-OCRv6 corrige à la source sur la série 2, sans une ligne de
+post-traitement — dont la totalité des « défauts connus restants » listés plus
+bas jusqu'ici :
+« JEMAS JONAS! » → « JONAS! JONAS! » ; « ASYOU » → « AS YOU » ;
+« ALONG TIME » → « A LONG TIME » ; « AMANA VESSEL » → « A MANA VESSEL » ;
+« ATA SPEED » → « AT A SPEED » ; « THEMAN A INSIDE » → « THE MANA INSIDE » ;
+« MANA DUT SIDE » → « MANA OUTSIDE » ; « MYSON » → « MY SON » ;
+« ILL PLAY » → « I'LL PLAY » ; « YOu » → « YOU » ; « HAA. » → « HAA.. » ;
+« MANY WEREKILLED ORINJURED. » → « MANY WERE KILLED OR INJURED. ».
+
 ## Défauts connus restants
 
 1. **Mots collés de 5 lettres ou moins** : « ASYOU », « ANDNO », « AMANA »,

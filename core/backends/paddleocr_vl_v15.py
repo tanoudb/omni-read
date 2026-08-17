@@ -37,10 +37,19 @@ from .base import OCRBackend
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 
+# `PADDLE_VENV` permet de pointer un AUTRE environnement que celui par défaut,
+# pour comparer des versions de PaddleOCR sur le banc `scratch/ocr_bench.py`
+# sans toucher au venv qui fait tourner la production.
+import os as _os
+
+_VENV_NAME = _os.environ.get("PADDLE_VENV", "").strip() or (
+    ".venv_paddle_next" if Path(".venv_paddle_next").exists() else ".venv_paddleocr"
+)
+
 _VENV_CANDIDATES = [
-    Path(".venv_paddleocr/Scripts/python.exe"),   # Windows
-    Path(".venv_paddleocr/bin/python"),            # Linux
-    Path(".venv_paddleocr/bin/python3"),
+    Path(f"{_VENV_NAME}/Scripts/python.exe"),   # Windows
+    Path(f"{_VENV_NAME}/bin/python"),            # Linux
+    Path(f"{_VENV_NAME}/bin/python3"),
 ]
 
 _WORKER_CANDIDATES = [
