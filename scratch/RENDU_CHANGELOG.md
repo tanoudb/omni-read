@@ -243,6 +243,121 @@ court-circuitait le découpage. Ajoutés après vérification un par un : `ican`
 `backto`, `fromme`, `bigbrother`, `iwas`, `iam`, `buti`, `sizeof`, `ata`.
 Tests : `test_word_splitter.py` 51/51, `test_ocr_post_processing.py` OK.
 
+## OCR — les espaces se comptent dans l'image, pas dans un dictionnaire
+
+### O5 — Noms propres détruits par le découpeur
+`core/ocr.py::_estimate_word_count` + garde dans `post_process_text`.
+
+« FERDA ROSNOVA. » était **correctement lu** par l'OCR et ressortait
+« FERD A ROS NOVA. ». Ce n'est pas un défaut de reconnaissance : c'est le
+découpeur statistique qui casse. `wordsegment` propose toujours une découpe
+plausible, et rien dans le TEXTE ne distingue un nom propre d'un mot collé —
+mesuré précédemment, « MORI » est plus fréquent que « KUROI », donc aucun seuil
+de fréquence ne sépare « MORISHIGE » (à ne pas toucher) de « HEAVYWARRIOR » (à
+découper).
+
+L'information existe, mais dans les pixels : entre deux mots, le blanc est plus
+large qu'une chasse entre lettres. On compte donc, par ligne détectée, les
+blancs internes dépassant 0,32 × la hauteur de casse. Le découpeur n'est appelé
+que si l'image montre PLUS de mots que le texte n'en contient.
+
+Vérifié : `A UNIQUE CONSTITUTION?` 3=3 (intact), `IT MIGHT JUST BE A NORMAL RUN,
+BUT...` 8=8 (intact), `MAKE SURE YOU COMEBACK SAFE, OKAY?` texte 6 / image 7
+(découpage autorisé, à raison).
+
+**Deux pistes essayées, mesurées, abandonnées** — elles sont documentées dans le
+code pour qu'on ne les refasse pas :
+1. *Desserrer les garde-fous quand le collage est prouvé* (longueur minimale de
+   token à 4, court-circuit « mot connu » ignoré) : 4 gains contre
+   8 dégradations — « AGO » → « A GO », « ABOUT » → « A BOUT », « MANA » →
+   « MAN A », « INSIDE » → « I NSIDE ». La preuve qu'il MANQUE un espace ne dit
+   pas OÙ il manque.
+2. *Traiter « image < texte » comme une mesure peu fiable et découper quand
+   même* : récupérait 4 lignes collées sur the-frontier-count, mais recassait
+   « ROSNOVA ».
+
+**Compromis assumé, mesuré sur deux séries** : i-married-the-dragon passe de
+0/4 à **4/4 noms propres intacts** ; the-frontier-count perd l'aide du découpeur
+sur **8 lignes**, toutes dans des cartouches à LUEUR, où le halo comble les
+blancs et fait sous-compter la mesure. Un nom propre méconnaissable coûte plus
+cher au traducteur qu'un mot collé, qu'il peut souvent recomposer.
+
+*Prochaine étape identifiée* : la mesure se fait DÉJÀ par ligne, mais la garde
+s'applique au bloc entier. L'appliquer ligne par ligne protégerait les lignes
+propres tout en laissant le découpeur agir sur les lignes à lueur. Il faut pour
+ça associer chaque portion de texte à sa ligne, ce que l'OCR ne renvoie pas
+aujourd'hui sous cette forme.
+
+## Exécution — un chapitre traité à 39 % sans que rien ne le signale
+
+`pipeline.py::_process_chapters_mega_batch` et `run_translation_and_optimize.py`.
+Le 2026-08-15, `i-married-the-dragon-i-killed` a planté au rendu de `part03`
+(« array allocation size too large ») : l'exception remontait jusqu'à `main.py`
+qui faisait `sys.exit(1)`, donc `part04`/`part05` n'ont jamais été tentés et
+aucun `summary.json` n'a été écrit. Le lanceur ne lisait pas le code de sortie,
+affichait « Traduction terminée. » et recopiait le dossier tronqué.
+Preuves : `logs/webtoon_v5.log` (phases 1 et 2 terminées sur les 5 images, crash
+en phase 3) et `qcheck_report.json` limité à part01/part02.
+
+Corrigé : chaque image de la phase 3 est protégée individuellement (l'échec est
+journalisé, compté, et le traitement continue), le nettoyage mémoire complet est
+rétabli entre images (`MemoryManager.cleanup_medium()`, que le chemin
+`process_directory` faisait déjà), et le lanceur vérifie le code de sortie puis
+affiche un récapitulatif des séries en échec.
+
+**Sécurité** : ce même lanceur contenait une clé API Gemini EN CLAIR et
+réécrasait `.env` avec elle à chaque exécution. Fichier jamais commité (fuite
+locale, pas publique). Il lit désormais `GEMINI_API_KEY` depuis l'environnement.
+
+## O6 — Le modèle de reconnaissance était mal choisi
+
+`_paddle_vl_worker.py`. Le worker chargeait `PP-OCRv5_server_rec` : le gros
+modèle multilingue (81 Mo, précision publiée 86,4 %). Remplacé par
+`latin_PP-OCRv5_mobile_rec` (14 Mo, précision publiée **inférieure**, 84,7 %) —
+qui fait pourtant nettement mieux sur notre corpus, parce qu'il est spécialisé
+sur l'alphabet latin là où le « server » partage sa capacité avec le chinois.
+
+Banc de mesure créé pour trancher : `scratch/ocr_bench.py`, 16 bulles de 3
+séries avec vérité terrain relevée à l'œil, score exact + taux d'erreur
+caractère (CER).
+
+| configuration | exacts | CER |
+|---|---|---|
+| **`latin_PP-OCRv5_mobile_rec`** | **10/16** | **0,0506** |
+| `en_PP-OCRv5_mobile_rec` | 9/16 | 0,0524 |
+| latin + détection min 640 px | 9/16 | 0,0628 |
+| **`PP-OCRv5_server_rec` (avant)** | 7/16 | 0,0733 |
+| latin + détection min 960 px | 9/16 | 0,0733 |
+| `unclip_ratio` 1,2 | 7/16 | 0,0750 |
+| crop agrandi ×2 | 5/16 | 0,0768 |
+| crop agrandi ×3 | 5/16 | 0,1065 |
+
+**Tous les réglages de détection ont été mesurés négatifs** une fois le bon
+modèle en place — y compris forcer la résolution d'entrée, alors que la
+détection ne redimensionne jamais nos crops par défaut
+(`limit_type='min'`, `limit_side_len=64`, donc sans effet sur des crops déjà
+plus grands). Les paramètres restent pilotables par variables d'environnement
+(`PADDLE_DET_*`, `PADDLE_REC_MODEL`) pour pouvoir rejouer ces comparaisons.
+
+Ce que ça corrige à la SOURCE, sans post-traitement :
+- espaces perdus : « ITWOULDGOQUIET, ONLYTO ERUPT AGAIN WITHOUTWARNING » →
+  exact ; « ITKEPTEVERYONE IN THE ESTATE ONEDGE. » → exact ; « BRINGBACKA
+  SOUVENIR » → « BRING BACK A SOUVENIR » ; « IF YOULEAVE » → « IF YOU LEAVE » ;
+- confusion Y/4 : « AREN'T 4 OU » → « AREN'T YOU » (le rustine regex de O4
+  devient inutile) ;
+- nom propre : « MORI SHIGE » → « MORISHIGE » (l'OCR ne le coupe plus, donc le
+  découpeur n'a plus à être protégé de lui-même sur ce cas) ;
+- casse : « you SHOULD » → « YOU SHOULD » ; « KAZUKI' SON » → « KAZUKI'S ON ».
+
+Régressions honnêtes : « KAZUKI! » → « KAZUK! », « CANT LAND A » → « CANT
+LANA », « THE TOKYO MAKAI » → « THe TOKYO MAkAl », « WILD... » → « WILD.. ».
+Bilan sur la série 1 : nettement positif.
+
+**Piste ouverte** : PaddleOCR **3.7.0** (juin 2026) apporte **PP-OCRv6**, dont
+le benchmark comporte une catégorie « texte artistique » — exactement notre cas.
+Le venv `.venv_paddleocr` est en **3.4.0** : la mise à jour n'a pas été faite
+sans accord, elle touche un environnement qui fonctionne.
+
 ## Défauts connus restants
 
 1. **Mots collés de 5 lettres ou moins** : « ASYOU », « ANDNO », « AMANA »,

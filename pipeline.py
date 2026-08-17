@@ -1429,106 +1429,133 @@ class TranslationPipeline:
                     })
                     continue
 
-                ghost_risk_indices: List[int] = []
+                # Une image qui plante ne doit JAMAIS emporter le reste du
+                # chapitre. Mesuré le 2026-08-15 sur
+                # i-married-the-dragon-i-killed : « array allocation size too
+                # large » pendant le rendu de part03 ; l'exception remontait
+                # jusqu'à main.py qui faisait sys.exit(1), donc part04 et
+                # part05 n'ont jamais été tentés, aucun summary.json n'a été
+                # écrit, et le lanceur a recopié le dossier tronqué dans
+                # traductions_propres/ sans le moindre avertissement.
+                render_failed: Optional[str] = None
                 try:
-                    valid_dets_for_inpaint = [d for d in dets if getattr(d, 'text_translated', None)]
-                    img_translated, _inpaint_sec, ghost_risk_indices = self._run_pre_inpainting(img, valid_dets_for_inpaint, renderer)
-                except Exception as exc:
-                    self.logger.warning(f"   ⚠️  Inpainting échoué sur {img_path.name}: {exc}")
-                    img_translated = img.copy()
+                    ghost_risk_indices: List[int] = []
+                    try:
+                        valid_dets_for_inpaint = [d for d in dets if getattr(d, 'text_translated', None)]
+                        img_translated, _inpaint_sec, ghost_risk_indices = self._run_pre_inpainting(img, valid_dets_for_inpaint, renderer)
+                    except Exception as exc:
+                        self.logger.warning(f"   ⚠️  Inpainting échoué sur {img_path.name}: {exc}")
+                        img_translated = img.copy()
 
-                # QCheck : chaque détection dont l'effacement est resté
-                # imparfait (fantôme résiduel, cf. `_apply_erasure_by_group`)
-                # — aucun signal fiable ici pour réparer automatiquement sans
-                # risquer pire (le fond n'est pas sûr à diffuser, par
-                # construction), donc on se contente de le SIGNALER pour une
-                # retouche manuelle ciblée plutôt que de relire toute la page.
-                for idx in ghost_risk_indices:
-                    if idx >= len(dets):
-                        continue
-                    d = dets[idx]
-                    qcheck_report.append({
-                        'page': img_path.name,
-                        'class': getattr(d, 'class_name', ''),
-                        'bbox': [d.x1, d.y1, d.x2, d.y2],
-                        'type': 'ghost_residual',
-                        'detail': "Effacement imparfait (LaMa a échoué, fond jugé trop texturé pour diffuser) — vérifier visuellement.",
+                    # QCheck : chaque détection dont l'effacement est resté
+                    # imparfait (fantôme résiduel, cf. `_apply_erasure_by_group`)
+                    # — aucun signal fiable ici pour réparer automatiquement sans
+                    # risquer pire (le fond n'est pas sûr à diffuser, par
+                    # construction), donc on se contente de le SIGNALER pour une
+                    # retouche manuelle ciblée plutôt que de relire toute la page.
+                    for idx in ghost_risk_indices:
+                        if idx >= len(dets):
+                            continue
+                        d = dets[idx]
+                        qcheck_report.append({
+                            'page': img_path.name,
+                            'class': getattr(d, 'class_name', ''),
+                            'bbox': [d.x1, d.y1, d.x2, d.y2],
+                            'type': 'ghost_residual',
+                            'detail': "Effacement imparfait (LaMa a échoué, fond jugé trop texturé pour diffuser) — vérifier visuellement.",
+                        })
+
+                    for det in dets:
+                        if not getattr(det, 'text_translated', None):
+                            continue
+
+                        self._prepare_render_style(renderer, img, det)
+                        img_translated = renderer.insert_text(
+                            img_translated,
+                            det.text_translated,
+                            det.x1, det.y1, det.x2, det.y2,
+                            text_regions=getattr(det, 'text_regions', None),
+                            text_color_rgb=getattr(det, 'text_color_rgb', None),
+                            text_style=getattr(det, 'text_style', 'dialogue'),
+                            font_hint=getattr(det, 'font_hint', 'regular'),
+                            class_name=getattr(det, 'class_name', ''),
+                            bubble_mask=getattr(det, 'mask_binary', None),
+                            font_key=getattr(det, 'font_key', None),
+                            source_line_height=getattr(det, 'source_line_height', None),
+                            sibling_boxes=[
+                                (d.x1, d.y1, d.x2, d.y2) for d in dets if d is not det
+                            ],
+                        )
+
+                    # ── QCheck auto-repair post-render ──────────────────────────
+                    img_to_save = img_translated
+                    if QCheckEngine is not None:
+                        try:
+                            _translated_dets = [d for d in dets if getattr(d, 'text_translated', None)]
+                            if _translated_dets:
+                                qcheck_engine = QCheckEngine(
+                                    font_paths=getattr(renderer.cfg, 'font_paths', [])
+                                )
+                                img_fixed, qcheck_issues = qcheck_engine.check_and_repair(
+                                    img_before=img,
+                                    img_after=img_translated,
+                                    detections=_translated_dets,
+                                    renderer=renderer,
+                                )
+                                if qcheck_issues:
+                                    summary = QCheckEngine.format_summary(qcheck_issues)
+                                    self.logger.info(f"      {summary}")
+                                    if any(i.repaired for i in qcheck_issues):
+                                        img_to_save = img_fixed
+                                    QCheckEngine.save_report(
+                                        qcheck_issues,
+                                        out_ch_dir / 'qcheck_report.json',
+                                        page_name=img_path.stem,
+                                    )
+                                    # Ajouter à l'ancien rapport pour compatibilité
+                                    for issue in qcheck_issues:
+                                        if not issue.repaired:
+                                            qcheck_report.append({
+                                                'page': img_path.name,
+                                                'class': issue.class_name,
+                                                'bbox': list(issue.bbox),
+                                                'type': issue.issue_type,
+                                                'detail': issue.detail,
+                                            })
+                        except Exception as qcheck_err:
+                            self.logger.warning(f"      ⚠️  QCheck ignoré: {qcheck_err}")
+
+                    output_path = self._write_output_image(out_ch_dir, img_path.stem, img_to_save)
+                    global_stats['processed'] += 1
+                    global_stats['results'].append({
+                        'image': img_path.name,
+                        'success': True,
+                        'output': output_path.name,
+                        'detections': len(dets),
+                        'translated': sum(1 for d in dets if getattr(d, 'text_translated', None)),
                     })
 
-                for det in dets:
-                    if not getattr(det, 'text_translated', None):
-                        continue
-
-                    self._prepare_render_style(renderer, img, det)
-                    img_translated = renderer.insert_text(
-                        img_translated,
-                        det.text_translated,
-                        det.x1, det.y1, det.x2, det.y2,
-                        text_regions=getattr(det, 'text_regions', None),
-                        text_color_rgb=getattr(det, 'text_color_rgb', None),
-                        text_style=getattr(det, 'text_style', 'dialogue'),
-                        font_hint=getattr(det, 'font_hint', 'regular'),
-                        class_name=getattr(det, 'class_name', ''),
-                        bubble_mask=getattr(det, 'mask_binary', None),
-                        font_key=getattr(det, 'font_key', None),
-                        source_line_height=getattr(det, 'source_line_height', None),
-                        sibling_boxes=[
-                            (d.x1, d.y1, d.x2, d.y2) for d in dets if d is not det
-                        ],
-                    )
-
-                # ── QCheck auto-repair post-render ──────────────────────────
-                img_to_save = img_translated
-                if QCheckEngine is not None:
+                except Exception as exc:
+                    render_failed = str(exc)
+                    import traceback as _tb
+                    self.logger.error(f"   ❌ Rendering échoué sur {img_path.name}: {exc}")
+                    self.logger.error(_tb.format_exc())
+                    global_stats['failed'] += 1
+                    global_stats['results'].append({
+                        'image': img_path.name, 'success': False, 'error': render_failed,
+                    })
+                finally:
+                    img = None
+                    img_translated = None
+                    img_to_save = None
+                    # `gc.collect()` seul ne rendait pas la VRAM/RAM des
+                    # modèles entre deux images de ~690x60000 px : la pression
+                    # s'accumulait jusqu'à l'échec d'allocation. Le chemin
+                    # `process_directory` faisait déjà ce nettoyage complet.
                     try:
-                        _translated_dets = [d for d in dets if getattr(d, 'text_translated', None)]
-                        if _translated_dets:
-                            qcheck_engine = QCheckEngine(
-                                font_paths=getattr(renderer.cfg, 'font_paths', [])
-                            )
-                            img_fixed, qcheck_issues = qcheck_engine.check_and_repair(
-                                img_before=img,
-                                img_after=img_translated,
-                                detections=_translated_dets,
-                                renderer=renderer,
-                            )
-                            if qcheck_issues:
-                                summary = QCheckEngine.format_summary(qcheck_issues)
-                                self.logger.info(f"      {summary}")
-                                if any(i.repaired for i in qcheck_issues):
-                                    img_to_save = img_fixed
-                                QCheckEngine.save_report(
-                                    qcheck_issues,
-                                    out_ch_dir / 'qcheck_report.json',
-                                    page_name=img_path.stem,
-                                )
-                                # Ajouter à l'ancien rapport pour compatibilité
-                                for issue in qcheck_issues:
-                                    if not issue.repaired:
-                                        qcheck_report.append({
-                                            'page': img_path.name,
-                                            'class': issue.class_name,
-                                            'bbox': list(issue.bbox),
-                                            'type': issue.issue_type,
-                                            'detail': issue.detail,
-                                        })
-                    except Exception as qcheck_err:
-                        self.logger.warning(f"      ⚠️  QCheck ignoré: {qcheck_err}")
-
-                output_path = self._write_output_image(out_ch_dir, img_path.stem, img_to_save)
-                global_stats['processed'] += 1
-                global_stats['results'].append({
-                    'image': img_path.name,
-                    'success': True,
-                    'output': output_path.name,
-                    'detections': len(dets),
-                    'translated': sum(1 for d in dets if getattr(d, 'text_translated', None)),
-                })
-
-                img = None
-                img_translated = None
-                img_to_save = None
-                gc.collect()
+                        MemoryManager.cleanup_medium()
+                    except Exception:
+                        gc.collect()
 
             if qcheck_report:
                 qcheck_path = out_ch_dir / 'qcheck_report.json'

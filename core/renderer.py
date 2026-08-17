@@ -2920,8 +2920,10 @@ class TextRenderer:
             source_line_height,
         )
         block_fs: Optional[int] = None
+        rewrapped = False
         if fitted is not None:
             block_fs, lines = fitted
+            rewrapped = True
         else:
             for i, line in enumerate(lines):
                 if i >= len(regions) or not line:
@@ -2975,8 +2977,21 @@ class TextRenderer:
             offset_x, ink_w = self._line_extents(font, line)
             line_h = (font.getbbox(line)[3] - font.getbbox(line)[1])
             
-            # Centrer la ligne au milieu de son polygone
-            xp = x1 + (rw - ink_w) // 2 - offset_x
+            # Centrer la ligne au milieu de son polygone — SAUF si on a
+            # redécoupé le texte nous-mêmes : les polygones décrivent alors les
+            # coupures de la planche d'origine, pas les nôtres, et centrer
+            # chacune de nos lignes sur un polygone qui ne lui correspond plus
+            # décale le bloc et le rend irrégulier (mesuré sur « WHEN I WAS
+            # TEN, JUST A MONTH BEFORE ENTERING THE ROYAL ACADEMY, » : lignes
+            # poussées vers la droite, alignement en escalier). Dans ce cas le
+            # bon repère est le centre du BLOC, commun à toutes les lignes ;
+            # les ordonnées, elles, restent celles des polygones, ce qui
+            # préserve l'interligne de la planche.
+            if rewrapped and block_x1 is not None:
+                center_x = (block_x1 + block_x2) / 2.0
+                xp = int(round(center_x - ink_w / 2.0)) - offset_x
+            else:
+                xp = x1 + (rw - ink_w) // 2 - offset_x
             yp = y1 + (rh - line_h) // 2
             
             # Dessiner

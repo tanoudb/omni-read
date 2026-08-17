@@ -296,6 +296,84 @@ class YOLODetector:
     # NMS
     # ─────────────────────────────────────────────────────────────────────────
     
+    @staticmethod
+    def _recover_truncated_boxes(
+        detections: List[Detection], raw_detections: List[Detection],
+        min_containment: float = 0.92, max_growth: float = 2.2,
+    ) -> None:
+        """Réétend une boîte finale TRONQUÉE, d'après les boîtes brutes.
+
+        Le NMS ne garde que le meilleur SCORE, or le score ne dit rien de la
+        complétude. Mesuré sur the-frontier-count ch1 : la même bulle sortait
+        en [113,5463,339,5589] (h=126, score 0,909) et en [111,5373,340,5591]
+        (h=218, score 0,903) ; le NMS gardait la tronquée, et la ligne
+        « I PREPARED » — hors boîte — n'était ni lue, ni effacée, ni
+        retraduite. Le texte anglais restait visible dans la bulle avec la
+        traduction dessous, dans une autre police.
+
+        Corriger ça DANS le NMS ne marche pas : agrandir une gagnante en cours
+        de boucle élargit mécaniquement les comparaisons suivantes, ici comme
+        aux étapes de NMS d'après, et le voisinage se fait avaler — essayé, et
+        path-of-vengeance tombait de 37 à 34 détections, trois paires de bulles
+        soudées. On agit donc APRÈS toutes les étapes de suppression, sur les
+        boîtes finales, sans influencer aucune décision.
+
+        Une boîte n'est étendue que vers une boîte brute qui la CONTIENT
+        presque entièrement (92 %) et qui reste de taille comparable : c'est la
+        signature « deux vues du même objet, l'une coupée », que deux bulles
+        voisines n'ont jamais (mesuré : 0,31 de containment).
+        """
+        for det in detections:
+            try:
+                dx1, dy1, dx2, dy2 = (float(v) for v in det.bbox)
+                area_det = max(1.0, (dx2 - dx1) * (dy2 - dy1))
+                best_box = None
+                best_area = area_det
+                for raw in raw_detections:
+                    if raw.class_name != det.class_name:
+                        continue
+                    rx1, ry1, rx2, ry2 = (float(v) for v in raw.bbox)
+                    area_raw = max(1.0, (rx2 - rx1) * (ry2 - ry1))
+                    if area_raw <= best_area or area_raw > max_growth * area_det:
+                        continue
+                    inter = (
+                        max(0.0, min(dx2, rx2) - max(dx1, rx1))
+                        * max(0.0, min(dy2, ry2) - max(dy1, ry1))
+                    )
+                    if (inter / area_det) < min_containment:
+                        continue
+                    best_box, best_area = [rx1, ry1, rx2, ry2], area_raw
+                if best_box is None:
+                    continue
+                # Ne jamais s'étendre SUR une autre détection : la boîte
+                # élargie serait ensuite fusionnée avec elle par le
+                # dédoublonnage du pipeline, et on perdrait une bulle — deux
+                # textes dans la même, l'autre laissée en anglais. Mesuré :
+                # sans cette garde, path-of-vengeance passait de 37 à 35
+                # détections.
+                ex1, ey1, ex2, ey2 = best_box
+                clash = False
+                for other in detections:
+                    if other is det or other.class_name != det.class_name:
+                        continue
+                    ox1, oy1, ox2, oy2 = (float(v) for v in other.bbox)
+                    area_other = max(1.0, (ox2 - ox1) * (oy2 - oy1))
+                    inter_new = (
+                        max(0.0, min(ex2, ox2) - max(ex1, ox1))
+                        * max(0.0, min(ey2, oy2) - max(ey1, oy1))
+                    )
+                    inter_old = (
+                        max(0.0, min(dx2, ox2) - max(dx1, ox1))
+                        * max(0.0, min(dy2, oy2) - max(dy1, oy1))
+                    )
+                    if inter_new > inter_old and (inter_new / area_other) > 0.25:
+                        clash = True
+                        break
+                if not clash:
+                    det.bbox = best_box
+            except Exception:
+                continue
+
     def nms_per_class(self, detections: List[Detection], debug_events: Optional[List[Dict]] = None) -> List[Detection]:
         by_class = defaultdict(list)
         for det in detections:
@@ -620,6 +698,14 @@ class YOLODetector:
                     f"({event['reason']}) bbox={event['bbox']}"
                 )
         
+        # 7. Récupération des boîtes TRONQUÉES
+        before_boxes = [list(d.bbox) for d in detections]
+        self._recover_truncated_boxes(detections, raw_detections)
+        if logger:
+            grown = sum(1 for a, d in zip(before_boxes, detections) if list(d.bbox) != a)
+            if grown:
+                logger.info(f"      → {grown} boîte(s) tronquée(s) réétendue(s)")
+
         # Stats
         if logger:
             by_class = defaultdict(int)

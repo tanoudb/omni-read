@@ -59,13 +59,63 @@ def load_model() -> bool:
 
         # PP-OCRv5 server models — meilleure précision que mobile
         # Pas besoin de orientation/unwarping sur des crops de bulles
+        # Les paramètres de détection sont pilotables par variables
+        # d'environnement, pour pouvoir COMPARER des configurations sur le banc
+        # `scratch/ocr_bench.py` sans réécrire ce fichier à chaque essai.
+        # Sans variable définie, on laisse PaddleOCR à ses valeurs par défaut —
+        # c'est-à-dire exactement le comportement d'avant.
+        opts = {}
+        for env_name, kwarg, cast in (
+            ("PADDLE_DET_LIMIT_SIDE_LEN", "text_det_limit_side_len", int),
+            ("PADDLE_DET_LIMIT_TYPE", "text_det_limit_type", str),
+            ("PADDLE_DET_THRESH", "text_det_thresh", float),
+            ("PADDLE_DET_BOX_THRESH", "text_det_box_thresh", float),
+            ("PADDLE_DET_UNCLIP_RATIO", "text_det_unclip_ratio", float),
+            ("PADDLE_REC_SCORE_THRESH", "text_rec_score_thresh", float),
+        ):
+            raw = os.environ.get(env_name, "").strip()
+            if raw:
+                try:
+                    opts[kwarg] = cast(raw)
+                except Exception:
+                    pass
+        if opts:
+            sys.stderr.write("[paddle_worker] options detection: %s\n" % (opts,))
+
+        # Reconnaissance : modèle LATIN, pas le modèle « server » multilingue.
+        #
+        # Contre-intuitif — `PP-OCRv5_server_rec` affiche une meilleure précision
+        # publiée (86,4 % contre 84,7 %) et pèse 81 Mo contre 14 — mais il est
+        # entraîné sur du multilingue, chinois inclus. Sur notre corpus réel
+        # (banc `scratch/ocr_bench.py`, 16 bulles de 3 séries), le modèle latin
+        # fait NETTEMENT mieux : 10/16 exacts contre 7/16, et le taux d'erreur
+        # caractère passe de 0,073 à 0,051, soit -31 %.
+        #
+        # Surtout, il corrige précisément la classe de défauts qui empoisonnait
+        # la traduction — les espaces perdus entre mots :
+        #   « ITWOULDGOQUIET, ONLYTO ERUPT AGAIN WITHOUTWARNING »
+        #   → « IT WOULD GO QUIET, ONLY TO ERUPT AGAIN WITHOUT WARNING. »
+        #   « ITKEPTEVERYONE IN THE ESTATE ONEDGE. »
+        #   → « IT KEPT EVERYONE IN THE ESTATE ON EDGE. »
+        # Ce n'était donc pas une fatalité à rattraper au post-traitement.
+        #
+        # Réglages de détection essayés et ÉCARTÉS (tous mesurés sur le même
+        # banc, tous moins bons une fois le modèle latin en place) :
+        #   limit_side_len=640/min -> CER 0,063 ; 960/min -> 0,073 ;
+        #   unclip_ratio=1,2 -> 0,075 ; box_thresh=0,5 -> aucun effet ;
+        #   agrandissement du crop x2 -> 0,077, x3 -> 0,107.
+        det_model = os.environ.get("PADDLE_DET_MODEL", "").strip() or "PP-OCRv5_server_det"
+        rec_model = os.environ.get("PADDLE_REC_MODEL", "").strip() or "latin_PP-OCRv5_mobile_rec"
+        sys.stderr.write("[paddle_worker] modeles: %s / %s\n" % (det_model, rec_model))
+
         _ocr = PaddleOCR(
-            text_detection_model_name="PP-OCRv5_server_det",
-            text_recognition_model_name="PP-OCRv5_server_rec",
+            text_detection_model_name=det_model,
+            text_recognition_model_name=rec_model,
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,
             device="gpu:0",
+            **opts,
         )
 
         elapsed = time.time() - t0

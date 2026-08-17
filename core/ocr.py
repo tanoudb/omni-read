@@ -177,7 +177,9 @@ def _acceptable_pieces(pieces: List[str]) -> bool:
     return avg >= _SEG_MIN_AVG_PIECE
 
 
-def _segment_token(core: str, protected: frozenset) -> Optional[List[str]]:
+def _segment_token(
+    core: str, protected: frozenset, proven_glued: bool = False,
+) -> Optional[List[str]]:
     """
     Découpe `core` en mots. Retourne les morceaux DÉCOUPÉS SUR LA CHAÎNE
     D'ORIGINE (casse et ponctuation interne préservées), ou None.
@@ -202,13 +204,15 @@ def _segment_token(core: str, protected: frozenset) -> Optional[List[str]]:
     délibérément conservateur (cf. son commentaire) pour ne pas déchiqueter
     les onomatopées courtes ("BOOM", "CRACK"...), pas abaissé pour ce cas.
     """
-    key = core.upper()
+    token = core.upper()
+    # Le cache est indexé sur le token ET sur `proven_glued` : le même token
+    # peut se découper ou non selon que l'image a prouvé un collage.
+    key = f"{token}|{int(proven_glued)}"
 
-    # La protection est testée AVANT le cache : le résultat dépend du glossaire
-    # passé en argument, alors que le cache n'est indexé que sur le token. Sans
-    # ça, un token protégé lors d'un appel restait marqué « non découpable »
-    # pour tous les appels suivants, glossaire ou pas.
-    if key in protected:
+    # La protection est testée AVANT le cache, et sur le TOKEN NU — pas sur la
+    # clé de cache, qui porte un suffixe. Le glossaire contient « SUNGJINWOO »,
+    # pas « SUNGJINWOO|0 ».
+    if token in protected:
         return None
 
     if key in _split_cache:
@@ -244,6 +248,19 @@ def _segment_token(core: str, protected: frozenset) -> Optional[List[str]]:
         and _is_known_word("".join(letters[:-1]))
     )
 
+    # NOTE — piste essayée et ABANDONNÉE le 2026-08-15.
+    #
+    # Quand l'image prouve un collage (`proven_glued`), il est tentant de
+    # desserrer les garde-fous : abaisser la longueur minimale de token à 4 et
+    # ignorer le court-circuit « c'est déjà un mot connu ». Ça répare bien
+    # quelques cas (« ARED » → « A RED », « ASYOU » → « AS YOU », « MYSON » →
+    # « MY SON ») mais ça en casse davantage, mesuré sur
+    # the-frontier-count ch1 : « AGO » → « A GO », « ABOUT » → « A BOUT »,
+    # « MANA » → « MAN A », « INSIDE » → « I NSIDE ». Bilan négatif : 4 gains
+    # pour 8 dégradations. La preuve qu'il MANQUE un espace ne dit pas OÙ il
+    # manque, et `wordsegment` reste tout aussi confiant sur les vrais mots
+    # courts. On garde donc les garde-fous d'origine, et `proven_glued` ne sert
+    # qu'à décider si l'on tente le découpage — pas à le rendre plus agressif.
     if (
         (
             len(core) >= _SEG_MIN_TOKEN_LEN
@@ -334,7 +351,96 @@ def _split_after_contraction(core: str, protected: frozenset) -> str:
     return f"{m.group('head')} {tail_out}"
 
 
-def _split_glued_words(text: str, protected: Optional[frozenset] = None) -> str:
+def _estimate_word_count(
+    crop_bgr: Optional[np.ndarray],
+    regions: Optional[List[Dict]],
+    scale: float = 1.0,
+) -> Optional[int]:
+    """Nombre de mots VISIBLES dans l'image, compté par les blancs entre groupes
+    d'encre. Retourne None si la mesure n'est pas exploitable.
+
+    C'est la seule source fiable pour savoir s'il manque un espace : le texte
+    seul ne le dit pas. Un découpeur statistique qui travaille sans cette
+    information casse les noms propres — mesuré sur `i-married-the-dragon` :
+    « FERDA ROSNOVA. », lu correctement par l'OCR, ressortait « FERD A ROS
+    NOVA. » parce que « FERDA » et « ROSNOVA » ne sont pas des mots anglais et
+    que `wordsegment` propose toujours une découpe plausible. Le traducteur
+    reçoit alors un nom méconnaissable, et aucun recollage a posteriori ne peut
+    rattraper ça.
+    """
+    if crop_bgr is None or crop_bgr.size == 0 or not regions:
+        return None
+    try:
+        gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+        h, w = gray.shape[:2]
+        total = 0
+        counted = 0
+        for region in regions:
+            pts = region.get('bbox') if isinstance(region, dict) else None
+            if not pts or len(pts) < 3:
+                continue
+            arr = np.array(
+                [[int(round(p[0] / max(scale, 1e-6))), int(round(p[1] / max(scale, 1e-6)))]
+                 for p in pts],
+                dtype=np.int32,
+            )
+            arr[:, 0] = np.clip(arr[:, 0], 0, w - 1)
+            arr[:, 1] = np.clip(arr[:, 1], 0, h - 1)
+            line = np.zeros((h, w), dtype=np.uint8)
+            cv2.fillPoly(line, [arr], 255)
+            inside = gray[line > 0]
+            if inside.size < 64:
+                continue
+
+            # L'encre est le côté MINORITAIRE du seuil d'Otsu — sans supposer
+            # qu'elle soit plus sombre ou plus claire que le fond (texte blanc
+            # sur bulle noire est fréquent).
+            thr, _ = cv2.threshold(inside, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            frac_below = float(np.mean(inside < thr))
+            ink_dark = frac_below <= 0.5
+            minority = frac_below if ink_dark else (1.0 - frac_below)
+            if not (0.03 <= minority <= 0.55):
+                continue
+            ink = ((gray < thr) if ink_dark else (gray >= thr)) & (line > 0)
+
+            xs = np.nonzero(ink.any(axis=0))[0]
+            ys = np.nonzero(ink.any(axis=1))[0]
+            if xs.size == 0 or ys.size < 4:
+                continue
+            ink_h = float(ys.max() - ys.min() + 1)
+            cols = ink[:, xs.min():xs.max() + 1].any(axis=0)
+
+            # Un blanc INTERNE plus large qu'une fraction de la hauteur de casse
+            # sépare deux mots ; plus étroit, c'est une chasse entre lettres.
+            gap_min = max(2, int(round(ink_h * 0.32)))
+            gaps, run = 0, 0
+            for filled in cols:
+                if filled:
+                    if run >= gap_min:
+                        gaps += 1
+                    run = 0
+                else:
+                    run += 1
+            words_here = gaps + 1
+
+            # Garde-fou de fiabilité essayé puis RETIRÉ (2026-08-15) : refuser
+            # de répondre quand une « ligne d'un seul mot » est anormalement
+            # longue (halo de lueur qui comble les blancs). Mesuré : ça
+            # récupérait 1 ligne collée sur the-frontier-count, mais ça
+            # recassait 1 nom propre sur i-married-the-dragon (« ROSNOVA » →
+            # « ROS NOVA »), en retirant la protection à cette ligne-là. Un nom
+            # propre méconnaissable coûte plus cher au traducteur qu'un mot
+            # collé, donc on garde la protection.
+            total += words_here
+            counted += 1
+        return total if counted else None
+    except Exception:
+        return None
+
+
+def _split_glued_words(
+    text: str, protected: Optional[frozenset] = None, proven_glued: bool = False,
+) -> str:
     """
     Rétablit les espaces dans les mots collés par l'OCR.
 
@@ -379,7 +485,7 @@ def _split_glued_words(text: str, protected: Optional[frozenset] = None) -> str:
             result.append(word)
             continue
 
-        pieces = _segment_token(core, protected)
+        pieces = _segment_token(core, protected, proven_glued)
         if not pieces:
             core = _split_after_contraction(core, protected)
         result.append(leading + (" ".join(pieces) if pieces else core) + trailing)
@@ -516,7 +622,13 @@ class OCREngine:
 
         return img, upscale_factor
 
-    def post_process_text(self, text: str) -> str:
+    def post_process_text(
+        self,
+        text: str,
+        crop_bgr: Optional[np.ndarray] = None,
+        regions: Optional[List[Dict]] = None,
+        upscale: float = 1.0,
+    ) -> str:
         if not text:
             return ""
         # ★ NOUVEAU : OCR Cleaner V2 ★
@@ -536,7 +648,35 @@ class OCREngine:
         text = re.sub(r"\bI\.(?=\s+THE\b)", "I,", text)
         text = re.sub(r"(?<=[A-Z])\s+1\s+(?=[A-Z])", " I ", text)
         # ── Word splitting (mots collés OCR) ──
-        text = _split_glued_words(text, protected=_protected_words())
+        # Le découpage de mots collés n'est tenté QUE si l'image dit qu'il
+        # manque des espaces. Sans cette preuve, `wordsegment` propose toujours
+        # une découpe plausible et détruit les noms propres — « FERDA ROSNOVA. »
+        # (lu correctement) ressortait « FERD A ROS NOVA. », illisible pour le
+        # traducteur. Le nombre de mots visibles se compte dans les blancs entre
+        # groupes d'encre : si le texte en contient déjà au moins autant, rien
+        # n'est collé, on ne touche à rien.
+        visible_words = _estimate_word_count(crop_bgr, regions, upscale)
+        n_text = len(text.split())
+        # Découper n'est justifié que si l'image montre PLUS de mots que le
+        # texte n'en contient : c'est la seule preuve qu'il manque un espace.
+        #
+        # Les trois autres cas ne doivent RIEN déclencher :
+        #  - image == texte : rien n'est collé ;
+        #  - image < texte  : la mesure est forcément fausse (l'OCR peut
+        #    fusionner des mots, jamais en inventer), donc aucune preuve ;
+        #  - mesure impossible : on retombe sur le comportement d'avant.
+        #
+        # Essayé puis abandonné : traiter « image < texte » comme « mesure peu
+        # fiable, on découpe quand même ». Ça récupérait 4 lignes collées dans
+        # les cartouches à lueur de the-frontier-count, mais ça recassait
+        # « ROSNOVA » → « ROS NOVA » sur i-married-the-dragon. Un nom propre
+        # méconnaissable coûte plus cher au traducteur qu'un mot collé, qu'il
+        # peut souvent recomposer depuis le contexte.
+        proven = visible_words is not None and n_text < visible_words
+        if visible_words is None or proven:
+            text = _split_glued_words(
+                text, protected=_protected_words(), proven_glued=proven,
+            )
         text = re.sub(r"\s+", " ", text).strip()
         if self.cfg.remove_isolated_chars:
             words = text.split()
@@ -688,7 +828,9 @@ class OCREngine:
         final: List[Tuple[Optional[str], float, bool, Optional[str], List[Dict], float]] = []
         for i in range(n):
             text, confidence, regions = primary_results[i]
-            clean = self.post_process_text(text)
+            clean = self.post_process_text(
+                text, crop_bgr=crops[i], regions=regions, upscale=upscale_factors[i],
+            )
             is_valid, skip_reason = self.is_valid_text(clean, confidence) if clean else (False, "empty")
 
             if not is_valid:

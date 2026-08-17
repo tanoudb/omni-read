@@ -61,3 +61,9 @@ output*/**/debug/
 
 # Sorties de tests/dry_run_chapter.py : régénérées à chaque run, pas un livrable.
 tests/dry_run_out/
+# Sorties d'iteration du rendu — plusieurs Go, ne doivent jamais etre versionnees
+scratch/render_out/
+scratch/audit_propre/
+scratch/diag/
+manhwa_trad/
+traductions_propres/
