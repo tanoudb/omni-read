@@ -22,6 +22,30 @@ from pipeline import TranslationPipeline
 from utils import WebtoonLogger
 
 
+
+def inflate_text(text: str, factor: float) -> str:
+    """Allonge chaque MOT d'environ `factor`, sans en ajouter.
+
+    Simule le foisonnement francais tel qu'il met la mise en page en danger :
+    ce ne sont pas des mots en plus, ce sont des mots plus LONGS, qui bloquent
+    les retours a la ligne. Ajouter des mots aurait produit un stress plus
+    facile a absorber et n'aurait pas teste le vrai risque.
+    """
+    if factor <= 1.0:
+        return text
+    out = []
+    for w in text.split():
+        letters = [c for c in w if c.isalpha()]
+        if len(letters) < 3:
+            out.append(w)
+            continue
+        target = max(len(w) + 1, int(round(len(w) * factor)))
+        extra = target - len(w)
+        mid = len(w) // 2
+        out.append(w[:mid] + w[mid - 1] * extra + w[mid:])
+    return " ".join(out)
+
+
 def build_pipeline() -> TranslationPipeline:
     logger = WebtoonLogger("render-iterate")
     p = TranslationPipeline.__new__(TranslationPipeline)
@@ -39,7 +63,8 @@ def build_pipeline() -> TranslationPipeline:
     return p
 
 
-def run(image_path: Path, out_dir: Path, margin: int = 10):
+def run(image_path: Path, out_dir: Path, margin: int = 10, inflate: float = 1.0,
+        translate: bool = False):
     out_dir.mkdir(parents=True, exist_ok=True)
     bubbles_dir = out_dir / "bubbles"
     bubbles_dir.mkdir(parents=True, exist_ok=True)
@@ -95,11 +120,33 @@ def run(image_path: Path, out_dir: Path, margin: int = 10):
     erased = out.copy()
     cv2.imwrite(str(out_dir / "page_erased.png"), erased)
 
-    # ── Réinjection texte (texte source, PAS de traduction) ──
+    # ── Traduction REELLE (optionnelle) ──
+    # La cle est lue depuis l'environnement / .env par le traducteur lui-meme :
+    # ce script ne la manipule jamais.
+    fr_by_idx = {}
+    if translate and keep:
+        from core.translator_gemini import GeminiTranslator
+        tr = GeminiTranslator(device=p.device, series_name=image_path.parent.parent.name)
+        texts = [str(d.text_original) for d in keep]
+        classes = [str(d.class_name) for d in keep]
+        try:
+            res = tr.translate_page_json(texts, class_names=classes, chapter_id=image_path.stem)
+            for i in range(len(texts)):
+                v = res.get(str(i)) or res.get(i)
+                if v:
+                    fr_by_idx[i] = str(v)
+            print(f"Traduits: {len(fr_by_idx)}/{len(texts)}")
+        except Exception as exc:
+            print(f"Traduction echouee: {exc}")
+
+    # ── Réinjection texte ──
     meta = []
+    # Releve par bulle : `last_layout_debug` est ecrase a chaque appel, il faut
+    # le capturer DANS la boucle de rendu, pas apres.
+    layout_by_idx = {}
     for i, d in enumerate(keep):
         try:
-            d.text_translated = str(d.text_original)
+            d.text_translated = fr_by_idx.get(i) or inflate_text(str(d.text_original), inflate)
             p._prepare_render_style(renderer, img, d)
             out = renderer.insert_text(
                 out,
@@ -108,6 +155,7 @@ def run(image_path: Path, out_dir: Path, margin: int = 10):
                 text_regions=getattr(d, 'text_regions', None),
                 text_color_rgb=getattr(d, 'text_color_rgb', None),
                 outline_width_px=getattr(d, 'measured_outline_px', None),
+                source_text=getattr(d, 'text_original', None),
                 text_style=getattr(d, 'text_style', 'dialogue'),
                 font_hint=getattr(d, 'font_hint', 'regular'),
                 class_name=str(d.class_name),
@@ -116,6 +164,12 @@ def run(image_path: Path, out_dir: Path, margin: int = 10):
                 source_line_height=getattr(d, 'source_line_height', None),
                 sibling_boxes=[(o.x1, o.y1, o.x2, o.y2) for o in keep if o is not d],
             )
+            dbg = getattr(renderer, 'last_layout_debug', None) or {}
+            layout_by_idx[i] = {
+                "font_size": dbg.get('font_size_final'),
+                "n_lines": dbg.get('n_lines'),
+                "bail": dbg.get('bail'),
+            }
         except Exception as e:
             print(f"[{i}] Exception rendu: {e}")
 
@@ -142,7 +196,11 @@ def run(image_path: Path, out_dir: Path, margin: int = 10):
             "score": float(getattr(d, 'score', 0.0)),
             "bbox": [int(d.x1), int(d.y1), int(d.x2), int(d.y2)],
             "ocr_text": getattr(d, 'text_original', '') or '',
+            "rendered_text": getattr(d, 'text_translated', '') or '',
             "ghost_risk": i in ghost_set,
+            "font_size": layout_by_idx.get(i, {}).get('font_size'),
+            "n_lines": layout_by_idx.get(i, {}).get('n_lines'),
+            "bail": layout_by_idx.get(i, {}).get('bail'),
             # Polygones de ligne OCR, en coordonnees LOCALES a la bbox.
             # Sans eux, toute analyse ulterieure doit deviner ou est le texte
             # dans la boite — et se trompe : la mesure des FX prenait la bbox
@@ -175,5 +233,9 @@ if __name__ == "__main__":
     ap.add_argument("image", type=Path)
     ap.add_argument("out_dir", type=Path)
     ap.add_argument("--margin", type=int, default=50)
+    ap.add_argument("--inflate", type=float, default=1.0,
+                    help="allonge chaque mot de ce facteur (1.2 = +20%%)")
+    ap.add_argument("--translate", action="store_true",
+                    help="traduit reellement via l'API Gemini (cle lue dans .env)")
     args = ap.parse_args()
-    run(args.image, args.out_dir, args.margin)
+    run(args.image, args.out_dir, args.margin, args.inflate, args.translate)

@@ -2111,6 +2111,7 @@ class TextRenderer:
         font_path: Optional[str] = None, mask_y_offset: float = 0,
         max_font_size: Optional[int] = None, mask_x_origin: float = 0.0,
         target_lines: Optional[int] = None,
+        length_ratio: Optional[float] = None,
     ) -> Optional[Dict]:
         """
         Cherche la PLUS GRANDE taille qui tient dans la zone, par dichotomie.
@@ -2161,7 +2162,22 @@ class TextRenderer:
         # plus de lignes que la planche d'origine (tolérance +1, la traduction
         # pouvant être plus longue que la source).
         if best is not None and target_lines and target_lines > 0:
+            # Budget de lignes INDEXE SUR LE FOISONNEMENT.
+            #
+            # Un `+1` constant enfermait la traduction dans le decoupage de la
+            # planche : le moteur epuisait la reduction de taille avant
+            # d'envisager une ligne de plus. Mesure sur path-of-vengeance,
+            # bulle « WELL... BUT FOR A SUPPLY RUN... » traduite par « Enfin...
+            # Mais pour une mission de ravitaillement... » : 33 px sur 5 lignes
+            # devenaient 16 px sur 4 lignes — plus de la moitie du corps perdue
+            # alors qu'il restait de la place en hauteur.
+            #
+            # Un texte 17 % plus long a droit a ~17 % de lignes en plus. La
+            # regle vaut pour n'importe quelle langue cible sans rien coder en
+            # dur : elle se deduit du texte lui-meme.
             budget = int(target_lines) + 1
+            if length_ratio and length_ratio > 1.0:
+                budget = max(budget, int(math.ceil(target_lines * length_ratio)) + 1)
             if len(best.get('lines') or []) > budget:
                 for size in range(int(best['size']) - 1, int(self.cfg.min_font_size) - 1, -1):
                     cand = self._layout_at_size(
@@ -2812,6 +2828,10 @@ class TextRenderer:
         # Doit être calculée en amont : ici l'image est déjà effacée, le texte
         # source n'existe plus.
         outline_width_px: Optional[int] = None,
+        # Texte SOURCE, pour calibrer le budget de lignes sur le foisonnement
+        # reel de la traduction. Passe explicitement plutot que devine depuis la
+        # geometrie des polygones : c'est la seule donnee exacte.
+        source_text: Optional[str] = None,
     ) -> np.ndarray:
         if not text or not str(text).strip():
             return img
@@ -3055,6 +3075,9 @@ class TextRenderer:
             max_font_size=size_cap,
             mask_x_origin=x1,
             target_lines=len(text_regions) if text_regions else None,
+            length_ratio=(
+                len(text) / max(1, len(source_text)) if source_text and text else None
+            ),
         )
 
         # Le retrait « loin des voisines » est une précaution : il évite qu'un
@@ -3084,6 +3107,9 @@ class TextRenderer:
                 max_font_size=size_cap,
                 mask_x_origin=x1,
                 target_lines=len(text_regions) if text_regions else None,
+                length_ratio=(
+                    len(text) / max(1, len(source_text)) if source_text and text else None
+                ),
             )
             if retry is not None and retry.get('fits'):
                 ix1, iy1, ix2, iy2 = zone_unshrunk

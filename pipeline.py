@@ -1496,6 +1496,7 @@ class TranslationPipeline:
                             text_regions=getattr(det, 'text_regions', None),
                             text_color_rgb=getattr(det, 'text_color_rgb', None),
                         outline_width_px=getattr(det, 'measured_outline_px', None),
+                        source_text=getattr(det, 'text_original', None),
                             text_style=getattr(det, 'text_style', 'dialogue'),
                             font_hint=getattr(det, 'font_hint', 'regular'),
                             class_name=getattr(det, 'class_name', ''),
