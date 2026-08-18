@@ -166,6 +166,9 @@ class GeminiTranslator:
         self.cache_misses = 0
         self.generation_seconds_total = 0.0
         self.api_calls = 0
+        # Textes du dernier lot restés en langue source, (index, texte).
+        # Permet à l'appelant de refuser de valider une page partielle.
+        self.last_untranslated: List[Tuple[int, str]] = []
         self.fallback_count = 0
 
         # Modèle courant (commence par le principal)
@@ -241,6 +244,14 @@ class GeminiTranslator:
         2. Cascade de fallback sur 429 / ResourceExhausted
         """
         if self._client is None:
+            # Échouer BRUYAMMENT. L'avertissement de construction (« clé non
+            # définie ») se perd dans le défilement d'un run long ; ici on est
+            # au moment précis où une traduction est perdue.
+            print(
+                "   ❌ TRADUCTION IMPOSSIBLE : aucun client Gemini "
+                "(GEMINI_API_KEY absente ou invalide). Les textes de ce lot "
+                "resteront en langue source."
+            )
             return None
 
         original_model_idx = self._current_model_idx
@@ -548,7 +559,24 @@ class GeminiTranslator:
         )
 
         # Appel API avec fallback cascade
+        self.last_untranslated = []
         parsed = self._call(prompt)
+
+        if not (parsed and "traductions" in parsed):
+            # Sans cette branche, les index de `to_send` n'apparaissaient nulle
+            # part dans le résultat : l'appelant ne pouvait pas distinguer
+            # « non traduit » de « absent », et rendait l'anglais sans le
+            # savoir.
+            for idx, orig, _cls in to_send:
+                result[str(idx)] = orig
+                self.last_untranslated.append((idx, orig))
+            print(
+                f"   ❌ {len(to_send)} texte(s) NON TRADUIT(S) : l'appel API "
+                f"n'a rien rendu d'exploitable."
+            )
+            for idx, orig in self.last_untranslated[:5]:
+                print(f"        #{idx:02d} {orig[:60]!r}")
+            return result
 
         if parsed and "traductions" in parsed:
             trad_map: Dict[str, str] = {}
@@ -577,10 +605,16 @@ class GeminiTranslator:
                 if cls.lower() in ("system", "system_card", "sys") and fr:
                     fr = self._format_system_text(fr)
 
-                result[str(idx)] = fr if fr else orig
-
                 if fr:
+                    result[str(idx)] = fr
                     self._cset(orig, fr)
+                else:
+                    # On garde le texte source pour ne pas rendre une bulle
+                    # VIDE — mais on le COMPTE et on le signale. C'est ce
+                    # repli, jusque-là muet, qui laissait passer de l'anglais
+                    # dans une planche française sans que rien ne l'indique.
+                    result[str(idx)] = orig
+                    self.last_untranslated.append((idx, orig))
 
                 # Stocker le choix de font
                 fk = font_map.get(
@@ -608,6 +642,12 @@ class GeminiTranslator:
                 lst.extend(r for r in rels if isinstance(r, str))
 
             self._save_state()
+
+        if self.last_untranslated:
+            print(
+                f"   ⚠️ {len(self.last_untranslated)}/{len(texts)} texte(s) "
+                f"restés en langue source dans ce lot."
+            )
 
         self._save_cache()
         return result

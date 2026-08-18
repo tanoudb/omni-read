@@ -1379,6 +1379,11 @@ class TranslationPipeline:
                             else:
                                 det.text_nllb_raw = orig
                                 det.text_translated = orig
+                                # Trace explicite : cette bulle sortira en
+                                # langue SOURCE. Sans ce marquage, une page
+                                # partiellement traduite était indiscernable
+                                # d'une page correcte.
+                                det.translation_failed = True
 
             else:
                 for ch_name in sorted(chapter_data.keys()):
@@ -1414,6 +1419,7 @@ class TranslationPipeline:
                         else:
                             det.text_nllb_raw = orig
                             det.text_translated = orig
+                            det.translation_failed = True
 
             try:
                 if hasattr(translator, '_save_cache'):
@@ -1547,13 +1553,39 @@ class TranslationPipeline:
                             self.logger.warning(f"      ⚠️  QCheck ignoré: {qcheck_err}")
 
                     output_path = self._write_output_image(out_ch_dir, img_path.stem, img_to_save)
-                    global_stats['processed'] += 1
+
+                    # Une page dont une partie du texte est restée en langue
+                    # source n'est PAS un succès : le lecteur y verra de
+                    # l'anglais. On l'écrit quand même — la relire vaut mieux
+                    # que la perdre — mais elle est marquée comme telle.
+                    untranslated = [
+                        d for d in dets
+                        if getattr(d, 'text_translated', None)
+                        and getattr(d, 'translation_failed', False)
+                    ]
+                    if untranslated:
+                        global_stats['failed'] += 1
+                        self.logger.error(
+                            f"   ❌ {img_path.name} : {len(untranslated)}/{len(dets)} "
+                            f"bulle(s) NON TRADUITE(S), page marquée en échec."
+                        )
+                        for d in untranslated[:5]:
+                            self.logger.error(
+                                f"        {str(getattr(d, 'text_original', ''))[:60]!r}"
+                            )
+                    else:
+                        global_stats['processed'] += 1
+
                     global_stats['results'].append({
                         'image': img_path.name,
-                        'success': True,
+                        'success': not untranslated,
                         'output': output_path.name,
                         'detections': len(dets),
                         'translated': sum(1 for d in dets if getattr(d, 'text_translated', None)),
+                        'untranslated': len(untranslated),
+                        'untranslated_samples': [
+                            str(getattr(d, 'text_original', ''))[:80] for d in untranslated[:5]
+                        ],
                     })
 
                 except Exception as exc:
