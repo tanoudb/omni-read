@@ -418,3 +418,52 @@ bas jusqu'ici :
    CCSamaritanTall 0,61 contre CCWildWords 0,72), mais la mesure côté source
    dépend de polygones OCR parfois tronqués et n'est pas assez fiable pour
    justifier un changement de police. À reprendre sur un corpus plus large.
+
+## Mise en page face au foisonnement de la traduction (2026-08-18)
+
+Tout le travail précédent avait été validé **traduction désactivée** — le texte
+réinjecté était le texte source, donc de longueur identique. Le cas « la
+traduction est plus longue que la VO » n'avait jamais été exercé. Le harnais
+sait désormais traduire réellement (`--translate`) et simuler le foisonnement
+(`--inflate`).
+
+Trois correctifs, mesurés sur path-of-vengeance traduit par l'API (24 bulles) :
+
+| | taille conservée (moy.) | pire cas |
+|---|---|---|
+| départ | 93,9 % | 48 % |
+| + budget de lignes dynamique | 98,0 % | 48 % |
+| + césure pyphen | 100,7 % | 48 % |
+| + prédicat monotone | **102,7 %** | **79 %** |
+
+### M1 — Budget de lignes indexé sur le foisonnement
+Un budget constant (lignes source + 1) enfermait la traduction dans le
+découpage de la planche : le moteur épuisait la réduction de taille avant
+d'envisager une ligne de plus. Le budget suit maintenant le ratio de longueur
+FR/EN, déduit du texte lui-même — donc valable pour toute langue cible.
+
+### M2 — Césure syllabique (pyphen)
+Un mot est insécable au sens de la mise en page : quand il ne tient pas, tout le
+bloc rétrécit pour lui. `pyphen` plutôt que la géométrie — couper là où ça rentre
+donnerait « RAVITA-ILLEMENT », les motifs Hunspell donnent « ra-vi-taille-ment ».
+Changer le code langue suffit pour l'allemand.
+
+Deux défauts de la première implémentation, tous deux mesurés :
+- une seule coupure était tentée ; à 28 px la première césure laisse un reste de
+  198 px qui déborde. Le reste est désormais recoupé tant qu'il ne tient pas ;
+- la coupure n'était tentée que dans la place restante sur la ligne courante.
+
+### M3 — Prédicat de mise en page NON MONOTONE (le vrai mur de #17)
+Le défaut 2 ci-dessus faisait que la mise en page **tenait à 28 px mais pas à
+24** : la césure ne se déclenchait qu'au-delà d'un certain corps. La recherche
+dichotomique de `_fit_font_hard` suppose la monotonie — elle sautait donc
+par-dessus la bonne taille et se rabattait sur 16 px.
+
+Piste écartée en chemin : j'avais diagnostiqué un mur géométrique (retrait
+« loin des voisines »). L'instrumentation l'a infirmé — zone utile de 147 × 238
+sur un masque de 211 × 316, rien n'était amputé.
+
+Conséquence : **l'A/B des polices de dialogue est annulé**. Le blocage écrasait
+les quatre candidates de la même façon ; une fois levé, CCWildWords atteint
+26 px sur #17. On garde sa largeur et son air qui respire, et on évite la
+fatigue de lecture des variantes Bold condensées.
