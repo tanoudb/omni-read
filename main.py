@@ -15,8 +15,8 @@ import sys
 from pathlib import Path
 
 try:
-    from dotenv import load_dotenv
-    load_dotenv()  # charge .env (GEMINI_API_KEY, etc.) avant de lire la config
+    from utils.env_loader import load_env
+    load_env()  # charge .env (GEMINI_API_KEY, etc.) avant de lire la config
 except ImportError:
     pass
 

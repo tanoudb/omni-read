@@ -14,6 +14,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(r"A:\omni read")))
 
+# `main.py` et `run_all_series.py` chargent le .env ; ce harnais ne le faisait
+# PAS. La cle etait donc invisible ici, et le traducteur repartait en silence
+# sur le texte source — c'est l'origine du "12/36 non traduites" qu'on a mis
+# une session a diagnostiquer.
+try:
+    from utils.env_loader import load_env
+    load_env()
+except Exception:
+    pass
+
 import cv2
 import numpy as np
 from config import config
@@ -131,11 +141,18 @@ def run(image_path: Path, out_dir: Path, margin: int = 10, inflate: float = 1.0,
         classes = [str(d.class_name) for d in keep]
         try:
             res = tr.translate_page_json(texts, class_names=classes, chapter_id=image_path.stem)
+            echecs = {i for i, _ in getattr(tr, 'last_untranslated', [])}
             for i in range(len(texts)):
                 v = res.get(str(i)) or res.get(i)
                 if v:
                     fr_by_idx[i] = str(v)
-            print(f"Traduits: {len(fr_by_idx)}/{len(texts)}")
+            # Compter les VRAIES traductions : `res` contient aussi les replis
+            # en langue source, qui sont non vides et se comptaient donc comme
+            # des succes. C'est ce compteur trompeur qui affichait "36/36"
+            # alors que l'API rendait 401 sur tout le lot.
+            reels = len(fr_by_idx) - len(echecs & set(fr_by_idx))
+            print(f"Traduits: {reels}/{len(texts)}"
+                  + (f"  ({len(echecs)} restes en langue source)" if echecs else ""))
         except Exception as exc:
             print(f"Traduction echouee: {exc}")
 

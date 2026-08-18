@@ -35,8 +35,8 @@ os.environ.setdefault("WEBTOON_FORCE_LOCAL", "1")
 os.environ['FLAGS_allocator_strategy'] = 'auto_growth'
 
 try:
-    from dotenv import load_dotenv
-    load_dotenv()
+    from utils.env_loader import load_env
+    load_env()
 except ImportError:
     pass
 
