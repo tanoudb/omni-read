@@ -97,6 +97,7 @@ const makeEmptyPage = async (file: File, index: number, copiedPath: string): Pro
 const TOOLS = [
   { id: 'select', icon: '↖', title: 'Sélect (V)' },
   { id: 'draw',   icon: '⬜', title: 'Dessiner bbox (B)' },
+  { id: 'brush',  icon: '🖌', title: 'Pinceau (P)' },
   { id: 'pan',    icon: '✋', title: 'Pan (Espace)' },
   { id: 'delete', icon: '✕', title: 'Supprimer (Del)' },
 ] as const;
@@ -141,10 +142,12 @@ const App = () => {
   const activeBubbleId = useCanvasStore((s) => s.activeBubbleId);
   const tool = useCanvasStore((s) => s.tool);
   const showOriginal = useCanvasStore((s) => s.showOriginal);
+  const brushSize = useCanvasStore((s) => s.brushSize);
   const setActivePage = useCanvasStore((s) => s.setActivePage);
   const setActiveBubble = useCanvasStore((s) => s.setActiveBubble);
   const setTool = useCanvasStore((s) => s.setTool);
   const toggleShowOriginal = useCanvasStore((s) => s.toggleShowOriginal);
+  const setBrushSize = useCanvasStore((s) => s.setBrushSize);
 
   const jobStatus = useJobsStore((s) => s.status);
   const jobLogs = useJobsStore((s) => s.logs);
@@ -194,23 +197,21 @@ const App = () => {
 
   // Keyboard shortcuts
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    let prevTool: any = null;
+    const onKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === 'TEXTAREA' || document.activeElement?.tagName === 'INPUT') return;
       if (e.key === 'v' || e.key === 'V') setTool('select');
       if (e.key === 'b' || e.key === 'B') setTool('draw');
+      if (e.key === 'p' || e.key === 'P') setTool('brush');
+      if (e.key === '[') setBrushSize((s) => Math.max(1, s - 5));
+      if (e.key === ']') setBrushSize((s) => Math.min(100, s + 5));
       if (e.key === 'h' || e.key === 'H' || e.key === ' ') {
-        if (e.key === ' ' && e.type === 'keydown') e.preventDefault();
+        if (e.key === ' ') e.preventDefault();
+        const currentTool = useCanvasStore.getState().tool;
+        if (currentTool !== 'pan') prevTool = currentTool;
         setTool('pan');
       }
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (activePageId && activeBubbleId && project) {
-          const page = project.pages.find(p => p.id === activePageId);
-          if (page) {
-            setPageBubbles(activePageId, page.bubbles.filter(b => b.id !== activeBubbleId));
-            setActiveBubble(null);
-          }
-        }
-      }
+      // Note: Delete/Backspace is handled in CanvasEditor.tsx to avoid double-firing
       if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
         e.preventDefault();
         undo();
@@ -224,9 +225,26 @@ const App = () => {
         useProjectStore.getState().saveProject(); 
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [setTool, activePageId, activeBubbleId, project, setPageBubbles, setActiveBubble, undo, redo]);
+    
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'TEXTAREA' || document.activeElement?.tagName === 'INPUT') return;
+      if (e.key === 'h' || e.key === 'H' || e.key === ' ') {
+        if (prevTool) {
+           setTool(prevTool);
+           prevTool = null;
+        } else {
+           setTool('select');
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, [setTool, undo, redo]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -325,13 +343,15 @@ const App = () => {
   };
 
   const handleDetect = async () => {
-    if (!activePage) { showToast('error', 'Sélectionne une page.'); return; }
+    const freshPageId = useCanvasStore.getState().activePageId;
+    const freshPage = useProjectStore.getState().project?.pages.find(p => p.id === freshPageId);
+    if (!freshPage) { showToast('error', 'Sélectionne une page.'); return; }
     setStep('detect', 'running');
     try {
-      const res = await runDetect({ image_path: activePage.image_path, classes: ['bulle', 'out_text', 'System'], debug: false });
+      const res = await runDetect({ image_path: freshPage.image_path, classes: ['bulle', 'out_text', 'System'], debug: false });
       // The backend returns bboxes as arrays, we must map them to {x,y,w,h} objects
       const newBubbles = mapDetectionsToBubbles(res.bubbles as unknown as Array<Record<string, unknown>>);
-      setPageBubbles(activePage.id, newBubbles);
+      setPageBubbles(freshPage.id, newBubbles);
       if (newBubbles.length > 0) {
         setActiveBubble(newBubbles[0].id);
       }
@@ -341,44 +361,50 @@ const App = () => {
   };
 
   const handleOcr = async () => {
-    if (!activePage) { showToast('error', 'Sélectionne une page.'); return; }
+    const freshPageId = useCanvasStore.getState().activePageId;
+    const freshPage = useProjectStore.getState().project?.pages.find(p => p.id === freshPageId);
+    if (!freshPage) { showToast('error', 'Sélectionne une page.'); return; }
     setStep('ocr', 'running');
     try {
       const res = await runOcr({ 
-        image_path: activePage.image_path, 
-        bubbles: activePage.bubbles.map(b => ({
+        image_path: freshPage.image_path, 
+        bubbles: freshPage.bubbles.map(b => ({
           ...b,
           bbox: [b.bbox.x, b.bbox.y, b.bbox.x + b.bbox.w, b.bbox.y + b.bbox.h]
         })) 
       });
-      patchPageBubbles(activePage.id, (res.bubbles ?? []).map(b => ({ id: b.id, source_text: b.source_text, ocr_confidence: b.ocr_confidence, errors: b.errors })));
+      patchPageBubbles(freshPage.id, (res.bubbles ?? []).map(b => ({ id: b.id, source_text: b.source_text, ocr_confidence: b.ocr_confidence, errors: b.errors })));
       setStep('ocr', 'done');
       showToast('success', 'OCR terminé.');
     } catch (err) { setStep('ocr', 'error'); showToast('error', err instanceof Error ? err.message : 'OCR failed'); }
   };
 
   const handleTranslate = async () => {
-    if (!activePage) { showToast('error', 'Sélectionne une page.'); return; }
+    const freshPageId = useCanvasStore.getState().activePageId;
+    const freshPage = useProjectStore.getState().project?.pages.find(p => p.id === freshPageId);
+    if (!freshPage) { showToast('error', 'Sélectionne une page.'); return; }
     setStep('translate', 'running');
     try {
       const res = await runTranslate({
-        bubbles: activePage.bubbles.map(b => ({ id: b.id, source_text: b.source_override ?? b.source_text, translated_text: b.translated_override ?? b.translated_text, llm_input_index: b.llm_input_index, llm_output_index: b.llm_output_index })),
+        bubbles: freshPage.bubbles.map(b => ({ id: b.id, source_text: b.source_override ?? b.source_text, translated_text: b.translated_override ?? b.translated_text, llm_input_index: b.llm_input_index, llm_output_index: b.llm_output_index })),
         cache_enabled: true, return_llm_debug: true,
-        glossary: project?.settings?.glossary || {},
+        glossary: useProjectStore.getState().project?.settings?.glossary || {},
       });
-      patchPageBubbles(activePage.id, (res.bubbles ?? []).map(b => ({ id: b.id, translated_text: b.translated_text, llm_input_index: b.llm_input_index, llm_output_index: b.llm_output_index, errors: b.errors })));
+      patchPageBubbles(freshPage.id, (res.bubbles ?? []).map(b => ({ id: b.id, translated_text: b.translated_text, llm_input_index: b.llm_input_index, llm_output_index: b.llm_output_index, errors: b.errors })));
       setStep('translate', 'done');
       showToast('success', 'Traduction terminée.');
     } catch (err) { setStep('translate', 'error'); showToast('error', err instanceof Error ? err.message : 'Translate failed'); }
   };
 
   const handleRender = async () => {
-    if (!activePage) { showToast('error', 'Sélectionne une page.'); return; }
+    const freshPageId = useCanvasStore.getState().activePageId;
+    const freshPage = useProjectStore.getState().project?.pages.find(p => p.id === freshPageId);
+    if (!freshPage) { showToast('error', 'Sélectionne une page.'); return; }
     setStep('render', 'running');
     try {
       const res = await renderPagePreview({
-        image_path: activePage.image_path,
-        bubbles: activePage.bubbles.map(b => ({ 
+        image_path: freshPage.image_path,
+        bubbles: freshPage.bubbles.map(b => ({ 
           ...b, 
           source_text: b.source_override ?? b.source_text, 
           translated_text: b.translated_override ?? b.translated_text,
@@ -386,7 +412,7 @@ const App = () => {
         })),
         text_only: false, skip_inpainting: false,
       });
-      setPagePreviewPath(activePage.id, res.preview_path ?? null);
+      setPagePreviewPath(freshPage.id, res.preview_path ?? null);
       setStep('render', 'done');
       showToast('success', 'Render terminé.');
     } catch (err) { setStep('render', 'error'); showToast('error', err instanceof Error ? err.message : 'Render failed'); }
@@ -479,18 +505,33 @@ const App = () => {
         {/* Center: canvas + toolbar + logs */}
         <section className="canvas-area">
           {/* Vertical tool toolbar */}
-          <div className="canvas-toolbar">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-10 bg-gray-900/65 backdrop-blur-md border border-white/10 rounded-xl p-2 shadow-2xl">
             {TOOLS.map((t) => (
               <button
                 key={t.id}
                 type="button"
-                className={`tool-btn ${tool === t.id ? 'is-active' : ''}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-lg border-none text-lg transition-all ${tool === t.id ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-[0_4px_15px_rgba(168,85,247,0.4)]' : 'bg-transparent text-slate-400 hover:bg-white/10 hover:text-white hover:scale-105'}`}
                 title={t.title}
                 onClick={() => setTool(t.id)}
               >
                 {t.icon}
               </button>
             ))}
+            {tool === 'brush' && (
+               <div className="mt-2 pt-2 border-t border-white/10 flex flex-col items-center gap-2">
+                 <span className="text-[10px] font-bold text-gray-400">{brushSize}</span>
+                 <input 
+                   type="range" 
+                   min="1" 
+                   max="100" 
+                   value={brushSize} 
+                   onChange={(e) => setBrushSize(Number(e.target.value))}
+                   className="w-8 h-24 cursor-pointer"
+                   style={{ appearance: 'slider-vertical', WebkitAppearance: 'slider-vertical', writingMode: 'bt-lr' }}
+                   title="Taille du pinceau ([ et ])"
+                 />
+               </div>
+            )}
           </div>
 
           <CanvasEditor />

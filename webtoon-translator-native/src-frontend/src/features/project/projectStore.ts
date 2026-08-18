@@ -32,6 +32,9 @@ export const useProjectStore = create<ProjectStore>((set) => ({
     useHistoryStore.getState().clearHistory();
     set({ project, isDirty: false });
   },
+  restoreProject: (project) => {
+    set({ project, isDirty: true });
+  },
   setProject: (project) => {
     useHistoryStore.getState().clearHistory();
     set({ project, isDirty: true });

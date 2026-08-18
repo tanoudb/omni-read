@@ -608,12 +608,12 @@ Response:
 ## 4) Architecture frontend (React + TS)
 
 ## 4.1 Stack
-- React 18 + TypeScript.
-- Vite (ou équivalent) pour build frontend Tauri.
-- Konva pour canvas.
-- Zustand pour state management.
-- Immer pour patches d’historique.
-- Axios (ou fetch wrapper) pour API client.
+- React 18 / TypeScript
+- Tauri v2 (Bureau Windows)
+- Zustand (Immer middlewares pour historique Undo/Redo)
+- React-Konva pour le canvas central.
+- **Tailwind CSS** pour le styling global de l'interface (remplace le CSS personnalisé strict d'origine) + Lucide React pour les icônes.
+- Communication backend via fetch local (`http://127.0.0.1:8000`).
 
 ## 4.2 Structure modules
 

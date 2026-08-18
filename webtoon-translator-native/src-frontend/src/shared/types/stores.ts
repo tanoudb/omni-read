@@ -14,6 +14,7 @@ export interface ProjectStoreState {
 export interface ProjectStoreActions {
   createEmptyProject: () => void;
   loadProject: (project: Project) => void;
+  restoreProject: (project: Project) => void;
   setProject: (project: Project | null) => void;
   setProjectPages: (pages: Page[]) => void;
   setPageBubbles: (pageId: string, bubbles: Bubble[]) => void;

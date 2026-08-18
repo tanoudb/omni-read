@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCanvasStore } from '../canvas-editor/canvasStore';
 import { useProjectStore } from '../project/projectStore';
 import { renderPagePreview } from '../render/renderService';
@@ -28,6 +28,25 @@ const BubbleInspectorPanel = ({ onRenderRequest }: { onRenderRequest?: () => voi
   const activePage = project?.pages.find((p) => p.id === activePageId) ?? null;
   const activeBubble = activePage?.bubbles.find((b) => b.id === activeBubbleId) ?? null;
 
+  const [localSource, setLocalSource] = useState('');
+  const [localTranslated, setLocalTranslated] = useState('');
+  const [localColorHex, setLocalColorHex] = useState('');
+  const [localColor, setLocalColor] = useState('');
+
+  useEffect(() => {
+    if (activeBubble) {
+      setLocalSource(activeBubble.source_override ?? '');
+      setLocalTranslated(activeBubble.translated_override ?? '');
+      setLocalColorHex(activeBubble.text_style?.color ?? '#000000');
+      setLocalColor(activeBubble.text_style?.color ?? '#000000');
+    }
+  }, [
+    activeBubble?.id,
+    activeBubble?.source_override,
+    activeBubble?.translated_override,
+    activeBubble?.text_style?.color
+  ]);
+
   if (!activeBubble || !activePage) {
     return (
       <div className="inspector-panel" style={{ overflowY: 'auto' }}>
@@ -51,11 +70,15 @@ const BubbleInspectorPanel = ({ onRenderRequest }: { onRenderRequest?: () => voi
     ? `${(activeBubble.ocr_confidence * 100).toFixed(0)}%` : '—';
 
   const handleRerender = async () => {
+    const freshPageId = useCanvasStore.getState().activePageId;
+    const freshPage = useProjectStore.getState().project?.pages.find((p) => p.id === freshPageId);
+    if (!freshPage) return;
+
     try {
       setIsRerendering(true);
       const response = await renderPagePreview({
-        image_path: activePage.image_path,
-        bubbles: activePage.bubbles.map((b) => ({
+        image_path: freshPage.image_path,
+        bubbles: freshPage.bubbles.map((b) => ({
           ...b,
           source_text: b.source_override ?? b.source_text,
           translated_text: b.translated_override ?? b.translated_text,
@@ -64,9 +87,9 @@ const BubbleInspectorPanel = ({ onRenderRequest }: { onRenderRequest?: () => voi
         text_only: true,
         skip_inpainting: true,
       });
-      setPagePreviewPath(activePage.id, response.preview_path ?? null);
+      setPagePreviewPath(freshPage.id, response.preview_path ?? null);
       if (response.errors?.length) {
-        patchPageBubbles(activePage.id,
+        patchPageBubbles(freshPage.id,
           response.errors.filter(e => !!e.bubble_id).map(e => ({
             id: e.bubble_id as string,
             errors: [{ code: e.code, message: e.message }],
@@ -165,10 +188,13 @@ const BubbleInspectorPanel = ({ onRenderRequest }: { onRenderRequest?: () => voi
                 className="field-input"
                 rows={2}
                 placeholder="Laisser vide pour utiliser l'OCR"
-                value={activeBubble.source_override ?? ''}
-                onChange={(e) => updateBubbleOverrides(activePage.id, activeBubble.id, {
-                  source_override: e.target.value || null,
-                })}
+                value={localSource}
+                onChange={(e) => setLocalSource(e.target.value)}
+                onBlur={() => {
+                  if ((activeBubble.source_override ?? '') !== localSource) {
+                    updateBubbleOverrides(activePage.id, activeBubble.id, { source_override: localSource || null });
+                  }
+                }}
               />
             </div>
             <div className="field-group">
@@ -181,10 +207,13 @@ const BubbleInspectorPanel = ({ onRenderRequest }: { onRenderRequest?: () => voi
                 className="field-input"
                 rows={2}
                 placeholder="Laisser vide pour utiliser le pipeline"
-                value={activeBubble.translated_override ?? ''}
-                onChange={(e) => updateBubbleOverrides(activePage.id, activeBubble.id, {
-                  translated_override: e.target.value || null,
-                })}
+                value={localTranslated}
+                onChange={(e) => setLocalTranslated(e.target.value)}
+                onBlur={() => {
+                  if ((activeBubble.translated_override ?? '') !== localTranslated) {
+                    updateBubbleOverrides(activePage.id, activeBubble.id, { translated_override: localTranslated || null });
+                  }
+                }}
               />
             </div>
             {activeBubble.errors?.length ? (
@@ -276,22 +305,33 @@ const BubbleInspectorPanel = ({ onRenderRequest }: { onRenderRequest?: () => voi
                 <input
                   type="color"
                   className="style-color-input"
-                  value={activeBubble.text_style.color}
-                  onChange={(e) => patchPageBubbles(activePage.id, [{
-                    id: activeBubble.id,
-                    text_style: { ...activeBubble.text_style, color: e.target.value },
-                  }])}
+                  value={localColor}
+                  onChange={(e) => setLocalColor(e.target.value)}
+                  onBlur={() => {
+                    if (localColor !== activeBubble.text_style.color) {
+                      patchPageBubbles(activePage.id, [{
+                        id: activeBubble.id,
+                        text_style: { ...activeBubble.text_style, color: localColor },
+                      }]);
+                      setLocalColorHex(localColor);
+                    }
+                  }}
                 />
                 <input
                   type="text"
                   className="style-color-hex field-input"
-                  value={activeBubble.text_style.color}
-                  onChange={(e) => {
-                    if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+                  value={localColorHex}
+                  onChange={(e) => setLocalColorHex(e.target.value)}
+                  onBlur={() => {
+                    if (/^#[0-9a-fA-F]{6}$/.test(localColorHex) && localColorHex !== activeBubble.text_style.color) {
                       patchPageBubbles(activePage.id, [{
                         id: activeBubble.id,
-                        text_style: { ...activeBubble.text_style, color: e.target.value },
+                        text_style: { ...activeBubble.text_style, color: localColorHex },
                       }]);
+                      setLocalColor(localColorHex);
+                    } else if (!/^#[0-9a-fA-F]{6}$/.test(localColorHex)) {
+                      // Revert to valid color if invalid hex
+                      setLocalColorHex(activeBubble.text_style.color ?? '#000000');
                     }
                   }}
                 />

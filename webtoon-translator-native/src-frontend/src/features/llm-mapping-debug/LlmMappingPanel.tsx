@@ -32,8 +32,16 @@ const LlmMappingPanel = () => {
     const targetBubble = bubbles[targetIdx];
     
     patchPageBubbles(activePage.id, [
-      { id: sourceBubble.id, translated_text: targetBubble.translated_text },
-      { id: targetBubble.id, translated_text: sourceBubble.translated_text }
+      { 
+        id: sourceBubble.id, 
+        translated_text: targetBubble.translated_text,
+        translated_override: targetBubble.translated_override
+      },
+      { 
+        id: targetBubble.id, 
+        translated_text: sourceBubble.translated_text,
+        translated_override: sourceBubble.translated_override
+      }
     ]);
     
     setDraggedIdx(null);

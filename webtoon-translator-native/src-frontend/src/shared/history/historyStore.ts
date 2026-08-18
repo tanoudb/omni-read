@@ -39,8 +39,7 @@ export const useHistoryStore = create<HistoryStoreState>((set, get) => ({
     const currentProject = useProjectStore.getState().project;
     if (currentProject) {
       const nextProject = applyPatches(currentProject, previous.inversePatches);
-      useProjectStore.getState().loadProject(nextProject); // Recharge le projet sans marquer dirty = false
-      useProjectStore.getState().markDirty();
+      useProjectStore.getState().restoreProject(nextProject);
     }
 
     set({
@@ -60,8 +59,7 @@ export const useHistoryStore = create<HistoryStoreState>((set, get) => ({
     const currentProject = useProjectStore.getState().project;
     if (currentProject) {
       const nextProject = applyPatches(currentProject, next.patches);
-      useProjectStore.getState().loadProject(nextProject);
-      useProjectStore.getState().markDirty();
+      useProjectStore.getState().restoreProject(nextProject);
     }
 
     set({

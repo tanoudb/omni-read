@@ -17,6 +17,15 @@ const BatchManager = ({ onClose }: { onClose: () => void }) => {
   });
 
   useEffect(() => {
+    // Check status on mount to resume polling if already running
+    axios.get('http://127.0.0.1:8000/batch/status').then(res => {
+      if (res.data.status === 'running') {
+        setStatus(res.data);
+      }
+    }).catch(console.error);
+  }, []);
+
+  useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (status.status === 'running') {
       interval = setInterval(async () => {
