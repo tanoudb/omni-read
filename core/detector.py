@@ -481,6 +481,44 @@ class YOLODetector:
                 # Est-ce que j est contenu dans i ?
                 ratio = self._containment_ratio(detections[j].bbox, detections[i].bbox)
                 if ratio > 0.75:
+                    # Ce filtre arbitrait UNIQUEMENT sur la géométrie : le score
+                    # n'entrait jamais dans la décision. Une détection médiocre
+                    # et mal placée pouvait donc avaler une détection
+                    # excellente. Mesuré sur la bulle ronde de
+                    # i-married-the-dragon : un `bulle` à 0,337, décalé vers la
+                    # droite et ratant le tiers gauche du cercle, absorbait un
+                    # `out_text` à 0,721 qui, lui, encadrait correctement le
+                    # texte. Résultat : 79 px de texte hors de la boîte
+                    # retenue, jamais effacés — les résidus « HAT » et « DON'T »
+                    # visibles dans le rendu final.
+                    #
+                    # On INVERSE plutôt que de refuser : refuser laisserait les
+                    # deux boîtes vivre, et leur IoU (0,306 mesuré) est sous le
+                    # seuil inter-classes de 0,5, donc rien ne les
+                    # départagerait ensuite — le texte serait traduit et rendu
+                    # DEUX fois, superposé. C'est le défaut que documente déjà
+                    # `config/settings.py::inter_class_iou_threshold`.
+                    #
+                    # Le facteur 1,5 : dans le cas légitime que ce filtre vise
+                    # — un fragment redondant à l'intérieur d'une vraie
+                    # détection — le conteneur est au moins aussi confiant que
+                    # le fragment. Un conteneur nettement MOINS confiant est la
+                    # signature de l'inverse. Ici le rapport vaut 2,1.
+                    if detections[j].score > detections[i].score * 1.5:
+                        to_remove.add(i)
+                        if debug_events is not None:
+                            debug_events.append({
+                                'stage': 'containment_inverse',
+                                'ratio': round(float(ratio), 3),
+                                'keeper_class': detections[j].class_name,
+                                'keeper_score': round(float(detections[j].score), 3),
+                                'removed_class': detections[i].class_name,
+                                'removed_score': round(float(detections[i].score), 3),
+                                'removed_bbox': [int(detections[i].x1), int(detections[i].y1),
+                                                 int(detections[i].x2), int(detections[i].y2)],
+                            })
+                        break
+
                     # j est contenu dans i → supprimer j (le plus petit)
                     to_remove.add(j)
                     if debug_events is not None:
