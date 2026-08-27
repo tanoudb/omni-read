@@ -978,6 +978,51 @@ class TranslationPipeline:
         return out, max(0.0, time.perf_counter() - t0), ghost_risk_indices
 
     @staticmethod
+    def _measure_source_ink_height(ink_mask: Optional[np.ndarray]) -> Optional[float]:
+        """
+        Hauteur de ligne du texte ORIGINAL, mesurée sur l'ENCRE.
+
+        Remplace la mesure sur les POLYGONES OCR, qui servait de plafond au
+        dimensionnement. Mesuré sur les 8 séries du barème, le polygone vaut
+        **1,23 fois** l'encre qu'il entoure (p25 1,17 / p75 1,35, stable d'une
+        série à l'autre) : le plafond `polygone / 0,75` surestimait donc le
+        corps d'origine d'environ un quart.
+
+        Conséquence chiffrée avant correction : sur les 14 % de bulles où ce
+        plafond MORD réellement, le texte sortait à 1,26 fois le corps de la
+        planche. Ce sont les séries à texte court qui l'atteignent
+        (the_cleaner 49 %, rise-of-the-dragon 41 %) tandis que celles à texte
+        long ne l'atteignent jamais (i-married 0 %, path-of-vengeance 0 %) —
+        d'où un écart de corps entre séries qui n'était pas un réglage de série
+        mais l'artefact d'un plafond mal calibré.
+
+        On projette l'encre sur les lignes de l'image : une suite de lignes
+        portant de l'encre est une ligne de texte, sa hauteur est celle des
+        glyphes. Médiane sur les lignes du bloc, comme l'ancienne mesure.
+        """
+        if ink_mask is None or not isinstance(ink_mask, np.ndarray) or ink_mask.size == 0:
+            return None
+        rows = np.count_nonzero(ink_mask, axis=1)
+        if rows.size == 0 or rows.max() == 0:
+            return None
+        # 10 % de la ligne la plus chargée : écarte l'anticrénelage isolé sans
+        # amputer une ligne courte.
+        on = rows > max(1.0, 0.10 * float(rows.max()))
+        heights, start = [], None
+        for i, v in enumerate(on):
+            if v and start is None:
+                start = i
+            elif not v and start is not None:
+                heights.append(i - start)
+                start = None
+        if start is not None:
+            heights.append(len(on) - start)
+        heights = sorted(h for h in heights if h > 2)
+        if not heights:
+            return None
+        return float(heights[len(heights) // 2])
+
+    @staticmethod
     def _measure_source_line_height(regions: Optional[List[Dict]]) -> Optional[float]:
         """
         Hauteur de ligne du texte ORIGINAL (médiane des polygones OCR).
@@ -1040,11 +1085,25 @@ class TranslationPipeline:
         det.font_hint = renderer.detect_font_hint(
             img, det.x1, det.y1, det.x2, det.y2, regions,
         )
-        # Mesurée sur les polygones OCR (serrés autour des lettres), pas sur le
-        # masque de segmentation qui couvre toute la bulle.
-        det.source_line_height = TranslationPipeline._measure_source_line_height(
+        # Mesurée sur l'ENCRE quand elle est disponible : le polygone OCR vaut
+        # 1,23 fois l'encre qu'il entoure (mesuré sur 325 bulles, 8 séries), ce
+        # qui gonflait d'autant le plafond de dimensionnement. Repli sur les
+        # polygones quand le masque d'encre manque — c'est encore le meilleur
+        # garde-fou disponible, et il vaut mieux qu'aucun.
+        _ink_h = TranslationPipeline._measure_source_ink_height(
+            getattr(det, 'chirurgical_mask', None)
+        )
+        _poly_h = TranslationPipeline._measure_source_line_height(
             getattr(det, 'text_regions', None)
         )
+        # L'encre d'une ligne ne peut pas etre PLUS HAUTE que le polygone qui la
+        # borne. Au-dela, c'est que la projection sur les lignes a fusionne deux
+        # lignes qui se touchent : mesure sur « START GAME> » de hellogin, 101 px
+        # rendus pour deux lignes de 48. Le plafond montait alors au lieu de
+        # descendre, et le rendu changeait de route.
+        if _ink_h and _poly_h:
+            _ink_h = min(_ink_h, _poly_h)
+        det.source_line_height = _ink_h or _poly_h
 
     @staticmethod
     def _write_output_image(out_dir: Path, stem: str, img: np.ndarray) -> Path:

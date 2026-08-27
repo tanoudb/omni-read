@@ -693,3 +693,268 @@ run n'a réellement validé que la borne d'effacement (R9), qui passe par
 
 Règle : tout paramètre ajouté à `insert_text` doit être ajouté au harnais dans
 le même commit, sinon le banc ment en silence.
+
+## Phase « barème » — mesure chiffrée sur 8 séries
+
+Outil : `scratch/bareme.py` (`build` / `score` / `report` / `sheet` / `compare`).
+Corpus : la planche `_merged_part01` du premier chapitre des 8 séries de
+`manhwa/`, soit **325 bulles**. Traduction désactivée comme dans
+`render_iterate.py` : le texte OCR est réinjecté, donc tout écart mesuré entre
+l'encre source et l'encre rendue est imputable au rendu.
+
+`build` est le seul passage par YOLO/PaddleOCR (~70 s pour les 8 planches, mis
+en cache) ; `score` rejoue effacement + rendu depuis ce cache et se relance
+après chaque modification de `core/renderer.py`. `compare a b` donne le delta
+par défaut et nomme les bulles qui basculent.
+
+### M0 — Le banc doit passer CHAQUE argument de `pipeline.py`
+Premier jet écrit d'après `render_iterate.py` d'avant son correctif : il
+oubliait `bubble_present`, `outline_width_px` et `source_text`. Même piège que
+celui déjà consigné, et même conséquence — noter un chemin que la production
+n'emprunte pas. L'appel du barème est désormais copié sur celui de
+`pipeline.py`, verdict `has_closed_bubble(img, after, …)` compris.
+
+### M1 — Hook de mesure absent sur le chemin `_draw_exact_lines`
+`core/renderer.py` — ce chemin (texte hors bulle) sortait sans renseigner
+`last_layout_debug`, alors que `insert_text` le renseigne sur tous les siens :
+38 zones sur 332 échappaient à toute mesure, dont 25 cartouches out_text. Le
+texte y était bien dessiné (encre rendue > 0 sur les 38) ; c'est
+l'instrumentation qui manquait. Hook ajouté, purement additif.
+
+### M2 — `line_h_ratio` est un mauvais juge du corps de texte
+Premier jet du barème : `font_size × 0,75 / source_line_height`, qui donnait
+p50 = 0,67 et la conclusion « le texte sort à 70 % du corps du studio sur 8/8
+séries ». **Faux.** Ce rapport compare la police à la hauteur des POLYGONES OCR,
+plus lâches que l'encre réelle, et il réutilise la constante 0,75 em du
+renderer — il ne peut donc pas l'arbitrer.
+
+Remplacé par `cap_ratio` : hauteur médiane d'une bande d'encre (projection des
+pixels sur les lignes), mesurée des DEUX côtés, sans aucune constante commune
+avec le renderer. Résultat p50 = **1,00** : au médian, le corps est juste.
+
+### M3 — La référence de débordement était fausse
+Premier jet : encre rendue hors de l'enveloppe convexe du texte source. Mesuré
+**0,4 % de débordement sur les bulles à corps trop petit contre 38 % sur celles
+au bon corps** — l'inverse d'un défaut. À corps égal, un découpage de lignes
+différent sort légitimement de cette enveloppe.
+
+Remplacé par `bubble_overflow_pct` : encre rendue hors de l'intérieur du ballon,
+détecté sur l'image EFFACÉE. E5 avait écarté la détection de ballon comme « non
+fiable tant que le texte d'origine est encore là » — vrai sur l'originale, faux
+après effacement où l'intérieur est lisse. Mesurable sur 262/325 zones ; rend
+`None` ailleurs plutôt que d'inventer. Résultat : p50 = 0, **3 % des bulles**.
+
+`mask_binary` a été essayé comme référence et écarté : 15–36 % de couverture de
+bbox, c'est un masque de LETTRES, pas de ballon (déjà noté en E5).
+
+### Ligne de base (run `actuel`, commit `b9b7e38`, 325 bulles)
+
+| Métrique | p50 | p75 | Lecture |
+|---|---|---|---|
+| `erase_spill_pct` | 0,000 | 0,000 | effacement propre (p90 = 1,10) |
+| `ghost_contrast` | 0,000 | 0,000 | 2 bulles sur 325 |
+| `bubble_overflow_pct` | 0,000 | 0,000 | 3 % de bulles débordent |
+| `cap_ratio` | 1,000 | 1,225 | corps juste au médian |
+| `footprint_ratio` | 1,234 | 1,755 | pavé plus étalé que l'original |
+| `rag_cv` | 0,192 | 0,293 | équilibre des lignes |
+
+**L'effacement généralise.** `erase_spill` et `ghost` sont à zéro au p75 sur les
+8 séries, dont 5 jamais travaillées. La partie difficile est derrière.
+
+**Les cartouches out_text sont réglés.** Par chemin de rendu, `exact_lines`
+donne p25 = 0,92 / p50 = 0,98 / p75 = 1,05. Le défaut connu n°5 (« cartouches
+d'impact plus légers que l'original ») ne se mesure plus. Sur le code du
+14 août, le même chemin donnait p50 = 0,71 : ce sont les 18 commits de
+`rendu-ocr-2026-08-15` qui l'ont corrigé.
+
+**Le corps de texte ne généralise pas.** `cap_ratio` médian par série :
+
+| Série | p25 | `cap_ratio` | empreinte | orphelins |
+|---|---|---|---|---|
+| i-married-the-dragon | 0,57 | **0,75** | 0,75 | 21 % |
+| path-of-vengeance | 0,65 | 0,85 | 1,11 | 35 % |
+| the-frontier-count's | 0,78 | 0,93 | 1,21 | 30 % |
+| 30-years-have-passed | 0,67 | 0,96 | 0,86 | 10 % |
+| hellogin | 0,88 | 1,05 | 1,44 | 33 % |
+| the-wind-mage | 1,03 | 1,05 | 1,65 | 12 % |
+| rise-of-the-dragon | 1,05 | **1,29** | 2,08 | 24 % |
+| the_cleaner | 1,19 | **1,38** | 1,83 | 23 % |
+
+Facteur **1,8** entre la série la plus petite et la plus grosse, et la
+dispersion INTERNE est du même ordre (chemin `wrap` : p25 = 0,76, p75 = 1,24).
+Le défaut n'est donc pas « trop petit » ni « trop gros » : le choix de corps
+n'est pas stable, ni d'une série à l'autre ni d'une bulle à l'autre. C'est
+précisément ce qui empêche un rendu professionnel indépendant du manhwa.
+
+Second défaut, indépendant : `footprint_ratio` p50 = 1,23 / p75 = 1,76 — à corps
+égal le pavé s'étale plus que l'original — et **25 % des blocs multi-lignes
+finissent sur un mot orphelin**.
+
+### Défauts trouvés par les extrêmes du barème (hors périmètre mesuré)
+
+La planche-contact (`sheet --metric cap_ratio`) a fait remonter quatre défauts
+que le barème ne cherchait pas :
+1. **Filigranes rendus** : « VORTEXSCANS.COM » → « SCANSREAD », et
+   « READ THIS SERIES FIRST AT: VORTEXSCANS.COM » traduits et redessinés.
+2. **Logos de titre traduits** : le logo « THE CLEANER » ressort en texte plat
+   « IHE CLEANER ZORONGE YLAB ».
+3. **Texte tronqué au grand corps** : « OR ACCEPT AND BE TORN TO PIECES » →
+   « ACCFAND B TORNPIECES ».
+4. **Ligne fantôme dupliquée** : « I MUST GET A COMBAT JOB! » suivi d'un
+   « CUM BAT JUB! » parasite.
+
+### T1 — Plafond de dimensionnement calé sur le POLYGONE au lieu de l'ENCRE
+`pipeline.py::_measure_source_ink_height` (nouveau) + `_prepare_render_style`.
+
+Le corps rendu variait d'un facteur 1,8 entre séries (0,75 pour i-married à
+1,38 pour the_cleaner). Deux hypothèses testées :
+
+1. *« Le rapport polygone/encre varie selon la série et transmet sa variance. »*
+   **Écartée par la mesure** : ce rapport est remarquablement stable — p50 entre
+   1,21 et 1,26 sur les 8 séries — et sa corrélation avec `cap_ratio` vaut
+   r = −0,16, c'est-à-dire rien.
+
+2. *« La taille est un `min` de trois contraintes ; l'écart vient de laquelle
+   mord. »* **Confirmée.** En isolant la taille CHOISIE rapportée à la taille
+   impliquée par l'encre source mesurée :
+
+   | | n | part | taille/source |
+   |---|---|---|---|
+   | au plafond source | 44 | 14 % | **1,26** |
+   | sous le plafond | 281 | 86 % | 0,84 |
+
+   Le plafond vaut `source_line_height / 0,75 × 1,05` où `source_line_height`
+   est la hauteur du POLYGONE OCR — soit 1,23 fois l'encre. Il surestime donc le
+   corps d'origine d'environ un quart, et le texte sort trop gros partout où il
+   mord. Les séries à texte court l'atteignent souvent (the_cleaner 49 %,
+   rise-of-the-dragon 41 %), celles à texte long jamais (i-married 0 %,
+   path-of-vengeance 0 %).
+
+   **L'écart entre séries n'était donc pas un besoin de réglage par série, mais
+   l'artefact bimodal d'un plafond mal calibré.**
+
+Correctif : `source_line_height` est désormais mesurée sur l'ENCRE
+(`chirurgical_mask`, disponible sur 325/325 zones) par projection sur les
+lignes, avec repli sur l'ancienne mesure si le masque manque. Une seule ligne
+change de sens, et elle se propage à tous les points qui s'en servent.
+
+Mesuré, `compare actuel corps-encre` :
+
+| | avant | après | |
+|---|---|---|---|
+| bulles conformes | 93 (29 %) | **133 (41 %)** | +40 |
+| `corps_gros` | 70 | **6** | −64 |
+| `empreinte` | 156 | **92** | −64 |
+| `corps_petit` | 90 | 74 | −16 |
+| `cap_ratio` p90 | 1,42 | **1,18** | |
+| `footprint_ratio` p75 | 1,76 | **1,49** | |
+
+**Réparées 40, cassées 0.** Les +3 / +2 / +1 sur décentrage et débordement
+portent tous sur des bulles déjà fautives par ailleurs.
+
+Le décompte « cassées 0 » est vrai mais masque les ÉCHANGES de défaut : une
+bulle déjà fautive qui change de faute reste fautive. Comptabilité complète des
+transitions de corps, cible [0,80 – 1,25] :
+
+| avant → après | n |
+|---|---|
+| OK → OK | 163 |
+| **gros → OK** | **64** |
+| **petit → OK** | **18** |
+| petit → petit (inchangé) | 71 |
+| gros → gros | 5 |
+| OK → petit | 2 |
+| échange gros ↔ petit | 2 |
+
+**Corps dans la cible : 165/325 (51 %) → 246/325 (76 %)** une fois T2 posé.
+82 bulles réparées, 3 dégradées — et les 3 relèvent de D1, pas du changement
+de mesure.
+
+### M4 — Le critère de corps ne peut pas être `line_h_ratio`
+Corollaire de T1 : `line_h_ratio` a `source_line_height` au dénominateur, donc
+il change de sens dès qu'on touche à la façon de mesurer la source. Comparer
+deux runs avec lui, c'est comparer deux barèmes. Le verdict se prononce
+désormais sur `cap_ratio` (pixels des deux côtés, aucune dépendance au
+renderer), avec un seuil haut ET un seuil bas — le défaut « trop gros » existe
+autant que « trop petit », et n'était pas compté jusqu'ici.
+
+Les verdicts sont maintenant **recalculés à la lecture** du run : changer un
+seuil ne demande plus de renoter, et deux runs se comparent toujours au même
+barème.
+
+### Reste à traiter, par ordre de poids
+
+1. `empreinte` 92 et `corps_petit` 74 — les 86 % de bulles SOUS le plafond, où
+   c'est l'ajustement qui mord. Le levier est le découpage de lignes :
+   `wrap_text` est un remplissage glouton, jamais équilibré, et **25 % des blocs
+   multi-lignes finissent sur un mot orphelin**.
+2. `erase_spill` 41 (13 %), concentré sur i-married (19). En hausse par rapport
+   au code du 14 août (30) — à vérifier, possible régression des commits récents.
+3. Les quatre défauts hors périmètre ci-dessus (filigranes, logos, troncature,
+   ligne dupliquée).
+
+### T2 — Garde-fou : la projection d'encre fusionne les lignes qui se touchent
+`pipeline.py::_prepare_render_style`. Sur « START GAME> » (hellogin), la
+projection rendait **101 px** là où les polygones en donnent 48 : deux lignes de
+grandes capitales qui se touchent forment une seule bande. Le plafond MONTAIT au
+lieu de descendre. L'encre d'une ligne ne pouvant pas être plus haute que le
+polygone qui la borne, on prend `min(encre, polygone)` — sans effet dans le cas
+normal (le rapport encre/polygone mesuré vaut 0,96 au p05, 1,00 au p50), correctif
+dans le cas fusionné.
+
+Portée réelle : actif sur **8 bulles sur 325**. « START GAME> » repasse de 101 à
+48 px de plafond, et de `cap_ratio` 0,35 à 1,00. Sur le corpus entier le corps
+dans la cible passe de 75 % à 76 % — modeste, mais gratuit et juste. Les deux
+autres bulles dégradées par T1 ne bougent pas : elles relèvent de D1.
+
+### D1 — Diagnostic : le choix de ROUTE de rendu n'est pas monotone
+**Non corrigé — décision à prendre, le correctif est structurel.**
+
+En traçant les 3 bulles dégradées par T1, on tombe sur bien plus gros :
+
+| bulle | plafond | police | |
+|---|---|---|---|
+| `i-married #22` | 56 → **45** (baisse) | 28 → **59** (double) | |
+| `30-years #15` | 48 → **37** (baisse) | 28 → **58** (double) | |
+| `rise-of-the-dragon #7` | 27 → **22** (baisse) | 37 → **13** (s'effondre) | |
+| `hellogin #4` | 48 → **101** (monte) | 75 → **42** (baisse) | |
+
+La taille finale ne varie pas de façon monotone avec le plafond, et elle peut
+varier d'un facteur 2 pour un plafond qui bouge de 20 %.
+
+Cause, `core/renderer.py::insert_text` : deux portes décident de la ROUTE de
+rendu, pas seulement de la taille —
+- `exact_lines_ok` (ligne ~3242) : rendu ligne-à-ligne dans les polygones OCR
+  plutôt que remise en page ;
+- `anchor_box` (ligne ~3292) : mise en page ancrée sur les polygones plutôt que
+  dans la boîte entière.
+
+Les deux testent `probe.size < 0.6 * cap` où `cap = source_line_height/0,75 × 1,05`.
+**Le seuil est proportionnel à la grandeur qu'il teste.** Baisser le plafond
+abaisse le seuil d'autant, la porte devient plus facile à passer, et le rendu
+CHANGE DE ROUTE — d'où des sauts de taille sans rapport avec l'amplitude du
+changement de plafond.
+
+C'est la vraie racine de l'instabilité du corps : ce n'est pas un réglage à
+ajuster, c'est une décision binaire prise sur un critère qui bouge avec son
+propre référentiel. Deux directions possibles, à trancher :
+1. Rendre le seuil ABSOLU — comparer `probe.size` à la taille d'origine mesurée,
+   pas à un `cap` qui en dérive.
+2. Supprimer la bascule et rendre les deux routes continues (choisir la mise en
+   page qui minimise un coût, au lieu de basculer sur un seuil).
+
+Le barème donnera le verdict dans les deux cas : `compare` nomme les bulles qui
+basculent, et la planche `sheet --vs` les montre.
+
+### Limite connue du barème — `erase_spill` sur-compte les `out_text`
+Le critère mesure les pixels repeints par l'effacement HORS de l'encre source
+dilatée. Or E3 donne délibérément aux cartouches `out_text` un masque au BLOC
+(polygones de ligne dilatés de 0,30 × hauteur de ligne) pour attraper la lueur
+externe. Ce débordement est donc voulu, et le barème le compte comme bavure :
+**29 des 41 zones signalées sont des `out_text`**, avec 10 000 à 23 000 px
+repeints — cohérent avec un masque au bloc, pas avec un accident.
+
+Les 10 `bulle` restantes, elles, sont à regarder : c'est là que vit le défaut E5
+(contour de ballon entamé). Correctif du barème à faire : dilater la référence
+selon la classe (0,30 × hauteur de ligne pour `out_text`, quelques px pour
+`bulle`) au lieu du noyau fixe de 11 px.

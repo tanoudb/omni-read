@@ -3700,7 +3700,25 @@ class TextRenderer:
                 img = self._draw_text_with_outline_pil(img, line, xp, yp, font, text_color, outline_color, outline_width)
             else:
                 img = self._draw_text_pil(img, line, xp, yp, font, text_color)
-                
+
+        # ── HOOK DE MESURE (additif, ne change aucun comportement) ──
+        # Ce chemin sortait sans renseigner `last_layout_debug`, alors que
+        # `insert_text` le renseigne sur tous les siens : le banc de mesure
+        # perdait 38 zones sur 332, dont 25 cartouches out_text — précisément
+        # là où le corps de texte s'écarte le plus de la planche d'origine.
+        try:
+            drawn = [ln for i, ln in enumerate(lines) if i < len(regions) and ln]
+            self.last_layout_debug = {
+                "bail": None, "mode": "exact_lines", "text": str(text)[:60],
+                "font_size_final": block_fs,
+                "source_line_height": source_line_height,
+                "n_lines": len(drawn), "lines": drawn,
+                "n_regions": len(regions), "block_w": block_w,
+                "rewrapped": bool(rewrapped), "angle": angle,
+            }
+        except Exception as _dbg_e:
+            self.last_layout_debug = {"bail": "debug_hook_error", "error": str(_dbg_e)}
+
         return img
 
     def _fit_block_lines(

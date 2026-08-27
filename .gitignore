@@ -63,6 +63,9 @@ output*/**/debug/
 tests/dry_run_out/
 # Sorties d'iteration du rendu — plusieurs Go, ne doivent jamais etre versionnees
 scratch/render_out/
+# Cache + runs du bareme de rendu (scratch/bareme.py) : ~856 Mo, regenerables
+# par `bareme.py build` puis `score`. Le CODE du bareme, lui, est versionne.
+scratch/bareme/
 scratch/audit_propre/
 scratch/diag/
 manhwa_trad/
