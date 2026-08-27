@@ -656,3 +656,40 @@ arbitrer une protection de contour.
 
 Non-régression : 19 détections sur 8 caches d'effacement ; la borne s'applique
 sur 7, aucune dégradation visuelle constatée, 12 inchangées au pixel près.
+
+### R10 — Le veto ne contredit plus une détection étiquetée `bulle`
+Le seuil de remplissage de R5 (82 %) a été calibré sur UNE planche, où les
+ballons plafonnaient à 79,5 %. Sur le chapitre entier il ne généralise pas :
+9 vraies bulles remplissent 85 à 97 % de leur bbox — couronne hérissée, ou
+boîte serrée sur le ballon — et se faisaient prendre pour du texte libre.
+
+Le défaut MESURÉ que le veto corrige est ailleurs (la teinte qui invente une
+géométrie sur des cartouches `out_text`). On le réserve donc à ce cas, et on
+fait confiance à YOLO là où il annonce une bulle.
+
+Mesure à travers le chemin de production, part03 (35 détections, 0 `out_text`) :
+
+| | détections modifiées |
+|---|---|
+| veto AVEC garde | **0** |
+| veto SANS garde | **5**, toutes `bulle` |
+
+Et sur part01 (6 `out_text`), le veto agit toujours sur **6/6 cartouches et
+0 bulle** — les trois non encore inspectés (#29, #32, #34) gagnent en corps
+sans régresser.
+
+### R11 — Le harnais ne reproduisait pas la production (piège de banc)
+`scratch/render_iterate.py` appelait `insert_text` SANS `bubble_present`, alors
+que les deux sites d'appel de `pipeline.py` le passent. Conséquence : un run
+complet du chapitre « validait » un chemin que le pipeline n'emprunte pas, et
+le veto n'y était jamais exercé — ni avant ni après le garde, d'où 0 pixel de
+différence entre les deux runs, ce qui aurait pu passer pour « le correctif ne
+sert à rien ».
+
+J'ai d'abord annoncé « le veto a mal routé 9 vraies bulles pendant le run ».
+C'était faux : c'était une mesure du classifieur HORS LIGNE, pas du rendu. Le
+run n'a réellement validé que la borne d'effacement (R9), qui passe par
+`_run_pre_inpainting`.
+
+Règle : tout paramètre ajouté à `insert_text` doit être ajouté au harnais dans
+le même commit, sinon le banc ment en silence.

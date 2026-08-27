@@ -29,6 +29,7 @@ import numpy as np
 from config import config
 from core import OCREngine, TextRenderer, SmartSegmenter, YOLODetector
 from pipeline import TranslationPipeline
+from core.bubble_shape import has_closed_bubble
 from utils import WebtoonLogger
 
 
@@ -179,6 +180,14 @@ def run(image_path: Path, out_dir: Path, margin: int = 10, inflate: float = 1.0,
                 bubble_mask=getattr(d, 'mask_binary', None),
                 font_key=getattr(d, 'font_key', None),
                 source_line_height=getattr(d, 'source_line_height', None),
+                # Le harnais ne passait PAS ce verdict, alors que les deux
+                # sites d'appel de `pipeline.py` le passent : le banc ne
+                # reproduisait donc pas la production, et un run complet
+                # « validait » un chemin que le pipeline n'emprunte pas.
+                bubble_present=has_closed_bubble(
+                    img, out, (int(d.x1), int(d.y1), int(d.x2), int(d.y2)),
+                    getattr(d, 'text_regions', None),
+                ),
                 sibling_boxes=[(o.x1, o.y1, o.x2, o.y2) for o in keep if o is not d],
             )
             dbg = getattr(renderer, 'last_layout_debug', None) or {}

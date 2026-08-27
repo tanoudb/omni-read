@@ -3181,7 +3181,22 @@ class TextRenderer:
             x1, y1, x2, y2 = container
             mask_for_wrap = None
             has_mask_wrap = False
-        elif bubble_present is False:
+        elif bubble_present is False and not labelled_bubble:
+            # Le veto ne contredit JAMAIS une detection etiquetee `bulle`.
+            #
+            # Le seuil de remplissage qui separe ballon et texte libre a ete
+            # calibre sur une seule planche, ou les ballons plafonnaient a
+            # 79,5 %. Sur le chapitre entier il ne generalise pas : 9 vraies
+            # bulles remplissent 85 a 97 % de leur bbox — couronne herissee, ou
+            # boite serree sur le ballon — et se faisaient donc prendre pour du
+            # texte libre, ce qui les routait vers `_draw_exact_lines`, qui
+            # ignore la forme du ballon.
+            #
+            # Le defaut MESURE que ce veto corrige est ailleurs : la teinte qui
+            # invente une geometrie sur des cartouches `out_text`. C'est donc a
+            # ce cas-la qu'on le reserve, et on fait confiance a YOLO la ou il
+            # annonce une bulle.
+            #
             # Aucun contour ferme autour de ce texte : il n'y a pas de ballon a
             # epouser. Sans ce veto, `_bubble_mask_from_image` rend quand meme
             # une « forme » sur du texte libre — mesure sur path-of-vengeance :
