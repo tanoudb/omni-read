@@ -261,6 +261,8 @@ class TextRenderer:
         # à chaque appel avec les mesures du dernier layout calculé — voir
         # scratch/measure_layout.py. Ne change aucun comportement de rendu.
         self.last_layout_debug: Optional[Dict[str, Any]] = None
+        # Coût de chaque route de rendu au dernier `insert_text` (cf. _route_cost).
+        self._last_route_costs: Dict[str, float] = {}
 
         self._init_anime_inpainter()
 
@@ -2304,6 +2306,87 @@ class TextRenderer:
             print(f"[RENDER_DEBUG] wrap_by_mask text={text[:30]!r} mask_shape={bubble_mask.shape if bubble_mask is not None else None} mask_nnz={int(np.count_nonzero(bubble_mask)) if bubble_mask is not None else None} mask_y_offset={mask_y_offset} inner_w={inner_w} inner_h={inner_h} -> lines={lines!r} allowed={allowed!r} centers={centers!r}")
         return (lines, allowed, centers) if lines else ([""], [rough_w], [default_center])
 
+    # Poids du mot orphelin dans le rééquilibrage, à comparer au coefficient de
+    # variation des largeurs (typiquement 0,10 à 0,40). Une ligne finale d'un
+    # seul mot est le défaut de lettrage le plus visible : on lui donne un poids
+    # du même ordre que le pire déséquilibre.
+    POIDS_ORPHELIN = 0.30
+
+    def _rebalance_lines(
+        self, lines: List[str], allowed: List[float], font: ImageFont.FreeTypeFont,
+    ) -> List[str]:
+        """Rééquilibre un pavé SANS changer son nombre de lignes.
+
+        `wrap_text` et `_wrap_text_by_mask` remplissent gloutonnement : chaque
+        ligne prend tout ce qu'elle peut et le reliquat tombe sur la dernière,
+        d'où le mot ORPHELIN — mesuré sur 67 des 71 blocs fautifs du corpus,
+        tous sur la route `box`. Un lettreur, lui, équilibre ses lignes.
+
+        On déplace des mots d'une ligne vers sa voisine tant que ça rapproche
+        les largeurs, en refusant tout déplacement qui ferait dépasser une ligne
+        de la largeur qui lui est allouée — pour une bulle, c'est la largeur du
+        ballon À SA hauteur, donc la contrainte reste celle de la forme.
+
+        Le nombre de lignes ne bouge JAMAIS : la hauteur du bloc, et donc la
+        taille de police déjà retenue par la dichotomie, restent valides. C'est
+        ce qui permet de poser ce rééquilibrage sans toucher à la recherche de
+        taille.
+        """
+        if len(lines) < 2 or len(lines) > 12:
+            return lines
+        mots = [ln.split() for ln in lines]
+        if any(not m for m in mots):
+            return lines          # ligne vide : mise en page voulue, on n'y touche pas
+
+        def largeurs(mm):
+            return [self._line_extents(font, " ".join(m))[1] for m in mm]
+
+        def tient(mm):
+            return all(w <= a for w, a in zip(largeurs(mm), allowed))
+
+        def cout(mm):
+            ws = largeurs(mm)
+            moyenne = sum(ws) / len(ws)
+            if moyenne <= 0:
+                return 0.0
+            ecart = (sum((w - moyenne) ** 2 for w in ws) / len(ws)) ** 0.5
+            c = ecart / moyenne
+            if len(mm[-1]) == 1:
+                c += self.POIDS_ORPHELIN
+            return c
+
+        meilleur = cout(mots)
+        for _ in range(6):
+            bouge = False
+            for i in range(len(mots) - 1):
+                for cand in (self._mot_descendu(mots, i), self._mot_remonte(mots, i)):
+                    if cand is None or not tient(cand):
+                        continue
+                    c = cout(cand)
+                    if c < meilleur - 1e-9:
+                        mots, meilleur, bouge = cand, c, True
+            if not bouge:
+                break
+        return [" ".join(m) for m in mots]
+
+    @staticmethod
+    def _mot_descendu(mots, i):
+        """Dernier mot de la ligne i poussé en tête de la ligne i+1."""
+        if len(mots[i]) < 2:
+            return None
+        cand = [list(m) for m in mots]
+        cand[i + 1].insert(0, cand[i].pop())
+        return cand
+
+    @staticmethod
+    def _mot_remonte(mots, i):
+        """Premier mot de la ligne i+1 remonté en fin de ligne i."""
+        if len(mots[i + 1]) < 2:
+            return None
+        cand = [list(m) for m in mots]
+        cand[i].append(cand[i + 1].pop(0))
+        return cand
+
     def _layout_at_size(
         self, text: str, font_size: int, inner_w: int, inner_h: int,
         font_path: Optional[str], use_mask_wrap: bool,
@@ -2328,10 +2411,18 @@ class TextRenderer:
                 for ln, aw in zip(lines, allowed)
             )
         else:
-            lines = self.wrap_text(text, font, max(10, int(inner_w * self.cfg.word_wrap_ratio)))
+            largeur_max = max(10, int(inner_w * self.cfg.word_wrap_ratio))
+            lines = self.wrap_text(text, font, largeur_max)
+            allowed = [float(largeur_max)] * len(lines)
             fits_width = all(
                 self._line_extents(font, ln)[1] <= inner_w for ln in lines
             )
+
+        # Rééquilibrage commun aux deux découpeurs. Les retours à la ligne
+        # explicites (cartes System) sont une mise en page voulue : on n'y touche
+        # pas.
+        if chr(10) not in (text or ""):
+            lines = self._rebalance_lines(lines, allowed, font)
 
         total_h = len(lines) * line_h + max(0, len(lines) - 1) * spacing
         max_line_w = max((self._line_extents(font, ln)[1] for ln in lines), default=0)
@@ -3050,6 +3141,101 @@ class TextRenderer:
     # INSERT TEXT (REWRITTEN FOR EXACT LINE-BY-LINE & BUBBLE SURFACE)
     # ─────────────────────────────────────────────────────────────────────────
 
+    # ─────────────────────────────────────────────────────────────────────
+    # ROUTAGE DU RENDU PAR COÛT CONTINU
+    # ─────────────────────────────────────────────────────────────────────
+    #
+    # Trois routes possibles, de la plus fidèle à la planche à la plus libre :
+    #   exact_lines — le texte est redessiné ligne à ligne dans les polygones
+    #                 OCR d'origine ; les coupures de la planche sont conservées
+    #   anchor      — remise en page, mais bornée à l'enveloppe des polygones
+    #   box         — remise en page dans la boîte (ou la forme du ballon)
+    #
+    # Ces routes étaient choisies par deux portes binaires testant
+    # `probe.size < 0.6 * cap`, où `cap` dérive de `source_line_height`. Le
+    # seuil était donc PROPORTIONNEL à la grandeur qu'il testait : baisser le
+    # plafond abaissait le seuil d'autant, la porte basculait, et le rendu
+    # changeait de route. Mesuré : `i-married #22` plafond 56 → 45 (baisse) mais
+    # police 28 → 59 (double) ; `hellogin #4` plafond 48 → 101 (monte) mais
+    # police 75 → 42 (baisse). La taille finale n'était pas monotone en son
+    # propre plafond — un effet de falaise, pas un réglage.
+    #
+    # Chaque route est maintenant CHIFFRÉE dans une unité commune et on prend la
+    # moins coûteuse. Une route qui se dégrade perd désormais progressivement.
+
+    # Prix de l'infidélité à la planche, en unités logarithmiques de corps.
+    # 0,10 se lit : « on accepte de perdre 10 % de corps de texte pour garder
+    # les coupures de lignes de la planche d'origine ».
+    ROUTE_INFIDELITE = {
+        "exact_lines": 0.00,
+        "anchor": 0.10,
+        "box": 0.20,
+    }
+    # Un texte qui ne tient pas est rédhibitoire : 2,0 dépasse tout écart de
+    # corps plausible (ln 2 = 0,69 pour un facteur deux).
+    COUT_NE_TIENT_PAS = 2.0
+
+    # Qualité du découpage en lignes, dans la même unité logarithmique.
+    #
+    # C'est ce terme qui JUSTIFIE la préférence pour les routes fidèles au lieu
+    # de la postuler : `exact_lines` reprend les coupures de la planche, donc son
+    # pavé est celui d'un lettreur ; `box` re-découpe gloutonnement et fabrique
+    # les orphelins (mesuré : 25 % des blocs multi-lignes du corpus finissent sur
+    # un mot seul).
+    PENALITE_ORPHELIN = 0.15      # « éviter un orphelin vaut 15 % de corps »
+    PENALITE_DESEQUILIBRE = 0.25  # multiplie le coefficient de variation
+
+    @staticmethod
+    def _rag_penalty(lines: Optional[List[str]]) -> float:
+        """Coût du découpage en lignes d'un pavé.
+
+        Deux défauts que l'œil voit immédiatement et qu'aucune mesure de taille
+        n'attrape : le mot ORPHELIN seul sur la dernière ligne, et le
+        DÉSÉQUILIBRE des largeurs, qui donne l'escalier au lieu du bloc.
+
+        Longueurs en caractères plutôt qu'en pixels : à police constante dans un
+        même pavé, c'est proportionnel, et ça évite de mesurer chaque ligne.
+        """
+        lignes = [l for l in (lines or []) if l and l.strip()]
+        if len(lignes) < 2:
+            return 0.0
+        cout = 0.0
+        derniere = lignes[-1].split()
+        if len(derniere) == 1 and len(lignes[-1]) <= 6:
+            cout += TextRenderer.PENALITE_ORPHELIN
+        longueurs = [len(l) for l in lignes]
+        moyenne = sum(longueurs) / len(longueurs)
+        if moyenne > 0:
+            ecart = (sum((x - moyenne) ** 2 for x in longueurs) / len(longueurs)) ** 0.5
+            cout += TextRenderer.PENALITE_DESEQUILIBRE * (ecart / moyenne)
+        return cout
+
+    def _route_cost(self, probe: Optional[Dict], em_source: Optional[float],
+                    route: str) -> float:
+        """Coût d'une route de rendu. Plus bas = mieux, `inf` = impossible.
+
+        `|ln(taille / taille_source)|` : symétrique, donc rendre au double ou à
+        la moitié du corps de la planche coûte exactement pareil — ce que ne
+        faisait aucun seuil, tous unilatéraux. L'infidélité de route s'ajoute
+        dans la MÊME unité, ce qui rend l'arbitrage explicite et réglable.
+        """
+        if probe is None or not em_source or em_source <= 0:
+            return float("inf")
+        size = float(probe.get("size") or 0)
+        if size <= 0:
+            return float("inf")
+        cout = abs(math.log(size / float(em_source)))
+        cout += self.ROUTE_INFIDELITE.get(route, 0.0)
+        # `exact_lines` reprend les coupures de la PLANCHE : son pavé est celui
+        # du lettreur d'origine, pas celui du sonde, donc on ne lui impute pas
+        # le découpage glouton de la sonde. Les routes qui remettent en page,
+        # elles, sont jugées sur le découpage qu'elles produiront vraiment.
+        if route != "exact_lines":
+            cout += self._rag_penalty(probe.get("lines"))
+        if not probe.get("fits", True):
+            cout += self.COUT_NE_TIENT_PAS
+        return cout
+
     def insert_text(
         self,
         img: np.ndarray,
@@ -3227,6 +3413,39 @@ class TextRenderer:
         if os.environ.get('RENDER_DEBUG'):
             print(f"[RENDER_DEBUG] insert_text text={text[:30]!r} class={class_name} is_bubble={is_bubble} container={container} angle={angle} n_regions={len(text_regions or [])}")
 
+        # ── Référence de comparaison : la route « boîte » ──
+        # Toujours disponible, donc c'est elle qui sert d'alternative réelle aux
+        # deux autres. La chiffrer AVANT les portes est ce qui permet de juger
+        # chaque route contre une VRAIE option, et non contre un seuil dérivé
+        # d'elle-même. Calculée seulement quand une porte peut se poser, c'est-
+        # à-dire quand il y a des polygones OCR et un corps source mesuré.
+        self._last_route_costs = {}
+        em_source = (float(source_line_height) / 0.75
+                     if source_line_height and source_line_height > 4 else None)
+        cout_box = None
+        if em_source and text_regions:
+            _bx1, _by1, _bx2, _by2 = self._get_inner_zone(
+                x1, y1, x2, y2, img.shape, bubble_mask=mask_for_wrap,
+                shrink=self._shrink_ratio_for(is_bubble, has_mask_wrap),
+            )
+            if sibling_boxes:
+                _bx1, _by1, _bx2, _by2 = self._shrink_zone_away_from_siblings(
+                    (_bx1, _by1, _bx2, _by2), sibling_boxes)
+            _bw = max(10, (_bx2 - _bx1) - 2 * self.cfg.padding_horizontal)
+            _bh = max(10, (_by2 - _by1) - 2 * self.cfg.padding_vertical)
+            _cap = int(em_source * 1.05)
+            _probe_box = self._fit_font_hard(
+                text, _cap, _bw, _bh,
+                bubble_mask=mask_for_wrap if angle == 0.0 else None,
+                shape_wrap=has_mask_wrap and angle == 0.0,
+                font_path=resolved_font_path,
+                mask_y_offset=(_by1 + self.cfg.padding_vertical) - y1,
+                max_font_size=_cap,
+                mask_x_origin=x1,
+            )
+            cout_box = self._route_cost(_probe_box, em_source, "box")
+            self._last_route_costs["box"] = cout_box
+
         # === LINE-BY-LINE REPLACEMENT POUR TEXTE HORS-BULLE ===
         #
         # Ce chemin repose sur une hypothèse : les polygones OCR décrivent
@@ -3251,7 +3470,14 @@ class TextRenderer:
                     bubble_mask=None, shape_wrap=False,
                     font_path=resolved_font_path, max_font_size=cap,
                 )
-                if probe is None or probe.get('size', 0) < 0.6 * cap:
+                cout = self._route_cost(probe, em_source, "exact_lines")
+                self._last_route_costs["exact_lines"] = cout
+                if cout_box is not None:
+                    if cout > cout_box:
+                        exact_lines_ok = False
+                elif probe is None or probe.get('size', 0) < 0.6 * cap:
+                    # Repli sur l'ancienne règle si la route « boîte » n'a pas
+                    # pu être chiffrée : mieux vaut un seuil que rien.
                     exact_lines_ok = False
 
         if not is_bubble and container is None and exact_lines_ok:
@@ -3298,7 +3524,11 @@ class TextRenderer:
                     bubble_mask=None, shape_wrap=False,
                     font_path=resolved_font_path, max_font_size=cap,
                 )
-                if probe is None or probe.get('size', 0) < 0.6 * cap:
+                cout = self._route_cost(probe, em_source, "anchor")
+                self._last_route_costs["anchor"] = cout
+                _rejette = (cout > cout_box) if cout_box is not None else (
+                    probe is None or probe.get('size', 0) < 0.6 * cap)
+                if _rejette:
                     anchor_box = None
                     use_locked_mode = False
 
@@ -3478,6 +3708,8 @@ class TextRenderer:
                 "is_bubble": is_bubble, "has_mask_wrap": has_mask_wrap,
                 "container": container, "anchor_box": anchor_box,
                 "use_locked_mode": use_locked_mode, "top_aligned": top_aligned_dbg,
+                "mode": "anchor" if anchor_box is not None else "box",
+                "route_costs": dict(self._last_route_costs),
                 "angle": angle,
                 # `block_top` et `line_centers` : coordonnées absolues réelles du
                 # bloc dessiné. Exposées pour que l'éditeur Konva puisse replacer
@@ -3499,6 +3731,12 @@ class TextRenderer:
                 "fs_estimate": fs, "font_size_final": layout['size'],
                 "n_lines": len(lines_dbg), "lines": list(lines_dbg),
                 "line_h_px": line_h_dbg, "spacing_px": spacing_dbg,
+                # Largeurs d'encre REELLES : le barème mesurait l'équilibre en
+                # nombre de CARACTÈRES, alors que `_rebalance_lines` optimise
+                # des pixels. Les deux divergent dès que la largeur moyenne des
+                # glyphes change d'une ligne à l'autre.
+                "line_widths_px": [self._line_extents(font_dbg, ln)[1]
+                                   for ln in lines_dbg],
                 "total_h_px": total_h_dbg, "max_line_w_px": layout['max_line_w'],
                 "zone_center": (zone_cx, zone_cy),
                 "block_center": (block_cx, block_cy),
@@ -3710,6 +3948,7 @@ class TextRenderer:
             drawn = [ln for i, ln in enumerate(lines) if i < len(regions) and ln]
             self.last_layout_debug = {
                 "bail": None, "mode": "exact_lines", "text": str(text)[:60],
+                "route_costs": dict(getattr(self, "_last_route_costs", {}) or {}),
                 "font_size_final": block_fs,
                 "source_line_height": source_line_height,
                 "n_lines": len(drawn), "lines": drawn,

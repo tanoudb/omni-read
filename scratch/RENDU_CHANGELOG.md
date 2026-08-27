@@ -958,3 +958,98 @@ Les 10 `bulle` restantes, elles, sont à regarder : c'est là que vit le défaut
 (contour de ballon entamé). Correctif du barème à faire : dilater la référence
 selon la classe (0,30 × hauteur de ligne pour `out_text`, quelques px pour
 `bulle`) au lieu du noyau fixe de 11 px.
+
+## Phase « routage par coût continu »
+
+### D1 (correctif) — les portes binaires deviennent un coût
+`core/renderer.py::_route_cost`. Trois routes explicites, de la plus fidèle à la
+planche à la plus libre : `exact_lines` (redessine dans les polygones OCR,
+conserve les coupures d'origine), `anchor` (remise en page bornée à l'enveloppe
+des polygones), `box` (remise en page dans la boîte ou la forme du ballon).
+
+```
+coût = |ln(taille / taille_source)| + infidélité[route] + rag + 2,0 si ça ne tient pas
+```
+
+Le logarithme rend l'écart **symétrique** : rendre au double ou à la moitié du
+corps de la planche coûte pareil — ce que ne faisait aucun seuil, tous
+unilatéraux. L'infidélité s'ajoute dans la même unité, ce qui rend l'arbitrage
+lisible et réglable : `0,10` se lit « on accepte de perdre 10 % de corps pour
+garder les coupures de la planche ».
+
+Point de méthode : la route `box`, toujours disponible, est chiffrée AVANT les
+autres et leur sert de référence. C'est ce qui supprime l'auto-référence — chaque
+route se juge contre une alternative réelle, plus contre un seuil dérivé
+d'elle-même.
+
+**Effet mesuré : quasi nul.** 7 bulles sur 325 changent de route, +3
+`corps_petit`, 0 conforme gagnée. Ce n'est pas un échec du modèle : l'usage
+d'`exact_lines` reste conditionné en aval par
+`not is_bubble and container is None`, donc pour une vraie bulle avec forme de
+ballon, `box` est la seule route possible quoi que dise le coût. **Le routage ne
+peut arbitrer que ~24 % des zones.** La route `anchor` est quasi morte (1 bulle).
+
+Le correctif reste juste et supprime l'effet de falaise mesuré en D1 ; il fallait
+simplement constater que le gros du problème n'était pas là.
+
+### Deux impasses, notées pour ne pas les refaire
+
+1. **Le balayage des constantes d'infidélité est dégénéré.** Minimiser « l'écart
+   de corps de la route choisie » en faisant varier l'infidélité revient à
+   optimiser l'objectif en supprimant le seul terme qui n'est pas l'objectif :
+   il répond mécaniquement « infidélité = 0 ». Ces constantes ne se calibrent pas
+   sur une mesure de taille — il leur faut un terme de qualité indépendant.
+
+2. **La pénalité de césures placée dans le coût de ROUTE est inerte.** Résultats
+   identiques au bit près, même répartition de routes. Conservée parce que le
+   modèle est juste, mais elle ne mord pas tant que le mix de routes est
+   contraint. À ne pas prendre pour un acquis.
+
+### C1 — Rééquilibrage des lignes, là où le défaut est fabriqué
+`core/renderer.py::_rebalance_lines`, appelé depuis `_layout_at_size`.
+
+Les défauts restants ne vivent pas dans le choix de route mais DANS la route
+`box` : **79/90 `empreinte`, 52/70 `corps_petit`, et 67 des 71 orphelins**.
+`wrap_text` et `_wrap_text_by_mask` remplissent gloutonnement — chaque ligne
+prend tout ce qu'elle peut et le reliquat tombe sur la dernière.
+
+`_layout_at_size` est le point unique où les DEUX découpeurs produisent leurs
+lignes, et où la largeur allouée à chacune est connue (pour une bulle, la largeur
+du ballon à la hauteur de cette ligne). On y déplace des mots entre lignes
+voisines tant que ça rapproche les largeurs, en refusant tout dépassement de la
+largeur allouée.
+
+**Le nombre de lignes ne bouge jamais** : la hauteur du bloc, et donc la taille
+retenue par la dichotomie, restent valides. Vérifié sur le corpus — 0 bulle
+change de nombre de lignes, 0 change de taille de police. C'est ce qui permet de
+poser ce rééquilibrage sans toucher à la recherche de taille.
+
+Mesuré, `compare routage-rag cesures` :
+
+| | avant | après |
+|---|---|---|
+| **orphelins** | 71/282 (25 %) | **46/282 (16 %)** |
+| `rag_cv` p50 | 0,194 | **0,163** |
+| `empreinte` | 90 | 88 |
+| bulles conformes | 133 | 135 |
+
+**25 orphelins résolus, 0 nouveau.**
+
+### Barème — deux corrections
+- **L'orphelin est désormais un défaut COMPTÉ.** Il n'apparaissait qu'en bas de
+  rapport : un pavé finissant sur un mot seul passait pour « conforme ».
+- **L'équilibre se mesure en PIXELS.** `rag_cv` comptait des caractères alors que
+  `_rebalance_lines` optimise des largeurs d'encre ; les deux divergent dès que
+  la largeur moyenne des glyphes change d'une ligne à l'autre. Le renderer expose
+  `line_widths_px`, le barème s'en sert, avec repli sur le décompte de caractères
+  pour les runs antérieurs au hook.
+
+### Trajectoire, tous les runs rejugés au même barème
+
+| étape | conformes | orphelins | corps dans la cible | `rag_cv` |
+|---|---|---|---|---|
+| départ (`b9b7e38`) | 80 (25 %) | 72 (25 %) | 165 (51 %) | 0,192 |
+| + T1/T2 plafond sur l'encre | 108 (33 %) | 70 (25 %) | **246 (76 %)** | 0,194 |
+| + routage par coût | 108 (33 %) | 71 (25 %) | 249 (77 %) | 0,194 |
+| + rag dans le coût (inerte) | 108 (33 %) | 71 (25 %) | 249 (77 %) | 0,194 |
+| + rééquilibrage des lignes | **121 (37 %)** | **46 (16 %)** | 250 (77 %) | **0,163** |

@@ -66,6 +66,7 @@ SEUILS = {
     "centroid_dy_norm":     0.06,
     "bubble_overflow_pct":  3.0,   # % d'encre rendue hors du ballon
     "n_lines_delta_max":    1,     # lignes rendues - lignes source
+    "orphelin_compte":      True,  # dernière ligne réduite à un mot court
 }
 
 
@@ -436,6 +437,7 @@ def measure_bubble(before_c, erased_c, after_c, src_ink, page_ink_c, dbg, item,
         m["font_size"] = fs
         m["source_line_height"] = slh
         m["mode"] = dbg.get("mode", "wrap")
+        m["route_costs"] = dbg.get("route_costs") or {}
         m["n_lines"] = dbg.get("n_lines")
         m["fill_ratio"] = dbg.get("fill_ratio")
         m["zone_dx"] = dbg.get("dx")
@@ -449,7 +451,11 @@ def measure_bubble(before_c, erased_c, after_c, src_ink, page_ink_c, dbg, item,
         # ── Qualite du pave (rag) — indicateur pour le levier suivant ──────
         lines = [l for l in (dbg.get("lines") or []) if l.strip()]
         if len(lines) >= 2:
-            lens = [len(l) for l in lines]
+            # Largeurs en PIXELS quand le renderer les expose : c'est ce que
+            # l'oeil voit, et c'est ce que `_rebalance_lines` optimise. Repli
+            # sur le nombre de caracteres pour les runs anterieurs au hook.
+            px = [w for w in (dbg.get("line_widths_px") or []) if w]
+            lens = px if len(px) == len(lines) else [len(l) for l in lines]
             mean = sum(lens) / len(lens)
             var = sum((x - mean) ** 2 for x in lens) / len(lens)
             m["rag_cv"] = (math.sqrt(var) / mean) if mean else None
@@ -494,6 +500,11 @@ def verdict(m):
     v = m.get("n_lines_delta")
     if v is not None and v > S["n_lines_delta_max"]:
         bad.append("trop_de_lignes")
+    # Le mot seul sur la dernière ligne est le défaut de lettrage le plus
+    # visible, et il n'était compté nulle part — seulement affiché en bas de
+    # rapport. Un pavé qui finit sur un orphelin n'est pas « conforme ».
+    if S.get("orphelin_compte") and m.get("orphan"):
+        bad.append("orphelin")
     return bad
 
 
@@ -668,7 +679,7 @@ def _pcts(vals):
 
 
 DEFAUTS = ["erase_spill", "ghost", "empreinte", "corps_petit", "corps_gros",
-           "decentre_x", "decentre_y", "debordement", "trop_de_lignes"]
+           "decentre_x", "decentre_y", "debordement", "trop_de_lignes", "orphelin"]
 
 
 def load_run(run):
@@ -755,7 +766,7 @@ def report(run):
               % ("orphelins", len(orph), "", "", 100.0 * len(orph) / len(multi)))
 
 
-def sheet_vs(run_a, run_b, n=10, tile_h=230):
+def sheet_vs(run_a, run_b, n=10, tile_h=230, par="cap_ratio"):
     """Planche ORIGINAL | RENDU `run_a` | RENDU `run_b`, sur les bulles qui ont
     le plus bouge entre les deux runs.
 
@@ -772,9 +783,9 @@ def sheet_vs(run_a, run_b, n=10, tile_h=230):
 
     # Les plus gros ecarts de corps, un par serie au moins.
     common = [k for k in (set(ra) & set(rb))
-              if isinstance(ra[k].get("cap_ratio"), (int, float))
-              and isinstance(rb[k].get("cap_ratio"), (int, float))]
-    common.sort(key=lambda k: -abs(rb[k]["cap_ratio"] - ra[k]["cap_ratio"]))
+              if isinstance(ra[k].get(par), (int, float))
+              and isinstance(rb[k].get(par), (int, float))]
+    common.sort(key=lambda k: -abs(rb[k][par] - ra[k][par]))
     vus, picks = set(), []
     for k in common:                      # d'abord un cas par serie
         if k[0] not in vus:
@@ -795,8 +806,8 @@ def sheet_vs(run_a, run_b, n=10, tile_h=230):
         sep = np.full((tile_h, 3, 3), 40, dtype=np.uint8)
         body = np.hstack([cells[0], sep, cells[1], sep, cells[2]])
         bar = np.full((26, body.shape[1], 3), 250, dtype=np.uint8)
-        cv2.putText(bar, "%s #%d   ORIGINAL | %s cap=%.2f | %s cap=%.2f"
-                    % (s[:22], i, run_a[:10], ra[k]["cap_ratio"], run_b[:10], rb[k]["cap_ratio"]),
+        cv2.putText(bar, "%s #%d   ORIGINAL | %s %s=%.2f | %s %s=%.2f"
+                    % (s[:22], i, run_a[:10], par[:7], ra[k][par], run_b[:10], par[:7], rb[k][par]),
                     (4, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (20, 20, 20), 1, cv2.LINE_AA)
         tiles.append(np.vstack([bar, body]))
 
@@ -809,7 +820,7 @@ def sheet_vs(run_a, run_b, n=10, tile_h=230):
             t_ = np.hstack([t_, np.full((t_.shape[0], width - t_.shape[1], 3), 250, np.uint8)])
         out_rows.append(t_)
         out_rows.append(np.full((6, width, 3), 250, np.uint8))
-    out = RUNS_ROOT / ("planche_%s_vs_%s.png" % (run_a, run_b))
+    out = RUNS_ROOT / ("planche_%s_vs_%s_%s.png" % (run_a, run_b, par))
     cv2.imwrite(str(out), np.vstack(out_rows))
     print("Planche ORIGINAL | %s | %s -> %s" % (run_a, run_b, out))
     return out
@@ -955,7 +966,7 @@ if __name__ == "__main__":
         report(args.run)
     elif args.cmd == "sheet":
         if args.vs:
-            sheet_vs(args.vs, args.run, max(args.n, 8))
+            sheet_vs(args.vs, args.run, max(args.n, 8), par=args.metric)
         else:
             sheet(args.run, args.metric, args.n)
     elif args.cmd == "compare":
