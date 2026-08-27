@@ -19,6 +19,7 @@ import re
 from config import config
 from utils import MemoryManager, model_context, WebtoonLogger
 from core import YOLODetector, OCREngine, NLLBTranslator, TextRenderer, Detection, SmartSegmenter
+from core.bubble_shape import has_closed_bubble
 
 try:
     from translator_gemini import GeminiTranslator
@@ -1501,6 +1502,14 @@ class TranslationPipeline:
                             det.x1, det.y1, det.x2, det.y2,
                             text_regions=getattr(det, 'text_regions', None),
                             text_color_rgb=getattr(det, 'text_color_rgb', None),
+                        # Se calcule ICI parce qu'il faut les deux images a la
+                        # fois : l'encre sur l'origine, le trait du ballon sur
+                        # l'effacee.
+                        bubble_present=has_closed_bubble(
+                            img, img_translated,
+                            (det.x1, det.y1, det.x2, det.y2),
+                            getattr(det, 'text_regions', None),
+                        ),
                         outline_width_px=getattr(det, 'measured_outline_px', None),
                         source_text=getattr(det, 'text_original', None),
                             text_style=getattr(det, 'text_style', 'dialogue'),
@@ -2583,6 +2592,11 @@ class TranslationPipeline:
                 det.x1, det.y1, det.x2, det.y2,
                 text_regions=effective_regions,
                 text_color_rgb=getattr(det, 'text_color_rgb', None),
+                bubble_present=has_closed_bubble(
+                    img, img_translated,
+                    (det.x1, det.y1, det.x2, det.y2),
+                    effective_regions,
+                ),
                 text_style=getattr(det, 'text_style', 'dialogue'),
                 font_hint=getattr(det, 'font_hint', 'regular'),
                 class_name=getattr(det, 'class_name', ''),

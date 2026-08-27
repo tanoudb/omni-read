@@ -3007,6 +3007,12 @@ class TextRenderer:
         # reel de la traduction. Passe explicitement plutot que devine depuis la
         # geometrie des polygones : c'est la seule donnee exacte.
         source_text: Optional[str] = None,
+        # Verdict MESURE « y a-t-il un contour ferme autour de ce texte ? ».
+        # Se calcule en amont (cf. `core.bubble_shape.has_closed_bubble`) : il
+        # faut a la fois l'image d'origine, pour l'encre, et l'effacee, pour le
+        # trait du ballon — or ici seule l'effacee existe.
+        # None = indecidable, on garde le comportement historique.
+        bubble_present: Optional[bool] = None,
     ) -> np.ndarray:
         if not text or not str(text).strip():
             return img
@@ -3104,6 +3110,16 @@ class TextRenderer:
             container = self._container_box(img, x1, y1, x2, y2, exclude_boxes=sibling_boxes)
         if container is not None:
             x1, y1, x2, y2 = container
+            mask_for_wrap = None
+            has_mask_wrap = False
+        elif bubble_present is False:
+            # Aucun contour ferme autour de ce texte : il n'y a pas de ballon a
+            # epouser. Sans ce veto, `_bubble_mask_from_image` rend quand meme
+            # une « forme » sur du texte libre — mesure sur path-of-vengeance :
+            # trois cartouches out_text sur six, dont un masque fantome de
+            # 27,3 % de la boite. `is_bubble` passait alors a vrai et detournait
+            # le texte de `_draw_exact_lines`, seul regime correct pour du texte
+            # libre, vers un wrap dans une forme qui n'existe pas.
             mask_for_wrap = None
             has_mask_wrap = False
         else:
@@ -3324,16 +3340,38 @@ class TextRenderer:
                 ys_dbg = iy2 - self.cfg.padding_vertical - total_h_dbg
             else:
                 ys_dbg = top_dbg + (inner_h - total_h_dbg) // 2
+                # `_draw_block` applique ENSUITE ce recentrage optique (cf. la
+                # note sur le « texte trop haut »). Sans le rejouer ici, le
+                # `block_top` exposé serait la position AVANT correction —
+                # décalage mesuré de 2-3 px, qui se serait retrouvé sur chaque
+                # texte de l'éditeur manuel.
+                ys_dbg = self._optical_center_y(
+                    font_dbg, lines_dbg, line_h_dbg, spacing_dbg, top_dbg, inner_h, ys_dbg
+                )
 
             line_centers_dbg = layout.get('line_centers')
             ink_area = 0.0
+            # Géométrie d'encre PAR LIGNE. Exposée pour que l'éditeur Konva
+            # aligne le texte sur l'encre réelle plutôt que sur une convention
+            # d'ancrage : PIL ancre en haut de l'ascendante, Canvas sur la ligne
+            # de base, et les deux ne coïncident pas (2 px d'écart mesurés).
+            # En donnant `ink_top`/`lsb`, l'alignement devient exact et
+            # indépendant de ces conventions. Additif : ne change rien au rendu.
+            line_ink_dbg = []
             for li, ln in enumerate(lines_dbg):
                 if not ln:
+                    line_ink_dbg.append(None)
                     continue
-                _, ink_w_dbg = self._line_extents(font_dbg, ln)
+                lsb_dbg, ink_w_dbg = self._line_extents(font_dbg, ln)
                 bb = font_dbg.getbbox(ln)
                 ink_h_dbg = max(0, bb[3] - bb[1])
                 ink_area += float(ink_w_dbg) * float(ink_h_dbg)
+                line_ink_dbg.append({
+                    "lsb": int(lsb_dbg),
+                    "ink_top": int(bb[1]),
+                    "ink_w": int(ink_w_dbg),
+                    "ink_h": int(ink_h_dbg),
+                })
 
             if line_centers_dbg:
                 block_cx = sum(line_centers_dbg) / len(line_centers_dbg)
@@ -3357,6 +3395,22 @@ class TextRenderer:
                 "container": container, "anchor_box": anchor_box,
                 "use_locked_mode": use_locked_mode, "top_aligned": top_aligned_dbg,
                 "angle": angle,
+                # `block_top` et `line_centers` : coordonnées absolues réelles du
+                # bloc dessiné. Exposées pour que l'éditeur Konva puisse replacer
+                # le texte EXACTEMENT là où ce moteur l'a posé — sans elles, il
+                # faudrait re-deviner la position, et les bulles rondes (dont
+                # chaque ligne est recentrée sur la largeur disponible à son y)
+                # divergeraient. Additif : aucune incidence sur le rendu.
+                "block_top": ys_dbg,
+                "line_centers": list(line_centers_dbg) if line_centers_dbg else None,
+                "line_ink": line_ink_dbg,
+                "ascent": font_dbg.getmetrics()[0],
+                "descent": font_dbg.getmetrics()[1],
+                # Bord gauche et largeur interne : PIL centre chaque ligne sur
+                # `left + (inner_w - ink_w) / 2`. Sans ces deux valeurs, le
+                # frontend devrait les redériver de usable_zone + padding.
+                "left": left_dbg,
+                "inner_w_used": inner_w,
                 "source_line_height": source_line_height,
                 "fs_estimate": fs, "font_size_final": layout['size'],
                 "n_lines": len(lines_dbg), "lines": list(lines_dbg),

@@ -467,3 +467,146 @@ Conséquence : **l'A/B des polices de dialogue est annulé**. Le blocage écrasa
 les quatre candidates de la même façon ; une fois levé, CCWildWords atteint
 26 px sur #17. On garde sa largeur et son air qui respire, et on évite la
 fatigue de lecture des variantes Bold condensées.
+
+---
+
+## Nuit du 2026-08-26/27 — Croissance depuis l'encre : ce qu'elle apporte réellement
+
+Mission : remplacer la détection de forme de ballon par teinte
+(`TextRenderer._bubble_mask_from_image`) par une **croissance depuis l'encre**,
+au motif que la teinte produit des « coulées » sur les ballons sombres.
+
+Le nouveau module est `core/bubble_shape.py`, le banc `scratch/test_mask_growth.py`
+et `scratch/test_bubble_verdict.py`.
+
+**Le résultat contredit la prémisse, et l'oriente ailleurs.**
+
+### R1 — La prémisse elle-même était un artefact de bbox
+La « coulée » observée sur le ballon rond sombre de i-married-the-dragon venait
+d'une **bbox fausse**, pas de la polarité. Sur la bbox de production (score
+0,898), la méthode par TEINTE donne 71,2 % de remplissage et 17,5 px de dérive
+de centre (3,6 %) — elle fonctionne. Il n'y avait pas de coulée à corriger.
+
+### R2 — Comme *forme*, la croissance ne gagne rien
+Banc sur 12 ballons (1 sombre, 1 bulle de cri dentelée, 10 ovales classiques),
+métriques : remplissage, dérive du centre bande par bande, asymétrie, IoU.
+
+| | médiane | moyenne | pire |
+|---|---|---|---|
+| dérive du centre % — TEINTE | 7,42 | 10,07 | 27,26 |
+| dérive du centre % — CROISSANCE | 9,13 | 11,06 | 27,65 |
+| asymétrie % — TEINTE | 2,46 | 4,23 | 13,73 |
+| asymétrie % — CROISSANCE | 3,22 | 4,51 | 13,90 |
+
+IoU entre les deux : **0,937 à 0,983**. Elles décrivent le même objet. La
+croissance ne gagne que sur le ballon sombre (dérive 3,59 % → 2,05 %,
+asymétrie 0,96 % → 0,55 %) et perd de peu sur 10 cas sur 12.
+
+**Remplacer la teinte serait donc une régression légère.** On ne le fait pas.
+
+### R3 — Ma métrique de « dérive » mesurait la vraie forme du ballon
+Les deux pires cas (pov#06 à 27 %, pov#23 à 22 %) sont pires **avec les deux
+méthodes**, et l'inspection visuelle
+(`scratch/mask_growth_visuel.png`) montre deux masques justes : pov#06 est une
+bulle de cri qui se rétrécit vers le bas, pov#23 porte une queue en bas à
+gauche. La dérive de bande y est l'asymétrie honnête du ballon, pas une erreur.
+Ce n'est donc PAS un critère de qualité de masque — seulement un détecteur de
+coulée.
+
+### R4 — Le critère de fuite par contact avec les bords est faux
+Première version : « la croissance touche ≥ 2 bords ⇒ fuite ⇒ enveloppe
+convexe ». Elle amputait pov#23, un ballon parfaitement ordinaire, de 77,6 % à
+47,7 % de remplissage. Mesure du recouvrement de bord : **pov#23 (légitime)
+0,48, pov#06 (cri) 0,51** — le critère ne sépare rien. C'est mécanique : la
+bbox étant dessinée autour du ballon, celui-ci touche ses bords par
+construction.
+
+En laissant simplement la croissance converger, **12 cas sur 12 se referment
+d'eux-mêmes sur le trait**, bulle de cri dentelée comprise. Il n'y avait aucune
+fuite à gérer. Le repli par enveloppe convexe demandé au cahier des charges
+s'est révélé inutile ; le code de clôture le garde en option (`_close_contour(hull=True)`),
+non branché.
+
+### R5 — Le vrai discriminant est le REMPLISSAGE, et il sert à autre chose
+Le seul signal qui sépare franchement les familles :
+
+| | remplissage final |
+|---|---|
+| ballons (30 cas) | 52,9 – 79,5 % |
+| textes libres `out_text` (6 cas) | 86,5 – 98,0 % |
+
+Sans recouvrement. Seuil à **82 %** (`MAX_FILL`). Au-delà, la croissance ne
+rend pas un masque : elle rend le verdict **« il n'y a pas de ballon ici »**.
+
+C'est cette réponse-là qui a de la valeur, pas la forme. Sur les 36 détections
+de path-of-vengeance :
+
+| | accord avec l'étiquette de classe |
+|---|---|
+| TEINTE | 33/36 |
+| CROISSANCE | **36/36** |
+
+La teinte invente une forme de ballon sur pov#30, #31 et #33 — trois cartouches
+`out_text`. Conséquence réelle et pas cosmétique : dans `insert_text`,
+`has_mask_wrap` met `is_bubble` à vrai, ce qui **détourne le texte de
+`_draw_exact_lines`** (le régime qui rejoue les lignes d'origine) vers le wrap
+sur polygone. Sur pov#33 le masque fantôme ne fait que 27,3 % de la boîte : le
+texte y est mis en page dans un blob qui n'existe pas.
+
+### R6 — Le verdict exige le crop EFFACÉ (résultat négatif, utile)
+Tenté : calculer le verdict sur le crop d'ORIGINE, ce qui aurait permis de le
+loger dans `_prepare_render_style` (qui reçoit déjà l'image d'origine). Mesuré :
+**30/36 d'accord seulement** — six vrais ballons (#03, #06, #14, #21, #26, #27)
+basculent en « texte libre », parce que le dégagement de 9 px autour de l'encre
+perce le contour là où le lettrage le frôle, et la croissance s'échappe. Le
+veto doit donc se calculer dans la boucle de rendu, qui seule dispose des deux
+images.
+
+### R7 — Le veto est un gain sur les 3 cas, et ma première lecture était fausse
+Mesure de l'effet réel : sur les 6 textes libres de path-of-vengeance, le veto
+change **exactement** les 3 cas prédits ; les 3 autres sont identiques au pixel
+près (0 pixel de différence). Aucun effet de bord.
+
+J'ai d'abord annoncé une régression sur pov#31. C'était un artefact de mon banc :
+je dessinais le rectangle de la bbox PAR-DESSUS le texte rendu, ce qui donnait
+l'illusion d'une dernière ligne tranchée. Sans l'encadré, les trois cartouches
+sont plus grands, mieux centrés, et pov#33 perd son alignement en escalier.
+
+Débordement réel sous le plancher de la bbox, mesuré :
+
+| | encre sous le plancher | débord max | hauteur bbox |
+|---|---|---|---|
+| pov#30 | 490 px | 2 px | 290 px |
+| pov#31 | 3144 px | **11 px** | 233 px |
+| pov#33 | 1833 px | **11 px** | 215 px |
+
+Origine : `_fit_block_lines` tolère `hauteur_glyphe ≤ hauteur_polygone × 1,10`,
+et `_draw_exact_lines` centre le glyphe dans son polygone — la moitié de
+l'excédent passe donc dessous. Or les polygones OCR occupent TOUTE la hauteur de
+la bbox (pov#31 : 0..233 pour une boîte de 233), donc le dernier polygone a son
+bas sur le plancher. `_draw_exact_lines` ne reçoit pas la bbox : il ne peut pas
+connaître ce plancher. C'est une contrainte ABSENTE, pas un calcul faux, et le
+débordement des cartouches est autorisé.
+
+### R8 — Les deux bibliothèques d'inpainting se disputaient le même fichier
+`simple_lama_inpainting` et `lama_cleaner` téléchargent des builds DIFFÉRENTS
+sous le même nom `~/.cache/torch/hub/checkpoints/big-lama.pt` :
+
+| bibliothèque | source | md5 |
+|---|---|---|
+| `simple_lama_inpainting` | release *enesmsahin* | `19970cd5…` |
+| `lama_cleaner` | release *Sanster* | `e3aa4aaa…` |
+
+Conséquence, à CHAQUE construction de `TextRenderer` : `_init_anime_inpainter()`
+trouvait le build enesmsahin, `torch.jit.load` échouait, `lama_cleaner`
+SUPPRIMAIT le fichier — puis `SimpleLama`, qui ne vérifie aucun md5, le
+retéléchargeait (205 Mo). Donc 205 Mo par lancement, et `anime_inpainter_ready`
+définitivement à False.
+
+Portée réelle, à ne pas surestimer : l'inpainter « anime » n'est qu'un repli de
+3e rang, utilisé seulement si `SimpleLama` lève. `SimpleLama` fonctionnait. **Ce
+n'était donc pas la cause des fantômes résiduels.**
+
+Situation désormais stable et auto-réparante : le fichier est le build Sanster
+(md5 conforme), `_init_anime_inpainter()` s'exécute AVANT `SimpleLama` dans le
+constructeur, et `SimpleLama` réutilise sans broncher le fichier présent.
