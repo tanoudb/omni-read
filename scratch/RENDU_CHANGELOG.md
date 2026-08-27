@@ -610,3 +610,49 @@ n'était donc pas la cause des fantômes résiduels.**
 Situation désormais stable et auto-réparante : le fichier est le build Sanster
 (md5 conforme), `_init_anime_inpainter()` s'exécute AVANT `SimpleLama` dans le
 constructeur, et `SimpleLama` réutilise sans broncher le fichier présent.
+
+### R9 — Le contour mordu venait de la 2e passe, pas de la lueur
+Diagnostic initial FAUX, à corriger : j'avais annoncé que la lueur rose de
+« JUST KILL ME ALREADY!! » bavait jusqu'au trait et que le masque l'englobait.
+L'instrumentation dit l'inverse. Masque réellement envoyé à LaMa, Dragon #0 :
+
+| passe | part du crop masquée | trait du ballon avalé |
+|---|---|---|
+| 1 (chirurgical + lueur) | 11,7 % | **0 %** |
+| 2 (bloc + halo_grow) | 40,6 % | **9,5 %** |
+
+La passe 1 est PROPRE : elle épouse les lettres et leur lueur et laisse le
+feston blanc intact. Les dégâts viennent entièrement de la deuxième passe, qui
+masque `local_mask | block_mask` puis fait croître de 30 px. Or `block_mask`
+dilate déjà les polygones de 0,30 × hauteur de ligne : sur une bulle de 595 px
+dont deux lignes de ~150 px occupent presque toute la surface, il atteint le
+trait AVANT la croissance, que `_halo_grow` ne peut donc plus éviter.
+
+**Correctif** : borner la passe 2 par l'INTÉRIEUR du ballon, déduit par
+`grow_from_ink` sur la sortie de la passe 1 — le texte y a disparu, le trait est
+intact, c'est exactement l'image dont la croissance a besoin. Sur l'image
+d'origine ce serait faux (R6 : 30/36).
+
+La zone de calcul déborde la bbox de 20 % : les festons et la queue SORTENT de
+la boîte de détection, et borner sur la bbox seule laissait encore 4,9 % du
+trait dans le masque.
+
+| variante | masque | trait avalé | ghost_score |
+|---|---|---|---|
+| passe 2 actuelle | 40,6 % | 9,5 % | 0,1681 |
+| bornée, pad 0 % | 39,4 % | 4,9 % | — |
+| bornée, pad 10 % | 38,6 % | 1,3 % | — |
+| **bornée, pad 20 %** | **38,0 %** | **0 %** | **0,0363** |
+
+Meilleur sur les deux critères à la fois, pour 2,6 points de couverture en moins.
+
+**Piège de métrique à retenir** : sur `tex` et `t28` le `_ghost_score` MONTE
+légèrement après correctif (2,6277 → 2,6371 ; 1,3990 → 1,4204) alors que
+l'image est visiblement meilleure — le contour noir dentelé, aminci et émoussé
+avant, ressort net. `_ghost_score` compte la structure résiduelle dans le
+masque : préserver le trait AJOUTE de la structure. La métrique ne distingue
+pas un fantôme de texte d'un contour légitime. Ne pas l'utiliser seul pour
+arbitrer une protection de contour.
+
+Non-régression : 19 détections sur 8 caches d'effacement ; la borne s'applique
+sur 7, aucune dégradation visuelle constatée, 12 inchangées au pixel près.

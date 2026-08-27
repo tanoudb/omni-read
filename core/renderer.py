@@ -19,6 +19,8 @@ Base V6 conservée :
 
 import cv2
 import numpy as np
+
+from core.bubble_shape import grow_from_ink, ink_mask_from_regions
 from PIL import Image, ImageDraw, ImageFont
 from typing import Tuple, Optional, List, Dict, Any
 from pathlib import Path
@@ -780,6 +782,23 @@ class TextRenderer:
                     wider = self._halo_grow(
                         crop, cv2.bitwise_or(local_mask, block_mask), max_radius=30,
                     )
+                    # Le masque au BLOC est un rectangle autour des polygones,
+                    # dilate de 0,30 x hauteur de ligne. Sur une bulle dont le
+                    # texte occupe presque toute la surface il atteint le TRAIT
+                    # avant meme la croissance — mesure sur « JUST KILL ME
+                    # ALREADY!! » : 9,5 % du feston blanc dans le masque, que
+                    # LaMa devait ensuite halluciner, d'ou le contour mordu et
+                    # les trainees en bas de bulle. On le borne donc a
+                    # l'interieur du ballon, deduit de la passe 1.
+                    interior_limit = self._bubble_interior_limit(
+                        erased, text_regions, crop,
+                        max(0, x1 - crop_x1), max(0, y1 - crop_y1),
+                        min(crop_w, x2 - crop_x1), min(crop_h, y2 - crop_y1),
+                    )
+                    if interior_limit is not None:
+                        wider = cv2.bitwise_or(
+                            cv2.bitwise_and(wider, interior_limit), local_mask,
+                        )
                     retry = self._inpaint_lama(crop, wider)
                     erased2 = crop.copy()
                     erased2[wider > 0] = retry[wider > 0]
@@ -808,6 +827,56 @@ class TextRenderer:
             pass
 
         return img
+
+
+    # Marge autour de la bbox pour deduire l'interieur du ballon. Les festons
+    # et la queue DEPASSENT de la boite de detection : borner sur la bbox seule
+    # laissait encore 4,9 % du trait dans le masque (mesure Dragon #0). A 20 %
+    # il n'en reste rien, et le masque ne perd que 2,6 points de couverture.
+    INTERIOR_PAD_FRAC = 0.20
+    INTERIOR_ERODE = 9
+
+    def _bubble_interior_limit(
+        self, crop_erased: np.ndarray, regions, crop_orig: np.ndarray,
+        bx1: int, by1: int, bx2: int, by2: int,
+    ) -> Optional[np.ndarray]:
+        """Borne « ne franchis pas le trait du ballon », au repere du crop.
+
+        Renvoie None quand il n'y a pas de ballon a proteger (texte libre) ou
+        que la forme n'est pas deduisible — l'appelant garde alors son masque.
+
+        `crop_erased` doit etre la sortie de la PREMIERE passe : le texte y a
+        disparu mais le trait du ballon est intact, ce qui est exactement
+        l'image dont `grow_from_ink` a besoin pour trouver ses murs. Sur
+        l'image d'ORIGINE la croissance s'echappe par les endroits ou le
+        lettrage frole le contour (mesure : 30/36 seulement).
+        """
+        try:
+            ch, cw = crop_erased.shape[:2]
+            px = int((bx2 - bx1) * self.INTERIOR_PAD_FRAC)
+            py = int((by2 - by1) * self.INTERIOR_PAD_FRAC)
+            ax1, ay1 = max(0, bx1 - px), max(0, by1 - py)
+            ax2, ay2 = min(cw, bx2 + px), min(ch, by2 + py)
+            if ax2 - ax1 < 24 or ay2 - ay1 < 24:
+                return None
+
+            ink = np.zeros((ay2 - ay1, ax2 - ax1), np.uint8)
+            sub = ink_mask_from_regions(crop_orig[by1:by2, bx1:bx2], regions)
+            ink[by1 - ay1:by2 - ay1, bx1 - ax1:bx2 - ax1] = sub
+
+            interior, _diag = grow_from_ink(crop_erased[ay1:ay2, ax1:ax2], ink)
+            if interior is None:
+                return None
+            k = cv2.getStructuringElement(
+                cv2.MORPH_ELLIPSE,
+                (self.INTERIOR_ERODE, self.INTERIOR_ERODE),
+            )
+            interior = cv2.erode(interior, k, iterations=1)
+            limit = np.full((ch, cw), 255, np.uint8)
+            limit[ay1:ay2, ax1:ax2] = interior
+            return limit
+        except Exception:
+            return None
 
     def _apply_erasure_by_group(
         self, crop: np.ndarray, result: np.ndarray, mask: np.ndarray, class_name: str = ""
