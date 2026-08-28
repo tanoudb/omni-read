@@ -1299,3 +1299,23 @@ Mesuré, `compare final orphelin2` :
 « IF YOU'RE OKAY WITH TELLING IT. » passe de 4 lignes (« IT. » orphelin) à 3
 lignes équilibrées ; « IS SOMETHING WRONG, ARAM? » de 3 lignes à 2. Le texte est
 parfois un cran plus petit mais nettement mieux réparti — le geste du lettreur.
+
+## L1 — Texte hors ballon : container faux rejeté (confort de lecture)
+`core/renderer.py::insert_text`. Le défaut le plus destructeur pour la lecture —
+le texte rendu HORS de sa bulle, dans le vide, l'œil qui le cherche.
+
+Diagnostic sur hellogin p02 #41 (« WAIT… DID I FALL ASLEEP…? ») : `_container_box`
+attrapait le FOND BLANC de la case (un aplat uni de 689 px de large, centré 176 px
+SOUS le texte) comme « container », et ce container remplaçait la bbox de la
+détection. Le texte, centré dans ce faux container, sortait de sa bulle. Ce
+n'était donc ni la bbox de détection ni le masque de forme (deux fausses pistes
+écartées, mesurées), mais le container.
+
+Correctif : un container n'est retenu que s'il est CENTRÉ sur le texte source —
+son centre vertical ne doit pas s'écarter des polygones OCR de plus d'une hauteur
+de texte. Un vrai cartouche est serré sur son texte (écart quasi nul) ; un aplat
+de fond happé par erreur est centré ailleurs (176 px ici) et se fait rejeter.
+
+Mesuré : `dy` de #41 passe de **+153 px à +15 px** (texte dans la bulle), et sur
+les 632 bulles **une SEULE bouge** — exactement le cas pathologique. Zéro
+régression (decentre_y −1, debordement −1, aucune bulle cassée). Vérifié à l'œil.

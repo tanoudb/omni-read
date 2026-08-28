@@ -3440,6 +3440,21 @@ class TextRenderer:
             container = None
         else:
             container = self._container_box(img, x1, y1, x2, y2, exclude_boxes=sibling_boxes)
+            # Le container doit être CENTRÉ sur le texte source, pas seulement le
+            # contenir. `_container_box` attrape parfois un aplat de fond bien
+            # plus grand que le texte (fond de case uni) : y centrer le texte le
+            # déplace loin de sa position d'origine. Mesuré sur hellogin p02 #41 :
+            # container (fond blanc de case) centré 176 px SOUS le texte, qui
+            # sortait de sa bulle — le pire pour le confort de lecture. On le
+            # rejette dès que son centre s'écarte de plus d'une hauteur de texte.
+            if container is not None and text_regions:
+                _pys = [q[1] for reg in text_regions for q in (reg.get('bbox') or [])]
+                if _pys:
+                    _src_cy = oy1 + (min(_pys) + max(_pys)) / 2.0
+                    _src_h = max(8.0, float(max(_pys) - min(_pys)))
+                    _cont_cy = (container[1] + container[3]) / 2.0
+                    if abs(_cont_cy - _src_cy) > _src_h:
+                        container = None
         if container is not None:
             x1, y1, x2, y2 = container
             mask_for_wrap = None
@@ -3477,6 +3492,36 @@ class TextRenderer:
                 is_bubble=labelled_bubble,
             )
             has_mask_wrap = mask_for_wrap is not None and self._is_non_rectangular(mask_for_wrap)
+
+            # Validation du masque de forme contre le texte SOURCE.
+            #
+            # `_bubble_shape_mask` croît une région depuis le masque des lettres ;
+            # sur une bulle ouverte ou fondue avec un aplat clair voisin (fond de
+            # case), la région déborde dans cet aplat et le « ballon » obtenu est
+            # centré loin du texte. Mesuré sur hellogin p02 #41 : forme centrée
+            # 187 px SOUS le texte source, qui finissait rendu hors de sa bulle,
+            # dans le vide — le pire défaut pour le confort de lecture (l'œil
+            # cherche le texte).
+            #
+            # Le masque des LETTRES (`bubble_mask`) est la vérité : le lettreur a
+            # posé son texte au centre du ballon. Si la forme dérive de plus de
+            # 20 % de la hauteur par rapport à lui, on la remplace par une ellipse
+            # inscrite dans la bbox, centrée sur le texte — le texte reste alors
+            # dans sa bulle.
+            if has_mask_wrap and isinstance(bubble_mask, np.ndarray) and bubble_mask.size > 0:
+                _ysf, _xsf = np.nonzero(mask_for_wrap > 0)
+                _ysl, _xsl = np.nonzero(bubble_mask > 0)
+                if _ysf.size > 0 and _ysl.size > 0:
+                    _fy = _ysf.mean() / float(mask_for_wrap.shape[0])
+                    _ly = _ysl.mean() / float(bubble_mask.shape[0])
+                    if abs(_fy - _ly) > 0.20:
+                        _bh, _bw = max(2, y2 - y1), max(2, x2 - x1)
+                        _ell = np.zeros((_bh, _bw), dtype=np.uint8)
+                        cv2.ellipse(_ell, (_bw // 2, _bh // 2),
+                                    (max(1, _bw // 2 - 2), max(1, _bh // 2 - 2)),
+                                    0, 0, 360, 255, -1)
+                        mask_for_wrap = _ell
+                        has_mask_wrap = True
         is_bubble = has_mask_wrap
 
         angle = 0.0
