@@ -3982,7 +3982,15 @@ class TextRenderer:
             
             # Dessiner la ligne
             offset_x, ink_w = self._line_extents(font, line)
-            line_h = (font.getbbox(line)[3] - font.getbbox(line)[1])
+            _bb = font.getbbox(line)
+            line_h = (_bb[3] - _bb[1])
+            # Décalage du haut de l'ENCRE dans le cadratin. `draw.text()` place
+            # son `y` au haut du CADRATIN, alors que `line_h` ci-dessus est une
+            # hauteur d'ENCRE : sans cette compensation, chaque ligne était
+            # dessinée `_bb[1]` px trop bas, soit 20 à 30 % du corps pour des
+            # capitales. L'offset horizontal, lui, était déjà compensé par
+            # `offset_x` — c'était une asymétrie, pas un choix.
+            offset_y = _bb[1]
             
             # Centrer la ligne au milieu de son polygone — SAUF si on a
             # redécoupé le texte nous-mêmes : les polygones décrivent alors les
@@ -3999,8 +4007,18 @@ class TextRenderer:
                 xp = int(round(center_x - ink_w / 2.0)) - offset_x
             else:
                 xp = x1 + (rw - ink_w) // 2 - offset_x
-            yp = y1 + (rh - line_h) // 2
-            
+            # Position VERTICALE : sur la bande d'encre source quand elle a
+            # été mesurée (cf. `_prepare_render_style`), sinon centrage dans le
+            # polygone. Le polygone contient de la place de jambage inutilisée
+            # par des capitales ; s'y centrer remontait le texte.
+            _iy0 = region.get('ink_y0') if isinstance(region, dict) else None
+            _iy1 = region.get('ink_y1') if isinstance(region, dict) else None
+            if _iy0 is not None and _iy1 is not None and _iy1 > _iy0:
+                _cy = (float(_iy0) + float(_iy1)) / 2.0 + region_offset_y
+                yp = int(round(_cy - line_h / 2.0)) - offset_y
+            else:
+                yp = y1 + (rh - line_h) // 2 - offset_y
+
             # Dessiner
             if outline_color is not None and outline_width > 0:
                 img = self._draw_text_with_outline_pil(img, line, xp, yp, font, text_color, outline_color, outline_width)

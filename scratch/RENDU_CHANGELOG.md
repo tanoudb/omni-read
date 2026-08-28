@@ -1157,3 +1157,70 @@ Elle était le plan annoncé. Deux constats l'ont invalidée avant écriture :
 Piste restante pour les 29 cas « une ligne de trop » : forcer un bloc plus court
 élargit les bandes dans un ovale (cycle vertueux que le point fixe ne cherche
 jamais, puisqu'il ne descend pas en dessous de sa convergence).
+
+## Phase « centrage vertical et fiabilisation du barème » (corpus 16 planches)
+
+Défaut n°1 au barème corrigé : `decentre_y`, 127 bulles, jamais diagnostiqué.
+
+### V1 — Offset vertical d'encre non compensé dans `_draw_exact_lines`
+`core/renderer.py`. Ce chemin calculait l'ordonnée par `yp = y1 + (rh - line_h)//2`
+où `line_h` est une hauteur d'ENCRE (`getbbox[3]-getbbox[1]`), alors que
+`draw.text()` place son `y` au haut du CADRATIN. Chaque ligne était donc dessinée
+`getbbox[1]` px trop bas. L'offset HORIZONTAL, lui, était déjà compensé
+(`- offset_x`) : c'était une asymétrie, pas un choix.
+
+Mesuré par police : **Allegre Sans (celle des `out_text`) a un offset d'encre de
+20–23 % du corps** (5–9 px aux tailles usuelles), contre 0–5 % pour CCWildWords.
+D'où `exact_lines` pesant 68 des 127 décentrages alors qu'il ne fait que 19 % du
+corpus, et 78 des 127 décalages vers le bas. Compensé par `- offset_y`.
+
+### V2 — Ancrage sur la bande d'encre SOURCE
+`pipeline.py` mesure désormais, pour chaque ligne source, la bande d'encre réelle
+(`ink_y0`/`ink_y1`) dans son polygone OCR — disponible sur 100 % des `out_text`.
+`_draw_exact_lines` aligne la ligne rendue sur cette bande plutôt que de la centrer
+dans le polygone, qui contient de la place de jambage inutilisée par des capitales
+et remontait le texte. Écart médian `exact_lines` : 8,2 → **2,2 px**.
+
+`decentre_y` : **127 → 85**. Pour la route `box`, aucune correction : le renderer
+y centre dans sa zone à 2,5 px près (p90 4,5), l'écart résiduel venant de ce que la
+planche elle-même ne centrait pas son texte.
+
+### Barème — trois corrections de fiabilité
+
+**`residu_pct` — le texte source encore VISIBLE.** `ghost_contrast` comparait deux
+médianes, aveugle à un résidu partiel : sur `30-years p01 #14`, 70 % du texte
+anglais restait visible et le critère ne bronchait pas. Nouvelle mesure : part de
+l'encre source qui, sur l'image FINALE, reste sombre HORS du texte rendu. La
+nuance « hors du texte rendu » est essentielle — un `out_text` est réinjecté à la
+même position, donc un résidu d'effacement y est RECOUVERT et invisible (mesuré
+sur `path-of-vengeance p02 #6` : résidu brut 86 %, rendu final impeccable). Après
+recentrage sur le visible : 17 vrais résidus.
+
+**`erase_spill` sensible à la classe.** E3 donne délibérément aux `out_text` un
+masque au BLOC (polygones dilatés de 0,30 × hauteur de ligne) pour absorber la
+lueur externe du texte d'impact. Compter ce débordement voulu comme bavure
+faisait ressortir 29 `out_text` sur 41. La zone légitime est maintenant élargie à
+ce bloc pour cette classe : **80 → 27** signalements, tous de vraies `bulle`.
+
+**`bubble_overflow` — deux faux positifs.** Le crop élargi de 60 % contient le
+texte des bulles VOISINES, compté comme encre de cette bulle hors de son ballon ;
+exclu désormais. Et la couronne d'échantillonnage incluait le trait du ballon,
+gonflant σ donc la tolérance — l'« intérieur » de `rise p01 #16` couvrait tout le
+crop. Remplacé par un écart robuste (MAD). **37 → 18**.
+
+### Bilan RENDU pur (départ `95b9e6f` vs final, MÊME barème final)
+
+Isolé de l'effet barème en re-notant les deux rendus avec le code de mesure final :
+
+| | départ | final |
+|---|---|---|
+| **bulles conformes** | 338 (53 %) | **366 (58 %)** |
+| `decentre_y` | 127 | **85** |
+| `corps_petit` | 114 | 107 |
+| `residu` | 22 | 17 |
+| `debordement` | 20 | 18 |
+
+**+28 conformes**, aucune régression visuelle. Les deux `corps_gros` « nouveaux »
+sont soit une amélioration mal étiquetée (`frontier #32` : cap 0,45 → 1,30, sortie
+du trop-petit), soit un rendu visuellement correct dont la vraie hauteur d'encre
+n'était révélée que par le bon placement (`30-years #15`).

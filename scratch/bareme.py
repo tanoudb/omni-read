@@ -58,6 +58,7 @@ RUNS_ROOT = REPO / "scratch" / "bareme" / "runs"
 SEUILS = {
     "erase_spill_pct":      0.30,  # % de l'aire bbox repeinte hors encre source
     "ghost_contrast":       12.0,  # niveaux de gris entre zone effacée et voisinage
+    "residu_pct":           12.0,  # % de l'encre source encore visible après effacement
     "footprint_ratio_min":  0.60,  # boîte de l'encre rendue / boîte de l'encre source
     "footprint_ratio_max":  1.60,
     "cap_ratio_min":        0.80,  # corps rendu / corps source, mesure en pixels
@@ -300,6 +301,41 @@ def _ink_box(mask):
     return float(w), float(h), float(w * h)
 
 
+def _zone_effacement_legitime(page_ink_c, item, dbg, forme):
+    """Ce que l'effacement a le DROIT de repeindre, selon la classe.
+
+    Une bavure se juge par rapport a ce que l'algorithme vise, pas par rapport
+    aux glyphes. Pour une `bulle`, il vise l'encre dilatee de quelques pixels
+    (anticrenelage). Pour un cartouche `out_text`, E3 lui donne deliberement un
+    masque au BLOC — polygones de ligne dilates de 0,30 x hauteur de ligne —
+    parce que le texte d'impact porte une LUEUR externe qu'un masque au glyphe
+    laisse visible. Compter ce debordement voulu comme une bavure faisait
+    ressortir 29 `out_text` sur 41 signales.
+    """
+    base = cv2.dilate(page_ink_c, _kernel(11)) if page_ink_c is not None else None
+    classe = str(item.get("class_name") or "").lower()
+    if classe != "out_text":
+        return base
+    # Enveloppe au BLOC : polygones de ligne remplis, dilates comme en E3.
+    slh = (dbg or {}).get("source_line_height") or 0
+    bloc = np.zeros(forme, dtype=np.uint8)
+    for region in (item.get("text_regions") or []):
+        pts = region.get("bbox") if isinstance(region, dict) else None
+        if not pts or len(pts) < 3:
+            continue
+        arr = np.array(pts, dtype=np.int32)
+        if arr.ndim != 2 or arr.shape[1] < 2:
+            continue
+        arr[:, 0] = np.clip(arr[:, 0], 0, forme[1] - 1)
+        arr[:, 1] = np.clip(arr[:, 1], 0, forme[0] - 1)
+        cv2.fillPoly(bloc, [arr], 255)
+    if np.count_nonzero(bloc) == 0:
+        return base
+    marge = max(5, int(0.30 * float(slh)) + 11)
+    bloc = cv2.dilate(bloc, _kernel(2 * marge + 1))
+    return bloc if base is None else cv2.bitwise_or(base, bloc)
+
+
 def _bubble_interior(erased_pad, src_ink_pad):
     """Interieur du ballon, mesure sur l'image EFFACEE.
 
@@ -321,7 +357,13 @@ def _bubble_interior(erased_pad, src_ink_pad):
     g = cv2.cvtColor(erased_pad, cv2.COLOR_BGR2GRAY).astype(np.int16)
     vals = g[ring > 0]
     ref = float(np.median(vals))
-    tol = max(28.0, 3.0 * float(np.std(vals)))
+    # Écart ROBUSTE (MAD), pas l'écart-type : la couronne autour des lettres
+    # contient le trait du ballon, très sombre, qui faisait exploser sigma —
+    # donc la tolérance, donc la bande fuyait à travers le contour et couvrait
+    # tout le crop (mesuré sur rise-of-the-dragon p01 #16 : « intérieur »
+    # s'étendant sur 653 x 753 px, c'est-à-dire le décor entier).
+    mad = float(np.median(np.abs(vals - ref)))
+    tol = max(18.0, 3.0 * 1.4826 * mad)
     band = (np.abs(g - ref) <= tol).astype(np.uint8)
     n, lab = cv2.connectedComponents(band, connectivity=8)
     labs = lab[src_ink_pad > 0]
@@ -339,12 +381,17 @@ def _bubble_interior(erased_pad, src_ink_pad):
 
 
 def measure_bubble(before_c, erased_c, after_c, src_ink, page_ink_c, dbg, item,
-                   pad=None):
+                   pad=None, voisines_pad=None):
     """Metriques d'une bulle. Coordonnees locales a la bbox.
 
     `pad` = (erased_pad, after_pad, src_ink_pad) sur un crop ELARGI. La bbox de
     detection est serree sur le texte, donc le ballon deborde d'elle : c'est
     seulement sur le crop elargi qu'on peut voir le texte sortir du ballon.
+
+    `voisines_pad` marque, dans ce crop elargi, les zones des AUTRES detections.
+    Sans lui, le texte redessine dans les bulles voisines etait compte comme de
+    l'encre de CETTE bulle tombee hors de son ballon — 74 % de faux debordement
+    mesure sur rise-of-the-dragon p01 #16.
     """
     h, w = before_c.shape[:2]
     area = float(max(1, h * w))
@@ -355,33 +402,67 @@ def measure_bubble(before_c, erased_c, after_c, src_ink, page_ink_c, dbg, item,
 
     # ── Effacement ──────────────────────────────────────────────────────────
     erase_changed = _changed(before_c, erased_c)
-    if page_ink_c is not None:
-        # L'union PLEINE PAGE de l'encre source, pas seulement celle de cette
-        # bulle : deux bulles qui se chevauchent (bulles de cri) partagent de
-        # la bbox, et effacer la voisine n'est pas une bavure.
-        legit = cv2.dilate(page_ink_c, _kernel(11))
+    # L'union PLEINE PAGE de l'encre source sert de base : deux bulles qui se
+    # chevauchent (bulles de cri) partagent de la bbox, et effacer la voisine
+    # n'est pas une bavure. La zone legitime est ensuite elargie selon la
+    # classe (cf. `_zone_effacement_legitime`).
+    legit = _zone_effacement_legitime(page_ink_c, item, dbg, before_c.shape[:2])
+    if legit is not None:
         spill = cv2.bitwise_and(erase_changed, cv2.bitwise_not(legit))
         m["erase_spill_pct"] = 100.0 * np.count_nonzero(spill) / area
     else:
         m["erase_spill_pct"] = None
 
     if src_n > 0:
-        # Fantome : apres effacement, la ou l'encre etait, l'image doit
-        # ressembler a son voisinage immediat. Sinon le texte anglais
-        # transparait encore.
+        # Résidu d'effacement : là où l'encre était, l'image doit désormais
+        # ressembler à son voisinage immédiat.
+        #
+        # L'ancienne mesure comparait deux MÉDIANES — insensible à un résidu
+        # partiel. Mesuré sur 30-years p01 #14 : 26 860 pixels sombres restants
+        # sur 38 183, soit 70 % du texte anglais encore visible, et
+        # `ghost_contrast` restait sous son seuil parce que la médiane de la
+        # zone basculait du côté effacé.
+        #
+        # On COMPTE désormais les pixels : quelle part de l'encre source
+        # s'écarte encore nettement du fond local après effacement.
         core = cv2.erode(src_ink, _kernel(3))
         if np.count_nonzero(core) < 10:
             core = src_ink
         ring = cv2.bitwise_and(cv2.dilate(src_ink, _kernel(15)),
                                cv2.bitwise_not(cv2.dilate(src_ink, _kernel(5))))
-        g = cv2.cvtColor(erased_c, cv2.COLOR_BGR2GRAY)
+        g_er = cv2.cvtColor(erased_c, cv2.COLOR_BGR2GRAY).astype(np.int16)
         if np.count_nonzero(ring) >= 10:
-            m["ghost_contrast"] = float(abs(np.median(g[core > 0])
-                                            - np.median(g[ring > 0])))
+            fond = float(np.median(g_er[ring > 0]))
+            # `ghost_contrast` : sur l'EFFACÉE, indicateur de qualité brute de
+            # l'effacement (conservé, non décisif).
+            m["ghost_contrast"] = float(abs(np.median(g_er[core > 0]) - fond))
+
+            # `residu_pct` : résidu VISIBLE dans le résultat final. Un texte
+            # `out_text` est réinjecté à la même position, donc un résidu
+            # d'effacement y est RECOUVERT par le nouveau texte et ne se voit
+            # pas — mesuré sur path-of-vengeance p02 #6, résidu brut 86 % mais
+            # rendu final impeccable. On ne compte donc que l'encre source qui,
+            # sur l'image FINALE, reste sombre HORS du texte rendu.
+            rendered_ink = _changed(erased_c, after_c)
+            decouvert = cv2.bitwise_and(core, cv2.bitwise_not(
+                cv2.dilate(rendered_ink, _kernel(5))))
+            n_dec = int(np.count_nonzero(decouvert))
+            if n_dec >= 10:
+                g_af = cv2.cvtColor(after_c, cv2.COLOR_BGR2GRAY).astype(np.int16)
+                vals = g_af[decouvert > 0]
+                # Part de l'encre source DÉCOUVERTE encore visible, rapportée à
+                # toute l'encre source : « 40 % de résidu » = 40 % des lettres
+                # d'origine transparaissent hors du nouveau texte.
+                visibles = float(np.sum(np.abs(vals - fond) > 35))
+                m["residu_pct"] = 100.0 * visibles / float(np.count_nonzero(core))
+            else:
+                m["residu_pct"] = 0.0
         else:
             m["ghost_contrast"] = None
+            m["residu_pct"] = None
     else:
         m["ghost_contrast"] = None
+        m["residu_pct"] = None
 
     # ── Corps et placement du texte rendu ───────────────────────────────────
     rendered_ink = _changed(erased_c, after_c)
@@ -436,6 +517,8 @@ def measure_bubble(before_c, erased_c, after_c, src_ink, page_ink_c, dbg, item,
         interior = _bubble_interior(erased_pad, src_ink_pad)
         if interior is not None:
             ren_pad = _changed(erased_pad, after_pad)
+            if voisines_pad is not None:
+                ren_pad = cv2.bitwise_and(ren_pad, cv2.bitwise_not(voisines_pad))
             n_pad = int(np.count_nonzero(ren_pad))
             if n_pad > 0:
                 # 2 px de tolerance : l'anticrenelage du texte mord legitimement
@@ -457,6 +540,9 @@ def measure_bubble(before_c, erased_c, after_c, src_ink, page_ink_c, dbg, item,
         m["mode"] = dbg.get("mode", "wrap")
         m["route_costs"] = dbg.get("route_costs") or {}
         m["blocage"] = dbg.get("blocage") or {}
+        # Lignes effectivement rendues : sans elles, impossible d'analyser un
+        # orphelin ou un mauvais découpage après coup.
+        m["lignes"] = list(dbg.get("lines") or [])[:12]
         m["n_lines"] = dbg.get("n_lines")
         m["fill_ratio"] = dbg.get("fill_ratio")
         m["zone_dx"] = dbg.get("dx")
@@ -497,6 +583,10 @@ def verdict(m):
     v = m.get("ghost_contrast")
     if v is not None and v > S["ghost_contrast"]:
         bad.append("ghost")
+    # Résidu COMPTÉ, insensible au basculement de la médiane.
+    v = m.get("residu_pct")
+    if v is not None and v > S["residu_pct"]:
+        bad.append("residu")
     # `empreinte` et `trop_de_lignes` ont été RETIRÉS du verdict.
     #
     # Tous deux demandent au pavé rendu de reproduire la géométrie du pavé
@@ -661,7 +751,19 @@ def score(run, only=None, save_pages=False, save_crops=False):
                 src_pad[y1 - py1:y1 - py1 + ih, x1 - px1:x1 - px1 + iw] = ink
             pad = (erased[py1:py2, px1:px2], after[py1:py2, px1:px2], src_pad)
 
-            m = measure_bubble(b, e, a, ink, page_ink[y1:y2, x1:x2], dbg, it, pad)
+            # Zones des AUTRES detections presentes dans le crop elargi : leur
+            # texte redessine n'appartient pas a cette bulle.
+            vois = np.zeros((py2 - py1, px2 - px1), dtype=np.uint8)
+            for j, other in enumerate(items):
+                if j == i:
+                    continue
+                ox1, oy1, ox2, oy2 = other["bbox"]
+                cx1, cy1 = max(px1, ox1), max(py1, oy1)
+                cx2, cy2 = min(px2, ox2), min(py2, oy2)
+                if cx2 > cx1 and cy2 > cy1:
+                    vois[cy1 - py1:cy2 - py1, cx1 - px1:cx2 - px1] = 255
+
+            m = measure_bubble(b, e, a, ink, page_ink[y1:y2, x1:x2], dbg, it, pad, vois)
             m.update({"series": series, "page": page,
                       "index": i, "class": it["class_name"],
                       "text": (it["text"] or "")[:70], "bbox": it["bbox"]})
@@ -712,7 +814,7 @@ def _pcts(vals):
     return q(0.50), q(0.75), q(0.90)
 
 
-DEFAUTS = ["erase_spill", "ghost", "corps_petit", "corps_gros",
+DEFAUTS = ["erase_spill", "ghost", "residu", "corps_petit", "corps_gros",
            "decentre_x", "decentre_y", "debordement", "orphelin"]
 # Mesurés et affichés, mais NON décisifs (cf. `verdict`).
 INDICATEURS = ["footprint_ratio", "n_lines_delta"]
@@ -780,6 +882,7 @@ def report(run):
     cibles = [
         ("erase_spill_pct", "< %s" % SEUILS["erase_spill_pct"]),
         ("ghost_contrast", "< %s" % SEUILS["ghost_contrast"]),
+        ("residu_pct", "< %s  (encre source encore visible)" % SEUILS["residu_pct"]),
         ("cap_ratio", "%s a %s  (CORPS, pixels des deux cotes)"
          % (SEUILS["cap_ratio_min"], SEUILS["cap_ratio_max"])),
         ("line_h_ratio", "(indicatif — depend de source_line_height)"),

@@ -1105,6 +1105,37 @@ class TranslationPipeline:
             _ink_h = min(_ink_h, _poly_h)
         det.source_line_height = _ink_h or _poly_h
 
+        # Bande d'encre RÉELLE de chaque ligne source, mesurée dans son polygone
+        # OCR. `_draw_exact_lines` centrait la ligne rendue dans le polygone, or
+        # celui-ci contient de la place de jambage que des capitales n'occupent
+        # pas : le texte ressortait trop haut de 20 px médian sur les 28 zones
+        # encore décentrées. On lui donne la position VRAIE plutôt qu'une
+        # approximation géométrique.
+        try:
+            _ink = getattr(det, 'chirurgical_mask', None)
+            _regs = getattr(det, 'text_regions', None)
+            if isinstance(_ink, np.ndarray) and _ink.size and _regs:
+                _h, _w = _ink.shape[:2]
+                for _r in _regs:
+                    _pts = _r.get('bbox') if isinstance(_r, dict) else None
+                    if not _pts or len(_pts) < 3:
+                        continue
+                    _ys = [int(q[1]) for q in _pts]
+                    _xs = [int(q[0]) for q in _pts]
+                    _y0, _y1 = max(0, min(_ys)), min(_h, max(_ys))
+                    _x0, _x1 = max(0, min(_xs)), min(_w, max(_xs))
+                    if _y1 <= _y0 or _x1 <= _x0:
+                        continue
+                    _rows = np.count_nonzero(_ink[_y0:_y1, _x0:_x1], axis=1)
+                    if _rows.size == 0 or _rows.max() == 0:
+                        continue
+                    _on = np.nonzero(_rows > max(1.0, 0.05 * float(_rows.max())))[0]
+                    if _on.size:
+                        _r['ink_y0'] = int(_y0 + _on[0])
+                        _r['ink_y1'] = int(_y0 + _on[-1] + 1)
+        except Exception:
+            pass
+
     @staticmethod
     def _write_output_image(out_dir: Path, stem: str, img: np.ndarray) -> Path:
         """
