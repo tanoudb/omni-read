@@ -2549,12 +2549,17 @@ class TextRenderer:
             budget = int(target_lines) + 1
             if length_ratio and length_ratio > 1.0:
                 budget = max(budget, int(math.ceil(target_lines * length_ratio)) + 1)
-            if len(best.get('lines') or []) > budget:
-                # ARBITRAGE, plus rattrapage. On descend en taille comme avant,
-                # mais au lieu de s'arrêter à la première mise en page qui rentre
-                # dans le budget, on CHIFFRE chaque candidate et on garde la
-                # moins coûteuse — le bloc initial compris. Une ligne de trop
-                # coûte `PENALITE_LIGNE_SUP` ; elle ne coûte plus l'infini.
+            def _a_orphelin(lay):
+                ll = [l for l in (lay.get('lines') or []) if l and l.strip()]
+                return len(ll) >= 2 and len(ll[-1].split()) == 1 and len(ll[-1]) <= 6
+
+            # ARBITRAGE de taille par coût. Déclenché quand le découpage dépasse
+            # le budget de lignes OU laisse un mot ORPHELIN : dans les deux cas,
+            # descendre d'un ou deux crans peut donner une mise en page
+            # nettement meilleure pour une perte de corps minime, et le coût
+            # tranche. Une ligne de trop coûte `PENALITE_LIGNE_SUP`, un orphelin
+            # est pénalisé dans `_rag_penalty` ; aucun ne coûte plus l'infini.
+            if len(best.get('lines') or []) > budget or _a_orphelin(best):
                 em = float(em_source) if em_source else (
                     float(max_font_size) / 1.05 if max_font_size else None)
 
@@ -2570,9 +2575,11 @@ class TextRenderer:
                     return c
 
                 meilleur, cout_meilleur = best, _cout(best)
-                # 14 crans suffisent : au-delà, le coût de corps (croissant) ne
-                # peut plus être compensé par le gain de lignes (borné).
-                bas = max(int(self.cfg.min_font_size), int(best['size']) - 14)
+                # 8 crans : assez pour absorber un orphelin ou une ligne de trop
+                # (chacun coûte ~0,15-0,30, soit 2-4 crans de corps), pas plus —
+                # au-delà la perte de corps l'emporte de toute façon.
+                bas = max(int(self.cfg.min_font_size), int(best['size']) - 8)
+                resolu_depuis = 0
                 for size in range(int(best['size']) - 1, bas - 1, -1):
                     cand = self._layout_at_size(
                         text, size, inner_w, inner_h, font_path, use_mask_wrap,
@@ -2583,10 +2590,13 @@ class TextRenderer:
                     c = _cout(cand)
                     if c < cout_meilleur:
                         meilleur, cout_meilleur = cand, c
-                    if len(cand.get('lines') or []) <= budget:
-                        # En dessous, on ne gagne plus de lignes et on perd du
-                        # corps : inutile de continuer.
-                        break
+                    # Arrêt : une fois budget respecté ET orphelin résorbé, on
+                    # explore encore 2 crans (le coût peut encore baisser d'un
+                    # cheveu) puis on s'arrête — inutile de rétrécir davantage.
+                    if len(cand.get('lines') or []) <= budget and not _a_orphelin(cand):
+                        resolu_depuis += 1
+                        if resolu_depuis >= 2:
+                            break
                 if meilleur is not best:
                     meilleur['blocage'] = best.get('blocage')
                     meilleur['arbitrage_budget'] = True

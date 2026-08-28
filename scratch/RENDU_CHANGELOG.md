@@ -1274,3 +1274,28 @@ mineur, et **3 faux positifs** : textes à GLOW coloré (néon) dont le halo
 résiduel après effacement déclenche la mesure alors que le rendu final est
 propre. Distinguer un glyphe résiduel lisible d'un halo diffus demanderait une
 mesure de structure (densité de bords) ; non fait, la métrique reste indicative.
+
+## C2 — L'arbitrage de taille absorbe aussi les orphelins
+`core/renderer.py::_fit_font_hard`. L'arbitrage par coût introduit pour le budget
+de lignes (B1) ne se déclenchait que sur un DÉPASSEMENT de budget. Or un lettreur
+qui voit un mot seul sur la dernière ligne descend d'un cran pour l'absorber —
+exactement le compromis que le coût sait trancher, puisque `_rag_penalty` pénalise
+déjà l'orphelin.
+
+Déclenchement élargi : budget dépassé OU orphelin présent. La descente est bornée
+à 8 crans (un orphelin coûte ~0,15-0,30, soit 2-4 crans de corps ; au-delà la
+perte de corps l'emporte) et s'arrête deux crans après résorption.
+
+Mesuré, `compare final orphelin2` :
+
+| | avant | après |
+|---|---|---|
+| **orphelins** | 87 | **64** |
+| bulles conformes | 366 (58 %) | **383 (61 %)** |
+| `corps_petit` | 107 | 108 |
+| `cap_ratio` p50 | 1,023 | 1,000 |
+
+**23 orphelins résolus, 1 seule régression `corps_petit`.** Vérifié à l'œil :
+« IF YOU'RE OKAY WITH TELLING IT. » passe de 4 lignes (« IT. » orphelin) à 3
+lignes équilibrées ; « IS SOMETHING WRONG, ARAM? » de 3 lignes à 2. Le texte est
+parfois un cran plus petit mais nettement mieux réparti — le geste du lettreur.
