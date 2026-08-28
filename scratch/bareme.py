@@ -74,11 +74,18 @@ SEUILS = {
 # CORPUS
 # ─────────────────────────────────────────────────────────────────────────────
 
-def discover_corpus(root: Path = CORPUS_ROOT):
-    """Une planche par série : le `_merged_part01` du premier chapitre.
+# Planches retenues par série. La `part01` porte le titre et les crédits, donc
+# elle sur-représente les cartouches `out_text` ; la `part02` est du corps de
+# chapitre, avec le dialogue dense sous-représenté sans elle.
+PLANCHES = ("_merged_part01", "_merged_part02")
 
-    Choix déterministe, et c'est exactement la planche sur laquelle les séries 1
-    et 2 ont été travaillées — les mesures passées restent comparables.
+
+def discover_corpus(root: Path = CORPUS_ROOT):
+    """Les planches de `PLANCHES` dans le premier chapitre de chaque série.
+
+    Rend des triplets (série, étiquette de planche, chemin). Le choix est
+    déterministe : deux corpus construits à deux moments contiennent les mêmes
+    images, donc deux runs restent comparables.
     """
     pages = []
     if not root.exists():
@@ -87,13 +94,24 @@ def discover_corpus(root: Path = CORPUS_ROOT):
         chapters = sorted(p for p in series_dir.iterdir() if p.is_dir())
         if not chapters:
             continue
-        imgs = sorted(chapters[0].glob("*_merged_part01.*"))
-        if not imgs:
+        trouve = False
+        for i, motif in enumerate(PLANCHES):
+            imgs = sorted(chapters[0].glob("*%s.*" % motif))
+            if imgs:
+                pages.append((series_dir.name, "p%02d" % (i + 1), imgs[0]))
+                trouve = True
+        if not trouve:
             imgs = sorted(q for q in chapters[0].iterdir()
                           if q.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"})
-        if imgs:
-            pages.append((series_dir.name, imgs[0]))
+            if imgs:
+                pages.append((series_dir.name, "p01", imgs[0]))
     return pages
+
+
+def _cache_dir(series, page):
+    """Un répertoire de cache par PLANCHE : les index de bulle sont locaux à une
+    planche, les mélanger ferait collisionner deux bulles différentes."""
+    return CACHE_ROOT / ("%s__%s" % (_slug(series), page))
 
 
 def _slug(name: str) -> str:
@@ -113,12 +131,12 @@ def build(only=None, force=False):
 
     pages = discover_corpus()
     if only:
-        pages = [(s, p) for s, p in pages if only.lower() in s.lower()]
+        pages = [x for x in pages if only.lower() in x[0].lower()]
     if not pages:
         raise SystemExit("Aucune planche trouvee sous %s" % CORPUS_ROOT)
 
-    todo = [(s, p) for s, p in pages
-            if force or not (CACHE_ROOT / _slug(s) / "dets.pkl").exists()]
+    todo = [x for x in pages
+            if force or not (_cache_dir(x[0], x[1]) / "dets.pkl").exists()]
     print("%d planches au corpus, %d a construire" % (len(pages), len(todo)))
     if not todo:
         return
@@ -136,9 +154,9 @@ def build(only=None, force=False):
     p.segmenter = SmartSegmenter(logger=logger)
     p.ocr_engine = OCREngine(device=p.device)
 
-    for series, img_path in todo:
+    for series, page, img_path in todo:
         t0 = time.perf_counter()
-        cache_dir = CACHE_ROOT / _slug(series)
+        cache_dir = _cache_dir(series, page)
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         img = cv2.imread(str(img_path))
@@ -188,10 +206,10 @@ def build(only=None, force=False):
 
         cv2.imwrite(str(cache_dir / "page.png"), img)
         with open(cache_dir / "dets.pkl", "wb") as f:
-            pickle.dump({"series": series, "image": str(img_path),
+            pickle.dump({"series": series, "page": page, "image": str(img_path),
                          "size": [w, h], "items": items}, f)
-        print("  %s: %d zones, %dx%dpx, %.0fs"
-              % (series, len(items), w, h, time.perf_counter() - t0))
+        print("  %s %s: %d zones, %dx%dpx, %.0fs"
+              % (series, page, len(items), w, h, time.perf_counter() - t0))
 
         del img, det_img, dets, crops, results, items
         import gc
@@ -438,6 +456,7 @@ def measure_bubble(before_c, erased_c, after_c, src_ink, page_ink_c, dbg, item,
         m["source_line_height"] = slh
         m["mode"] = dbg.get("mode", "wrap")
         m["route_costs"] = dbg.get("route_costs") or {}
+        m["blocage"] = dbg.get("blocage") or {}
         m["n_lines"] = dbg.get("n_lines")
         m["fill_ratio"] = dbg.get("fill_ratio")
         m["zone_dx"] = dbg.get("dx")
@@ -478,9 +497,24 @@ def verdict(m):
     v = m.get("ghost_contrast")
     if v is not None and v > S["ghost_contrast"]:
         bad.append("ghost")
-    v = m.get("footprint_ratio")
-    if v is not None and not (S["footprint_ratio_min"] <= v <= S["footprint_ratio_max"]):
-        bad.append("empreinte")
+    # `empreinte` et `trop_de_lignes` ont été RETIRÉS du verdict.
+    #
+    # Tous deux demandent au pavé rendu de reproduire la géométrie du pavé
+    # SOURCE : même aire, même nombre de lignes. C'est impossible à corps
+    # correct dès que la police diffère — celle du studio fait 0,72 de largeur
+    # par hauteur de casse, la nôtre 0,80 (mesuré, cf. changelog). À `cap_ratio`
+    # égal, le même texte prend donc plus de largeur, donc plus de lignes, donc
+    # plus de surface. Ces deux critères pénalisent la justesse.
+    #
+    # Falsification directe, mesurée sur 5 bulles où `empreinte` a doublé :
+    # `cap_ratio` 0,67-0,86 -> 0,91-1,12 (entré dans la cible) et le rendu est
+    # visiblement meilleur — texte lisible au lieu de minuscule. Voir
+    # `planche_ref16_vs_budget-cout_footprint_ratio.png`.
+    #
+    # Ils restent MESURÉS et affichés : un écart énorme reste un signal. Ils ne
+    # décident simplement plus de la conformité, qui repose désormais sur des
+    # critères insensibles à la police : effacement, corps, centrage,
+    # débordement hors ballon, orphelin.
     # Le corps se juge sur `cap_ratio` (pixels des deux cotes) et JAMAIS sur
     # `line_h_ratio` : celui-ci a `source_line_height` au denominateur, donc il
     # change de sens des qu'on touche a la facon de mesurer la source — il
@@ -497,9 +531,7 @@ def verdict(m):
     v = m.get("bubble_overflow_pct")
     if v is not None and v > S["bubble_overflow_pct"]:
         bad.append("debordement")
-    v = m.get("n_lines_delta")
-    if v is not None and v > S["n_lines_delta_max"]:
-        bad.append("trop_de_lignes")
+
     # Le mot seul sur la dernière ligne est le défaut de lettrage le plus
     # visible, et il n'était compté nulle part — seulement affiché en bas de
     # rapport. Un pavé qui finit sur un orphelin n'est pas « conforme ».
@@ -536,9 +568,10 @@ def score(run, only=None, save_pages=False, save_crops=False):
         with open(cache_dir / "dets.pkl", "rb") as f:
             blob = pickle.load(f)
         series, items = blob["series"], blob["items"]
+        page = blob.get("page", "p01")
         img = cv2.imread(str(cache_dir / "page.png"))
         if img is None or not items:
-            print("  %s: rien a noter" % series)
+            print("  %s %s: rien a noter" % (series, page))
             continue
         H, W = img.shape[:2]
 
@@ -629,24 +662,25 @@ def score(run, only=None, save_pages=False, save_crops=False):
             pad = (erased[py1:py2, px1:px2], after[py1:py2, px1:px2], src_pad)
 
             m = measure_bubble(b, e, a, ink, page_ink[y1:y2, x1:x2], dbg, it, pad)
-            m.update({"series": series, "index": i, "class": it["class_name"],
+            m.update({"series": series, "page": page,
+                      "index": i, "class": it["class_name"],
                       "text": (it["text"] or "")[:70], "bbox": it["bbox"]})
             m["defauts"] = verdict(m)
             rows.append(m)
 
             if save_crops:
-                cd = run_dir / "crops" / _slug(series)
+                cd = run_dir / "crops" / ("%s__%s" % (_slug(series), page))
                 cd.mkdir(parents=True, exist_ok=True)
                 cv2.imwrite(str(cd / ("%03d_before.png" % i)), img[py1:py2, px1:px2])
                 cv2.imwrite(str(cd / ("%03d_after.png" % i)), after[py1:py2, px1:px2])
 
         all_rows.extend(rows)
         clean = sum(1 for r in rows if not r["defauts"])
-        print("  %s: %d/%d bulles conformes (%.0fs)"
-              % (series, clean, len(rows), time.perf_counter() - t0))
+        print("  %s %s: %d/%d bulles conformes (%.0fs)"
+              % (series, page, clean, len(rows), time.perf_counter() - t0))
 
         if save_pages:
-            out = run_dir / "pages" / _slug(series)
+            out = run_dir / "pages" / ("%s__%s" % (_slug(series), page))
             out.mkdir(parents=True, exist_ok=True)
             cv2.imwrite(str(out / "erased.png"), erased)
             cv2.imwrite(str(out / "after.png"), after)
@@ -678,8 +712,16 @@ def _pcts(vals):
     return q(0.50), q(0.75), q(0.90)
 
 
-DEFAUTS = ["erase_spill", "ghost", "empreinte", "corps_petit", "corps_gros",
-           "decentre_x", "decentre_y", "debordement", "trop_de_lignes", "orphelin"]
+DEFAUTS = ["erase_spill", "ghost", "corps_petit", "corps_gros",
+           "decentre_x", "decentre_y", "debordement", "orphelin"]
+# Mesurés et affichés, mais NON décisifs (cf. `verdict`).
+INDICATEURS = ["footprint_ratio", "n_lines_delta"]
+
+
+def cle(r):
+    """Identite d'une bulle. La PLANCHE en fait partie : les index sont locaux
+    a une planche, donc deux bulles differentes partagent l'index 0."""
+    return (r["series"], r.get("page", "p01"), r["index"])
 
 
 def load_run(run):
@@ -774,8 +816,8 @@ def sheet_vs(run_a, run_b, n=10, tile_h=230, par="cap_ratio"):
     chiffres dit qu'il a bouge, celle-ci dit dans quel sens.
     """
     a, b = load_run(run_a), load_run(run_b)
-    ra = {(r["series"], r["index"]): r for r in a["rows"]}
-    rb = {(r["series"], r["index"]): r for r in b["rows"]}
+    ra = {cle(r): r for r in a["rows"]}
+    rb = {cle(r): r for r in b["rows"]}
     da, db = RUNS_ROOT / run_a, RUNS_ROOT / run_b
     for d, nm in ((da, run_a), (db, run_b)):
         if not (d / "crops").exists():
@@ -794,10 +836,11 @@ def sheet_vs(run_a, run_b, n=10, tile_h=230, par="cap_ratio"):
 
     tiles = []
     for k in picks:
-        s, i = k
-        orig = cv2.imread(str(da / "crops" / _slug(s) / ("%03d_before.png" % i)))
-        av = cv2.imread(str(da / "crops" / _slug(s) / ("%03d_after.png" % i)))
-        ap = cv2.imread(str(db / "crops" / _slug(s) / ("%03d_after.png" % i)))
+        s, pg, i = k
+        sous = "%s__%s" % (_slug(s), pg)
+        orig = cv2.imread(str(da / "crops" / sous / ("%03d_before.png" % i)))
+        av = cv2.imread(str(da / "crops" / sous / ("%03d_after.png" % i)))
+        ap = cv2.imread(str(db / "crops" / sous / ("%03d_after.png" % i)))
         if orig is None or av is None or ap is None:
             continue
         sc = tile_h / float(max(1, orig.shape[0]))
@@ -806,8 +849,9 @@ def sheet_vs(run_a, run_b, n=10, tile_h=230, par="cap_ratio"):
         sep = np.full((tile_h, 3, 3), 40, dtype=np.uint8)
         body = np.hstack([cells[0], sep, cells[1], sep, cells[2]])
         bar = np.full((26, body.shape[1], 3), 250, dtype=np.uint8)
-        cv2.putText(bar, "%s #%d   ORIGINAL | %s %s=%.2f | %s %s=%.2f"
-                    % (s[:22], i, run_a[:10], par[:7], ra[k][par], run_b[:10], par[:7], rb[k][par]),
+        cv2.putText(bar, "%s %s #%d   ORIGINAL | %s %s=%.2f | %s %s=%.2f"
+                    % (s[:20], pg, i, run_a[:10], par[:7], ra[k][par],
+                       run_b[:10], par[:7], rb[k][par]),
                     (4, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (20, 20, 20), 1, cv2.LINE_AA)
         tiles.append(np.vstack([bar, body]))
 
@@ -842,7 +886,8 @@ def sheet(run, metric="cap_ratio", n=3, tile_h=230):
         raise SystemExit("Crops absents — relancer: score --run %s --crops" % run)
 
     def tile(rec, tag):
-        cd = run_dir / "crops" / _slug(rec["series"])
+        cd = run_dir / "crops" / ("%s__%s" % (_slug(rec["series"]),
+                                              rec.get("page", "p01")))
         b = cv2.imread(str(cd / ("%03d_before.png" % rec["index"])))
         a = cv2.imread(str(cd / ("%03d_after.png" % rec["index"])))
         if b is None or a is None:
@@ -854,8 +899,9 @@ def sheet(run, metric="cap_ratio", n=3, tile_h=230):
         sep = np.full((tile_h, 3, 3), 40, dtype=np.uint8)
         body = np.hstack([b, sep, a])
         bar = np.full((26, body.shape[1], 3), 250, dtype=np.uint8)
-        cv2.putText(bar, "%s #%d  %s=%.2f  [%s]"
-                    % (rec["series"][:26], rec["index"], metric, rec[metric], tag),
+        cv2.putText(bar, "%s %s #%d  %s=%.2f  [%s]"
+                    % (rec["series"][:24], rec.get("page", "p01"),
+                       rec["index"], metric, rec[metric], tag),
                     (4, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (20, 20, 20), 1, cv2.LINE_AA)
         return np.vstack([bar, body])
 
@@ -888,8 +934,8 @@ def sheet(run, metric="cap_ratio", n=3, tile_h=230):
 
 def compare(run_a, run_b):
     a, b = load_run(run_a), load_run(run_b)
-    ra = {(r["series"], r["index"]): r for r in a["rows"]}
-    rb = {(r["series"], r["index"]): r for r in b["rows"]}
+    ra = {cle(r): r for r in a["rows"]}
+    rb = {cle(r): r for r in b["rows"]}
     common = sorted(set(ra) & set(rb))
     print("\n" + "=" * 78)
     print("%s  ->  %s   (%d bulles communes)" % (run_a, run_b, len(common)))
@@ -925,9 +971,9 @@ def compare(run_a, run_b):
     repare = [k for k in common if ra[k]["defauts"] and not rb[k]["defauts"]]
     print("\nReparees : %d   |   Cassees : %d" % (len(repare), len(casse)))
     for k in casse[:12]:
-        print("  X %-26s #%-3d %-28s %s"
-              % (k[0][:26], k[1], ",".join(rb[k]["defauts"])[:28],
-                 (rb[k].get("text") or "")[:34]))
+        print("  X %-22s %s #%-3d %-24s %s"
+              % (k[0][:22], k[1], k[2], ",".join(rb[k]["defauts"])[:24],
+                 (rb[k].get("text") or "")[:30]))
 
 
 if __name__ == "__main__":

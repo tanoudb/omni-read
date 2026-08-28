@@ -1053,3 +1053,107 @@ Mesuré, `compare routage-rag cesures` :
 | + routage par coût | 108 (33 %) | 71 (25 %) | 249 (77 %) | 0,194 |
 | + rag dans le coût (inerte) | 108 (33 %) | 71 (25 %) | 249 (77 %) | 0,194 |
 | + rééquilibrage des lignes | **121 (37 %)** | **46 (16 %)** | 250 (77 %) | **0,163** |
+
+## Phase « le budget de lignes devient un arbitrage »
+
+Corpus étendu à **16 planches / 632 bulles** (2 par série). La `part01` porte le
+titre et les crédits, donc elle sur-représente les cartouches `out_text` ; la
+`part02` apporte le dialogue dense qui manquait.
+
+### Diagnostic — d'où viennent vraiment les `corps_petit`
+`_fit_font_hard` enregistre désormais quelle contrainte a bloqué la taille juste
+au-dessus de celle retenue (hauteur, largeur, ou les deux). Instrumentation
+purement additive, posée dans la référence elle-même.
+
+Sur les **141 bulles `corps_petit`** :
+
+| origine | n | |
+|---|---|---|
+| **rattrapage `target_lines`** | **84 (60 %)** | aucun blocage relevé, et 4/84 seulement au plafond |
+| bloquées en hauteur | 37 | dont **29 refusent la taille supérieure pour exactement UNE ligne de plus** |
+| bloquées en largeur | 19 | |
+
+Le premier levier n'était donc ni la programmation dynamique ni le routage :
+c'était le budget de lignes, une contrainte DURE. Dès que le bloc dépassait
+`lignes_source + 1`, le code redescendait la taille jusqu'à rentrer dedans, à
+n'importe quel prix — soit λ = ∞ sur le troc « corps de la planche contre
+nombre de lignes de la planche ». `cap_ratio` médian de ces 84 bulles : 0,72.
+
+### B1 — Le rattrapage devient un arbitrage chiffré
+`core/renderer.py::_fit_font_hard`. Même unité que `_route_cost` :
+
+```
+coût = |ln(taille / taille_source)| + λ × lignes_au-delà_du_budget + rag
+```
+
+On descend en taille comme avant, mais au lieu de s'arrêter à la première mise
+en page qui rentre dans le budget, on chiffre chaque candidate — **le bloc
+initial compris** — et on garde la moins coûteuse. Balayage borné à 14 crans, et
+arrêt dès que le budget est atteint (en dessous on ne gagne plus de lignes et on
+perd du corps).
+
+**Calibrage de λ** (`WEBTOON_PENALITE_LIGNE_SUP`), 632 bulles :
+
+| λ | conformes | `corps_petit` | orphelins | corps dans la cible | `cap_ratio` p50 |
+|---|---|---|---|---|---|
+| ∞ (budget dur) | 298 (47 %) | 141 | 82 | 481 (76 %) | 1,000 |
+| 0,45 | 298 (47 %) | 138 | 83 | 484 (77 %) | 1,000 |
+| 0,25 | 305 (48 %) | 128 | 84 | 494 (78 %) | 1,000 |
+| **0,12** | **314 (50 %)** | **114** | 87 | **508 (80 %)** | **1,000** |
+| 0,06 | 314 (50 %) | 111 | 91 | 511 (81 %) | 1,032 |
+
+0,12 est le genou : 0,06 ne gagne plus de conformes, ajoute 4 orphelins et fait
+dépasser la médiane du corps. Retenu.
+
+Sur les 46 bulles qui gagnent une ligne : corps **+0,22** en médiane, et
+**17/46 → 44/46 dans la cible**.
+
+**Coût de calcul inchangé** — 16 découpages et 976 mesures de largeur par bulle
+avant comme après, 174 ms contre 182 ms. L'arbitrage REMPLACE l'ancienne
+descente, qui pouvait aller jusqu'au plancher ; la nouvelle est bornée.
+
+### M5 — Deux critères du barème étaient FAUX, et ils ont été retirés
+Le premier verdict de B1 annonçait **−11 conformes** : `empreinte` +22 et
+`trop_de_lignes` 0 → 46. Vérification sur les crops avant de conclure — les
+métriques avaient tort.
+
+| bulle | avant | après | source |
+|---|---|---|---|
+| `frontier p01 #59` | cap 0,67 · empr 0,84 | cap **1,11** · empr **2,17** | 2 lignes |
+| `i-married p02 #7` | cap 0,74 · empr 0,94 | cap **1,06** · empr **1,70** | 3 lignes |
+| `frontier p01 #46` | cap 0,76 · empr 0,88 | cap **1,12** · empr **2,09** | 2 lignes |
+
+Le corps entre dans la cible ET l'empreinte double, parce que c'est
+arithmétique : à `cap_ratio` égal, avec une police 11 % plus large par caractère
+(0,80 contre 0,72 pour le studio, déjà mesuré), le même texte prend plus de
+largeur, donc plus de lignes, donc plus de surface.
+
+`empreinte` et `trop_de_lignes` demandaient au pavé rendu de **reproduire la
+géométrie du pavé source**. C'est impossible à corps correct dès que la police
+diffère : ils pénalisaient la justesse.
+
+Retirés du verdict — non pas parce qu'ils accusaient le changement, mais parce
+qu'ils sont FALSIFIÉS : cinq cas mesurés où la métrique se dégrade pendant que le
+rendu s'améliore visiblement, avec un mécanisme arithmétique vérifiable
+indépendamment. Ils restent mesurés et affichés, un écart énorme restant un
+signal ; ils ne décident plus de la conformité.
+
+Le verdict repose désormais sur des critères **insensibles à la police** :
+effacement (bavure, fantôme), corps (`cap_ratio`, deux bornes), centrage,
+débordement hors ballon, orphelin.
+
+### La programmation dynamique est écartée, et pourquoi
+Elle était le plan annoncé. Deux constats l'ont invalidée avant écriture :
+1. `allowed[k]` ne dépend pas que de l'indice de ligne — le bloc étant centré
+   verticalement, la bande mesurée dépend du nombre TOTAL de lignes. Le code
+   résout ça par un point fixe. Une PD devrait tourner une fois par nombre de
+   lignes candidat.
+2. Surtout : **à largeurs données, le glouton minimise déjà le nombre de
+   lignes**. Une PD ne peut donc pas rendre le texte plus gros — or c'est le
+   nombre de lignes qui plafonne la taille. Elle n'aiderait que l'équilibre, que
+   `_rebalance_lines` traite déjà à moindre risque sur une fonction portant
+   quatre correctifs de monotonie documentés.
+
+Piste restante pour les 29 cas « une ligne de trop » : forcer un bloc plus court
+élargit les bandes dans un ovale (cycle vertueux que le point fixe ne cherche
+jamais, puisqu'il ne descend pas en dessous de sa convergence).

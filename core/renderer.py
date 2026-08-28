@@ -25,6 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 from typing import Tuple, Optional, List, Dict, Any
 from pathlib import Path
 import math
+import os
 import re
 import logging
 import torch
@@ -2312,6 +2313,23 @@ class TextRenderer:
     # du même ordre que le pire déséquilibre.
     POIDS_ORPHELIN = 0.30
 
+    # Prix d'une ligne AU-DELÀ du découpage de la planche, en unités
+    # logarithmiques de corps — même échelle que `_route_cost`.
+    #
+    # L'ancien budget était une contrainte DURE : dès que le bloc dépassait
+    # `lignes_source + 1`, on redescendait la taille jusqu'à rentrer dedans, à
+    # n'importe quel prix. Autrement dit λ = ∞. Mesuré sur le corpus 16
+    # planches : **84 des 141 bulles `corps_petit` sortent de ce rattrapage**,
+    # pas d'un défaut d'ajustement — elles ne butent sur rien (aucun blocage
+    # relevé) et ne sont pas au plafond (4/84). Leur `cap_ratio` médian tombe à
+    # 0,72.
+    #
+    # La police de rendu étant plus large que celle du studio, le même texte a
+    # légitimement besoin de plus de lignes : le nombre de lignes de la planche
+    # est une INDICATION, pas une contrainte. 0,12 se lit « une ligne de plus
+    # est acceptable si elle rapporte plus de 12 % de corps ».
+    PENALITE_LIGNE_SUP = float(os.environ.get("WEBTOON_PENALITE_LIGNE_SUP", "0.12"))
+
     def _rebalance_lines(
         self, lines: List[str], allowed: List[float], font: ImageFont.FreeTypeFont,
     ) -> List[str]:
@@ -2437,6 +2455,12 @@ class TextRenderer:
             'total_h': total_h,
             'max_line_w': max_line_w,
             'line_centers': line_centers,
+            # Les deux contraintes SÉPARÉMENT : savoir laquelle mord dit où est
+            # la marge de manoeuvre. Une taille bloquée par la HAUTEUR ne peut
+            # être débloquée qu'en enlevant une ligne ; bloquée par la LARGEUR,
+            # c'est le découpage qui est en cause.
+            'fits_h': total_h <= inner_h,
+            'fits_w': fits_width,
             'fits': total_h <= inner_h and fits_width,
         }
 
@@ -2447,6 +2471,7 @@ class TextRenderer:
         max_font_size: Optional[int] = None, mask_x_origin: float = 0.0,
         target_lines: Optional[int] = None,
         length_ratio: Optional[float] = None,
+        em_source: Optional[float] = None,
     ) -> Optional[Dict]:
         """
         Cherche la PLUS GRANDE taille qui tient dans la zone, par dichotomie.
@@ -2472,6 +2497,8 @@ class TextRenderer:
         hi = max(lo, hi)
 
         best: Optional[Dict] = None
+        # Contrainte qui a bloqué la taille juste au-dessus de la retenue.
+        blocage: Optional[Dict] = None
         while lo <= hi:
             mid = (lo + hi) // 2
             layout = self._layout_at_size(
@@ -2483,7 +2510,16 @@ class TextRenderer:
                 best = layout
                 lo = mid + 1
             else:
+                if blocage is None or mid < blocage['size']:
+                    blocage = {
+                        'size': mid,
+                        'hauteur': not layout['fits_h'],
+                        'largeur': not layout['fits_w'],
+                        'n_lines': len(layout.get('lines') or []),
+                    }
                 hi = mid - 1
+        if best is not None and blocage is not None:
+            best['blocage'] = blocage
 
         # « Tient » ne suffit pas comme critère : maximiser la taille produit
         # volontiers un empilement de mots isolés qui tient très bien dans la
@@ -2514,16 +2550,47 @@ class TextRenderer:
             if length_ratio and length_ratio > 1.0:
                 budget = max(budget, int(math.ceil(target_lines * length_ratio)) + 1)
             if len(best.get('lines') or []) > budget:
-                for size in range(int(best['size']) - 1, int(self.cfg.min_font_size) - 1, -1):
+                # ARBITRAGE, plus rattrapage. On descend en taille comme avant,
+                # mais au lieu de s'arrêter à la première mise en page qui rentre
+                # dans le budget, on CHIFFRE chaque candidate et on garde la
+                # moins coûteuse — le bloc initial compris. Une ligne de trop
+                # coûte `PENALITE_LIGNE_SUP` ; elle ne coûte plus l'infini.
+                em = float(em_source) if em_source else (
+                    float(max_font_size) / 1.05 if max_font_size else None)
+
+                def _cout(lay):
+                    if lay is None or not lay.get('fits'):
+                        return float('inf')
+                    c = 0.0
+                    if em and em > 0 and lay.get('size'):
+                        c += abs(math.log(float(lay['size']) / em))
+                    sup = max(0, len(lay.get('lines') or []) - budget)
+                    c += self.PENALITE_LIGNE_SUP * sup
+                    c += self._rag_penalty(lay.get('lines'))
+                    return c
+
+                meilleur, cout_meilleur = best, _cout(best)
+                # 14 crans suffisent : au-delà, le coût de corps (croissant) ne
+                # peut plus être compensé par le gain de lignes (borné).
+                bas = max(int(self.cfg.min_font_size), int(best['size']) - 14)
+                for size in range(int(best['size']) - 1, bas - 1, -1):
                     cand = self._layout_at_size(
                         text, size, inner_w, inner_h, font_path, use_mask_wrap,
                         bubble_mask, mask_y_offset, mask_x_origin,
                     )
                     if cand is None:
                         break
-                    if cand['fits'] and len(cand['lines']) <= budget:
-                        best = cand
+                    c = _cout(cand)
+                    if c < cout_meilleur:
+                        meilleur, cout_meilleur = cand, c
+                    if len(cand.get('lines') or []) <= budget:
+                        # En dessous, on ne gagne plus de lignes et on perd du
+                        # corps : inutile de continuer.
                         break
+                if meilleur is not best:
+                    meilleur['blocage'] = best.get('blocage')
+                    meilleur['arbitrage_budget'] = True
+                best = meilleur
 
         if best is not None:
             return best
@@ -3729,6 +3796,7 @@ class TextRenderer:
                 "inner_w_used": inner_w,
                 "source_line_height": source_line_height,
                 "fs_estimate": fs, "font_size_final": layout['size'],
+                "blocage": layout.get('blocage'),
                 "n_lines": len(lines_dbg), "lines": list(lines_dbg),
                 "line_h_px": line_h_dbg, "spacing_px": spacing_dbg,
                 # Largeurs d'encre REELLES : le barème mesurait l'équilibre en
