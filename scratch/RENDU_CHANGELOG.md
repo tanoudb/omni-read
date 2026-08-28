@@ -1224,3 +1224,53 @@ Isolé de l'effet barème en re-notant les deux rendus avec le code de mesure fi
 sont soit une amélioration mal étiquetée (`frontier #32` : cap 0,45 → 1,30, sortie
 du trop-petit), soit un rendu visuellement correct dont la vraie hauteur d'encre
 n'était révélée que par le bon placement (`30-years #15`).
+
+## Bilan visuel et défauts flagrants résiduels (2026-08-28)
+
+Après les correctifs de la journée (corps calé sur l'encre, routage par coût,
+rééquilibrage, centrage vertical), inspection de planches COMPLÈTES rendues pour
+juger la qualité perçue, que le barème ne capture qu'indirectement.
+
+**i-married-the-dragon (pire série au barème, ~40 % conforme) rend en fait à un
+niveau quasi-professionnel** : texte centré, couleurs d'origine préservées
+(bordeaux, blanc sur cartouche sombre), cartouches nets, effacement propre. Le
+barème strict (58 % global) sous-estime la qualité perçue : la plupart de ses
+« défauts » (corps un cran petit, décentrage < 10 %, orphelin) sont
+imperceptibles à l'œil.
+
+### Défauts flagrants résiduels, tous RARES et HORS du scope « rendu »
+
+Ce sont eux qui trahiraient l'automatisation, mais ils sont peu nombreux et leur
+cause est en amont du rendu :
+
+1. **Texte hors ballon** (~2-3 bulles) — `hellogin p02 #41` (texte 150 px sous
+   sa bulle), `p01 #16` (texte à droite du ballon). Diagnostiqué : la **bbox de
+   détection ne couvre pas le ballon** (décalée), le texte source lui-même est
+   hors de la bbox. Le centroïde de `mask_binary` tombe au centre de la bbox
+   (donc pas sur le vrai texte), et un recentrage dessus EMPIRE le cas (essayé,
+   mesuré, annulé). Corrigeable seulement côté DÉTECTION (YOLO), pas rendu.
+
+2. **Effacement tronqué** (~5-8 bulles, 1 %) — `30-years p01 #14` : le masque
+   d'effacement s'arrête à x≈432 alors que l'encre va à ~600, laissant
+   « RELATIONSHIP / CHARACTERS / WORK » (les fins de ligne) non effacées, qui
+   transparaissent sous le nouveau texte. Le seuillage Otsu par ligne rate le
+   texte noir sur la partie où le fond passe du blanc au beige sombre (arche).
+   Mesuré : `chirurgical_mask` du segmenter est tronqué de la même façon.
+   Un Otsu reconstruit capterait 98 %, mais l'effacement utilise
+   `chirurgical_mask` (segmenter). Fix côté segmentation, hors rendu ; et 1 % de
+   cas ne justifie pas de risquer les 99 % via un changement de masque.
+
+3. **Filigranes et logos** (VORTEXSCANS.COM, logo « THE CLEANER ») — hors
+   périmètre convenu.
+
+**Conclusion** : le rendu est à un niveau quasi-professionnel sur la masse. Les
+défauts bloquants pour un « 100 % pro » relèvent de la détection de boîte et de
+la segmentation (amont), déjà identifiées comme PRIORITÉ 0 d'une session
+antérieure et non résolues — un chantier distinct du travail de rendu.
+
+### Métrique `residu` — faux positifs restants (barème)
+Sur les 6 pires `residu`, 2 vrais défauts (texte dupliqué, hors ballon), 1 SFX
+mineur, et **3 faux positifs** : textes à GLOW coloré (néon) dont le halo
+résiduel après effacement déclenche la mesure alors que le rendu final est
+propre. Distinguer un glyphe résiduel lisible d'un halo diffus demanderait une
+mesure de structure (densité de bords) ; non fait, la métrique reste indicative.
