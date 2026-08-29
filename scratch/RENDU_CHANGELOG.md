@@ -1319,3 +1319,42 @@ de fond happé par erreur est centré ailleurs (176 px ici) et se fait rejeter.
 Mesuré : `dy` de #41 passe de **+153 px à +15 px** (texte dans la bulle), et sur
 les 632 bulles **une SEULE bouge** — exactement le cas pathologique. Zéro
 régression (decentre_y −1, debordement −1, aucune bulle cassée). Vérifié à l'œil.
+
+## L2 — Effacement tronqué : détecteur de résidu hors-masque, essayé et ÉCARTÉ
+Le second défaut de confort de lecture après le hors-ballon : du texte anglais
+résiduel visible (30-years p01 #14, « RELATIONSHIP / CHARACTERS / WORK » à droite
+des lignes).
+
+Diagnostic confirmé : les polygones OCR — et donc `chirurgical_mask` et
+`block_mask` — s'arrêtent à x≈432 alors que l'encre va à ~600. Le seuillage rate
+le texte noir là où le fond passe du blanc (fenêtre) au beige (arche). Les deux
+détecteurs de la 2e passe (`_erasure_failed`, `_ghost_remains`) regardent DANS le
+masque, où tout est propre ; le résidu vit HORS du masque.
+
+Essayé : (1) un détecteur `_residual_outside_mask` cherchant l'encre dans
+`block_mask` mais hors du masque d'effacement, pour déclencher la 2e passe ;
+(2) un rattrapage par contenu élargissant les bandes de lignes en X.
+
+**Écarté, mesuré.** Le rattrapage ne résout pas #14 : `interior_limit` (intérieur
+du ballon) exclut la zone droite, car #14 est un cartouche de narration sur DÉCOR
+(arche + fenêtre) mal classé `bulle`, sans « intérieur » à droite. Et le détecteur
+seul, au barème : residu 17 → 17 (aucun cas résolu) et erase_spill 27 → 28 (une
+bulle sur-effacée). Effet net négatif. Les deux annulés.
+
+La cause racine est l'OCR qui tronque ses polygones sur fond contrasté — un
+problème de détection de texte, en amont du rendu. ~5-8 cas sur 632 (1 %). Non
+traité côté rendu : le risque sur les 99 % dépasse le gain sur 1 %.
+
+## Bilan confort de lecture (demande utilisateur)
+
+Priorité recadrée par l'utilisateur : le CONFORT DE LECTURE (lire sans s'arrêter,
+ne pas casser le rythme). Ce sont les défauts FLAGRANTS qui cassent le rythme, pas
+le corps un cran petit.
+
+- **Texte hors ballon** (le pire — l'œil cherche le texte) : CORRIGÉ (L1, container
+  faux rejeté). hellogin p02 #41 : texte remis dans sa bulle.
+- **Taille lisible** : médiane 36 px, 90 % du texte ≥ 20 px, 8/632 seulement sous
+  16 px. Les `cap_ratio` très bas sont des out_text stylisés (source énorme) dont
+  le rendu reste gros et lisible (fs 35-80). Pas de problème de lisibilité de masse.
+- **Lignes équilibrées** (fluidité) : orphelins 25 % → 10 % sur la session.
+- **Effacement propre** sauf ~5-8 cas d'OCR tronqué (L2, hors rendu).
