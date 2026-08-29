@@ -70,3 +70,8 @@ scratch/audit_propre/
 scratch/diag/
 manhwa_trad/
 traductions_propres/
+
+# Artefacts de rendu/diagnostic — regenerables, jamais versionnes (nettoyage 2026-08-29)
+scratch/out/
+tmp/
+scratch/cache/
