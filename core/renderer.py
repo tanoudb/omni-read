@@ -718,8 +718,34 @@ class TextRenderer:
                     ):
                         fill_limit = limit
 
+        # Cartouche / titre / interface sur fond UNIFORME dont le masque OCR ne
+        # couvre qu'une partie des lettres : on efface toute l'encre de la boîte
+        # par la teinte du fond, sans dépendre de la couverture du masque.
+        # Ne se déclenche que sur fond uni ET masque sous-couvrant (verrous
+        # internes) : les bulles normales tombent à travers, inchangées.
+        det_box = (max(0, x1 - crop_x1), max(0, y1 - crop_y1),
+                   min(crop_w, x2 - crop_x1), min(crop_h, y2 - crop_y1))
+        uni = self._uniform_bg_erase(crop, local_mask, local_bubble,
+                                     region_box=det_box, class_name=class_name)
+        if uni is not None:
+            img[crop_y1:crop_y2, crop_x1:crop_x2] = uni
+            return img
+
         flat = self._flat_fill_color(crop, local_mask, local_bubble_mask=local_bubble, class_name=class_name)
-        if flat is not None:
+        # L'aplat (et le modele lisse) posent une couleur ~unique. Parfait sur
+        # un fond uni, mais quand ce fond VARIE sous le texte — texte a cheval
+        # sur l'arche beige et la fenetre blanche (30-years p01 #14), ou masque
+        # debordant d'une petite bulle sur un decor sombre — cette couleur
+        # unique se DEVERSE sur toute l'emprise et ruine le decor (taches
+        # blanches). `_flat_deverse` le mesure en comparant l'aplat a une
+        # reconstruction locale sous le masque. Dans ce cas on saute l'aplat ET
+        # le modele lisse (qui deverserait pareil) pour rendre la main a LaMa,
+        # seul a reconstruire la TEXTURE du fond plutot qu'une teinte moyenne.
+        # Mesure sur 979 zones : ne se declenche que sur 3 (dont #14), aucune
+        # bulle a fond uni ni a couronne rayonnante (ou LaMa laisserait un
+        # fantome) n'y tombe — verifie a l'oeil.
+        deverse = flat is not None and self._flat_deverse(crop, local_mask, flat)
+        if flat is not None and not deverse:
             inside_box = np.zeros((crop_h, crop_w), dtype=np.uint8)
             bx1, by1 = max(0, x1 - crop_x1), max(0, y1 - crop_y1)
             bx2, by2 = min(crop_w, x2 - crop_x1), min(crop_h, y2 - crop_y1)
@@ -750,7 +776,7 @@ class TextRenderer:
         # domine toutes les statistiques). Il est AUTO-VALIDÉ : on construit le
         # modèle lisse, puis on regarde s'il explique les pixels NON masqués du
         # voisinage. S'il les explique, il explique aussi ceux qu'on remplace.
-        smooth = self._smooth_fill(crop, local_mask)
+        smooth = None if deverse else self._smooth_fill(crop, local_mask)
         if smooth is not None:
             img[crop_y1:crop_y2, crop_x1:crop_x2] = smooth
             return img
@@ -808,6 +834,11 @@ class TextRenderer:
                     # On garde la passe qui laisse le MOINS de structure.
                     if self._ghost_score(erased2, wider) < self._ghost_score(erased, local_mask):
                         erased = erased2
+
+                # Dernier soin : là où le fond est uniforme sous le masque, LaMa
+                # laisse un fantôme gris — on y repose la teinte locale exacte
+                # (aplat de la fenêtre blanche de #14, arche beige laissée à LaMa).
+                erased = self._split_flatten(crop, local_mask, erased)
 
                 img[crop_y1:crop_y2, crop_x1:crop_x2] = erased
                 return img
@@ -1464,6 +1495,226 @@ class TextRenderer:
             return keep.astype(np.uint8) * 255
         except Exception:
             return mask
+
+    @staticmethod
+    def _uniform_bg_erase(crop: np.ndarray, mask: np.ndarray,
+                          local_bubble: Optional[np.ndarray] = None,
+                          grow: int = 4,
+                          region_box: Optional[tuple] = None,
+                          class_name: str = "") -> Optional[np.ndarray]:
+        """Efface un cartouche / titre / interface posé sur un fond QUASI PUR
+        (blanc ou noir), sans faire confiance au masque OCR. Sur un tel fond,
+        « l'encre = tout ce qui n'est pas le fond » : on repeint toute l'encre de
+        la boîte par la teinte du fond — y compris les hauts/bas de glyphes qui
+        débordent d'une bbox courte ou les mots que l'OCR a manqués (« GOLDEN
+        AGE » : masque OCR sur 60 % des lettres, LaMa redessinait le reste).
+
+        Réservé à out_text / System (la cible réelle des fantômes) : ouvert aux
+        bulles, il peignait un rectangle dès qu'une bbox mordait sur le décor
+        (mesuré : 30-years #3, rectangle blanc sur un visage). Trois verrous
+        contre toute destruction de décor :
+          1. fond QUASI PUR (≥248 ou ≤10 sur les 3 canaux) — écarte les scènes
+             claires mais texturées dont la médiane trompe (~240) ;
+          2. couronne homogène (≥85 % dans 20) ;
+          3. le texte est MINORITAIRE dans la boîte (< 45 %) et la surface
+             repeinte reste < 60 % — sinon la teinte « fond » est en fait du
+             décor pris pour fond : on renonce.
+        """
+        try:
+            if str(class_name).lower() not in ("out_text", "system"):
+                return None
+            h, w = crop.shape[:2]
+            core = mask > 0
+            if int(np.count_nonzero(core)) < 40:
+                return None
+            k_out = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (31, 31))
+            k_in = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+            # NB : pas d'intersection avec `local_bubble` — en mode hybride c'est
+            # un masque de LETTRES, l'y croiser viderait la couronne.
+            ring = (cv2.dilate(mask, k_out) > 0) & (cv2.dilate(mask, k_in) == 0)
+            samp = crop[ring].reshape(-1, 3).astype(np.float32)
+            if samp.shape[0] < 80:
+                return None
+            ref = np.median(samp, axis=0)
+            near_white = bool(np.all(ref >= 248))
+            near_black = bool(np.all(ref <= 10))
+            if not (near_white or near_black):
+                return None                       # fond ni blanc ni noir quasi pur
+            # La couronne est CONTAMINÉE par le débord d'encre (haut/bas de
+            # glyphes qui percent l'anneau) : exiger 85 % de fond y écarterait à
+            # tort « GOLDEN AGE » (bulk noir ~65 %). On demande donc seulement
+            # que le fond soit MAJORITAIRE (≥55 %) ; la vraie sûreté tient à la
+            # teinte quasi pure (verrou 1) et à l'encre minoritaire (verrou 3).
+            tol = 20.0
+            dev = np.abs(samp - ref).max(axis=1)
+            if float(np.mean(dev <= tol)) < 0.55:
+                return None                       # fond même pas majoritaire
+            ys, xs = np.nonzero(core)
+            bx1, bx2 = int(xs.min()), int(xs.max())
+            by1, by2 = int(ys.min()), int(ys.max())
+            # La boîte se cale sur la bbox de DÉTECTION quand elle est fournie :
+            # le masque OCR peut être court (« GOLDEN AGE ») alors que la bbox
+            # couvre tout le texte.
+            if region_box is not None:
+                rx1, ry1, rx2, ry2 = region_box
+                bx1, by1 = min(bx1, int(rx1)), min(by1, int(ry1))
+                bx2, by2 = max(bx2, int(rx2)), max(by2, int(ry2))
+            bh, bw = by2 - by1, bx2 - bx1
+            # Pad borné au rayon de couronne (15 px) : au-delà l'uniformité n'a
+            # pas été vérifiée. Il ne sert qu'à rattraper le débord de glyphe.
+            padx, pady = min(int(round(0.06 * bw)), 15), min(int(round(0.35 * bh)), 15)
+            ax1, ay1 = max(0, bx1 - padx), max(0, by1 - pady)
+            ax2, ay2 = min(w, bx2 + padx + 1), min(h, by2 + pady + 1)
+            inbox = np.zeros((h, w), bool)
+            inbox[ay1:ay2, ax1:ax2] = True
+            inbox_area = max(1, (ay2 - ay1) * (ax2 - ax1))
+            # VERROU DÉCOR INTRUSIF : le TEXTE est contenu dans la boîte ; un
+            # DÉCOR (la chevelure noire d'a-mountain #8, même teinte que le texte)
+            # DÉBORDE de la boîte. On repère donc tout gros amas « non-fond » qui a
+            # une part significative HORS de la boîte : c'est du décor qui entre,
+            # pas un glyphe — on renonce et on laisse LaMa gérer.
+            devref = np.abs(crop.astype(np.float32) - ref).max(axis=2)
+            raw_full = (devref > 45.0).astype(np.uint8)
+            nrw, lrw, strw, _ = cv2.connectedComponentsWithStats(raw_full, 8)
+            for ci in range(1, nrw):
+                a = int(strw[ci, cv2.CC_STAT_AREA])
+                if a <= 0.15 * inbox_area:
+                    continue                      # petit = glyphe, on ignore
+                comp = (lrw == ci)
+                in_box = int(np.count_nonzero(comp & inbox))
+                if in_box >= 50 and (a - in_box) > 0.30 * a:
+                    return None                   # décor débordant → flux normal
+            # On ne repeint QUE l'encre à la TEINTE DES LETTRES, jamais « tout ce
+            # qui n'est pas le fond » : sinon un décor coloré qui chevauche la
+            # boîte (le liseré JAUNE de savior #4) serait pris pour de l'encre et
+            # blanchi. La teinte des lettres = mode des pixels du cœur situés à
+            # l'EXTRÊME opposé du fond (sombres sur fond blanc, clairs sur noir).
+            core_pix = crop[core].reshape(-1, 3).astype(np.float32)
+            if near_white:
+                letters = core_pix[core_pix.max(axis=1) < 160]
+            else:
+                letters = core_pix[core_pix.min(axis=1) > 95]
+            if letters.shape[0] < 20:
+                return None                       # pas d'encre franche à effacer
+            ink_color = np.median(letters, axis=0).reshape(1, 1, 3)
+            inkimg = np.abs(crop.astype(np.float32) - ink_color).max(axis=2) < 70.0
+            total_ink = int(np.count_nonzero(inkimg & inbox))
+            # VERROU DÉCOR : le texte est forcément minoritaire sur un cartouche.
+            if total_ink == 0 or total_ink > 0.45 * inbox_area:
+                return None
+            uncovered = int(np.count_nonzero(inkimg & inbox & (~core)))
+            if uncovered < 0.15 * total_ink:
+                return None                       # masque déjà suffisant → flux normal
+            # On peint SEULEMENT l'encre teinte-lettres (+ halo d'anti-aliasing),
+            # pas le bloc entier : le décor coloré et le fond ne sont pas touchés.
+            sel = (inkimg & inbox).astype(np.uint8) * 255
+            sel = cv2.dilate(sel, cv2.getStructuringElement(
+                cv2.MORPH_ELLIPSE, (2 * grow + 1, 2 * grow + 1)))
+            selb = (sel > 0) & inbox
+            out = crop.copy()
+            out[selb] = np.clip(ref, 0, 255).astype(np.uint8)
+            return out
+        except Exception:
+            return None
+
+    @staticmethod
+    def _split_flatten(crop: np.ndarray, mask: np.ndarray, erased: np.ndarray,
+                       std_thr: float = 4.0, ksize: int = 41,
+                       grow: int = 5, halo_tol: int = 45,
+                       min_known: float = 0.20) -> np.ndarray:
+        """Effacement SPLIT : sur les sous-régions du masque dont le fond local
+        est UNIFORME, remplace le rendu LaMa — qui y laisse un fantôme gris —
+        par la couleur médiane locale EXACTE, étendue de quelques pixels pour
+        engloutir le halo d'anti-aliasing (invisible, le fond y est déjà de
+        cette teinte). Les sous-régions TEXTURÉES gardent LaMa.
+
+        C'est la réponse au dernier défaut de 30-years p01 #14 : texte à cheval
+        sur une fenêtre BLANCHE (uniforme) et une arche BEIGE (texturée). LaMa
+        seul reconstruit un gris moyen sur le blanc et laisse lire le texte ;
+        l'aplat seul déverserait du blanc sur l'arche. Le split donne un blanc
+        parfait sur la fenêtre et laisse LaMa reconstruire l'arche.
+
+        Ne s'active que dans la branche LaMa (fonds difficiles) : les bulles à
+        fond uni passent déjà par `_flat_fill_color`. Sûr par construction : on
+        ne pose une couleur que là où le fond est mesurément uniforme ET où le
+        voisinage contient assez de fond connu (`min_known`) pour que la médiane
+        soit fiable — un dégradé (bulle rayonnante) a un `std` élevé et reste à
+        LaMa.
+        """
+        try:
+            m = mask > 0
+            if int(np.count_nonzero(m)) < 30:
+                return erased
+            # Les cartouches à masque trop court (fond uni, encre débordante)
+            # sont traités en amont par `_uniform_bg_erase` ; ici on ne vise que
+            # le fantôme gris de LaMa sur les sous-régions uniformes d'un fond
+            # MIXTE (fenêtre blanche + arche beige de #14), où le masque colle
+            # déjà aux lettres. On estime donc le fond en excluant le seul
+            # masque : l'exclure plus large priverait la fenêtre de ses pixels
+            # blancs de référence et laisserait revenir le fantôme.
+            known = (mask == 0).astype(np.float32)
+            img = crop.astype(np.float32)
+            K = (ksize, ksize)
+            cnt = cv2.boxFilter(known, -1, K, normalize=False)
+            enough = cnt > (min_known * ksize * ksize)
+            cnt = cnt + 1e-6
+            mean = np.empty_like(img)
+            var = np.zeros(img.shape[:2], np.float32)
+            for c in range(3):
+                mc = cv2.boxFilter(img[:, :, c] * known, -1, K, normalize=False) / cnt
+                s2 = cv2.boxFilter((img[:, :, c] ** 2) * known, -1, K, normalize=False) / cnt
+                mean[:, :, c] = mc
+                var = np.maximum(var, s2 - mc * mc)
+            std = np.sqrt(np.clip(var, 0, None))
+            uniform = (std < std_thr) & enough
+            sel = m & uniform
+            if not sel.any():
+                return erased
+            out = erased.copy()
+            mean_u8 = np.clip(mean, 0, 255).astype(np.uint8)
+            out[sel] = mean_u8[sel]
+            # Halo : engloutir l'anti-aliasing autour des lettres aplaties, sans
+            # sortir de la zone uniforme ni s'éloigner de sa teinte.
+            sel_u = np.zeros(crop.shape[:2], np.uint8)
+            sel_u[sel] = 255
+            grown = cv2.dilate(
+                sel_u, cv2.getStructuringElement(
+                    cv2.MORPH_ELLIPSE, (2 * grow + 1, 2 * grow + 1)))
+            diff = np.abs(img - mean).max(axis=2)
+            add = (grown > 0) & uniform & (diff < halo_tol) & (~sel)
+            out[add] = mean_u8[add]
+            return out
+        except Exception:
+            return erased
+
+    @staticmethod
+    def _flat_deverse(crop: np.ndarray, mask: np.ndarray, flat: np.ndarray,
+                      dev_thr: int = 30, cc_thr: int = 800) -> bool:
+        """L'aplat `flat` deverserait-il sa couleur sur un fond qui differe ?
+
+        On reconstruit le fond localement par inpainting Telea (rapide, CPU,
+        sensible a la TEXTURE, contrairement a une couleur mediane qui se laisse
+        dominer par la teinte majoritaire) et on regarde ou il s'ecarte de
+        l'aplat SOUS le masque. Si cet ecart forme une composante connexe d'au
+        moins `cc_thr` px, l'aplat va peindre une couleur unique sur une zone
+        que le fond veut differente : on renonce a l'aplat.
+
+        Calibre sur 979 zones (23 series) : p99 du plus grand ecart connexe = 152
+        px ; seules 3 zones depassent 800 (30-years #14 texte a cheval
+        arche/fenetre, et deux masques debordant sur un decor sombre), toutes
+        mieux traitees par l'inpainting. `True` = renoncer a l'aplat.
+        """
+        try:
+            tel = cv2.inpaint(crop, mask, 3, cv2.INPAINT_TELEA).astype(np.int16)
+            fl = np.asarray(flat, dtype=np.int16).reshape(1, 1, 3)
+            dev = np.abs(tel - fl).max(axis=2)
+            ne = ((dev > dev_thr) & (mask > 0)).astype(np.uint8)
+            n, _, st, _ = cv2.connectedComponentsWithStats(ne, 8)
+            if n <= 1:
+                return False
+            return int(st[1:, cv2.CC_STAT_AREA].max()) >= cc_thr
+        except Exception:
+            return False
 
     @staticmethod
     def _flat_fill_color(

@@ -1,0 +1,770 @@
+[
+ {
+  "series": "archmage-curriculum",
+  "page": "p01",
+  "index": 11,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme net en blocs sombres qui suit exactement le contour de 'AN UNPRECEDENTED GOLDEN AGE,' sur le fond noir, silhouette du texte clairement lisible en négatif."
+ },
+ {
+  "series": "hellogin",
+  "page": "p01",
+  "index": 4,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "La flèche de navigation gauche '◄' a été effacée par erreur et remplacée par un aplat blanchâtre flou qui ne correspond pas au fond texturé (arbre/pétales) ; la flèche droite, elle, est restée intacte — décor endommagé hors du texte."
+ },
+ {
+  "series": "hellogin",
+  "page": "p02",
+  "index": 6,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "Mur en briques et feuillage floutés/lissés sur toute la zone où était 'BEGINNER GUIDE NPC EVE' — perte nette des joints de briques, plus une petite tache résiduelle sombre en bas à gauche de la zone."
+ },
+ {
+  "series": "hellogin",
+  "page": "p02",
+  "index": 13,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "minor",
+  "note": "Léger flou/lissage du grain du parchemin juste sous l'emblème, à l'endroit où était le titre 'LAST EDEN' (aucune lettre lisible mais texture non reconstruite) ; le paragraphe et le reste du papier sont propres."
+ },
+ {
+  "series": "hellogin",
+  "page": "p02",
+  "index": 23,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Tache fantôme pâle et diffuse en haut à gauche de la zone de texte (vestige léger de 'ARAM,'), le reste de la case est nettoyé."
+ },
+ {
+  "series": "hellogin",
+  "page": "p02",
+  "index": 27,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "Large bande cyan/turquoise opaque qui recouvre le texte ET le décor sous-jacent (pétales, armure) sur toute la largeur de la case — effacement raté, l'image derrière est invisible sous la tache de couleur."
+ },
+ {
+  "series": "i-married-the-dragon-i-killed",
+  "page": "p01",
+  "index": 11,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme étendu et net de 'WHAT'S THE POINT? HE HASN'T MADE ANY PROGRESS IN YEARS.' visible en traînées grises floues sur les 4 lignes de la bulle claire."
+ },
+ {
+  "series": "i-married-the-dragon-i-killed",
+  "page": "p01",
+  "index": 14,
+  "verdict": "SPILL",
+  "severity": "major",
+  "note": "Bavure semi-transparente grisâtre juste sous le cadre du texte 'IF I KEEP TRYING,', qui déborde nettement sur la corniche/balcon du bâtiment en dessous et le floute."
+ },
+ {
+  "series": "i-married-the-dragon-i-killed",
+  "page": "p01",
+  "index": 26,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Silhouette sombre nette de 'VERY WELL.' visible dans la bulle noire, avec traînées de coulure sous le texte — fantôme bien visible malgré le fond sombre."
+ },
+ {
+  "series": "i-married-the-dragon-i-killed",
+  "page": "p01",
+  "index": 27,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Taches grises pâles résiduelles visibles au zoom à l'emplacement de 'ROSNOVA' (milieu-bas de la bulle), texture de pluie sinon bien reconstruite."
+ },
+ {
+  "series": "i-married-the-dragon-i-killed",
+  "page": "p01",
+  "index": 28,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme diffus des deux lignes de texte visible en formes grisées plus claires dans le halo gris, pâle mais perceptible sans zoom extrême."
+ },
+ {
+  "series": "i-married-the-dragon-i-killed",
+  "page": "p02",
+  "index": 13,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "Le remplissage opaque de la bulle a été détruit : le décor du panneau (main, fond rouge) transparaît en gris translucide à travers la bulle, avec en plus des fantômes de lettres visibles ('OPEN' etc.) superposés."
+ },
+ {
+  "series": "path-of-vengeance",
+  "page": "p02",
+  "index": 0,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Contours de lettres nettement visibles en surimpression pâle dans le dégradé (formes anguleuses/blocs façon esquisse), sur une bonne largeur de la bulle, correspond au ghost=57 signalé."
+ },
+ {
+  "series": "path-of-vengeance",
+  "page": "p02",
+  "index": 3,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Taches grisâtres diffuses en bas de la zone (vers l'ancien 'WORLD-'), visibles au zoom mais noyées dans le flou blanc du fond, pas de lettres franchement lisibles."
+ },
+ {
+  "series": "path-of-vengeance",
+  "page": "p02",
+  "index": 8,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "Rupture nette en forme de rectangle dans le faisceau de traits verticaux lumineux (bord/marche visible cassant la continuité du motif), avec petites marques résiduelles en forme de parenthèses de part et d'autre."
+ },
+ {
+  "series": "rise-of-the-dragon-overlord",
+  "page": "p02",
+  "index": 22,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "'Ding!' quasiment pas effacé : on lit encore clairement le 'D' (boucle) et 'g!' au-dessus du cadre, alors que le texte à l'intérieur du cadre bleu est bien effacé."
+ },
+ {
+  "series": "rise-of-the-dragon-overlord",
+  "page": "p02",
+  "index": 26,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "minor",
+  "note": "Bande rectangulaire lissée qui interrompt localement les rayons lumineux convergents (zone de l'ancien 'LEVEL: 29'), visible au zoom mais discrète en taille normale ; pas de lettres lisibles."
+ },
+ {
+  "series": "solo-ex-rank-summoner",
+  "page": "p01",
+  "index": 7,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Vérifié par étirement de contraste : léger fantôme rectangulaire (ombre du contour du texte) dans la bulle dorée, imperceptible à l'oeil nu en lecture normale."
+ },
+ {
+  "series": "solo-ex-rank-summoner",
+  "page": "p01",
+  "index": 12,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme sombre net des deux lignes '[ONE OF THE FIVE EMPERORS OF THE HEAVENS] BAEKCHEON, WHO REACHED THE 70TH', silhouette rectangulaire visible sur le fond étoilé, forme identique au texte d'origine confirmée par comparaison avant/après."
+ },
+ {
+  "series": "solo-ex-rank-summoner",
+  "page": "p01",
+  "index": 13,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Silhouette sombre très nette de 'Huh?' persistant sous la bulle dorée sur le fond étoilé, visible même sans zoom."
+ },
+ {
+  "series": "solo-ex-rank-summoner",
+  "page": "p01",
+  "index": 30,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Effacement quasi inopérant : 'THE CHAT ANYWAY.' reste parfaitement lisible, image erased quasi identique à before."
+ },
+ {
+  "series": "spend-more-earn-more",
+  "page": "p01",
+  "index": 6,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Tache noire résiduelle en forme de texte ('Jinho') bien visible sur la vitre claire de la cage d'escalier, correspond à la position exacte de la 1re ligne du texte source."
+ },
+ {
+  "series": "spend-more-earn-more",
+  "page": "p01",
+  "index": 48,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme net du texte source superposé sur la note ('sure to order' / 'some dinner' quasi lisibles en surimpression grainée, plus un mot fantôme plus pâle au-dessus)."
+ },
+ {
+  "series": "spend-more-earn-more",
+  "page": "p01",
+  "index": 58,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Ombre sombre nette en forme de lettres de 'JINHO.' toujours visible dans le cartouche violet."
+ },
+ {
+  "series": "spend-more-earn-more",
+  "page": "p02",
+  "index": 11,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "L'effacement déborde hors de la bulle ovale et abîme le texte de fond du CV : 'OTHER DETAILS' devient 'OTHER DETAIID' et 'FUTURE HANX' devient un aplat flou illisible."
+ },
+ {
+  "series": "spend-more-earn-more",
+  "page": "p02",
+  "index": 24,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme net des chiffres '4:26:59' en bas de l'écran TaiPei : contour blanc résiduel + rangée de points noirs suivant exactement le tracé des chiffres effacés."
+ },
+ {
+  "series": "spend-more-earn-more",
+  "page": "p02",
+  "index": 26,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "Aplat rectangulaire sombre et flou plaqué sur tout l'écran LONDON, bordure du cadre déformée/dépassant vers le bas, ne raccorde plus avec les écrans voisins propres."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p01",
+  "index": 4,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Voile gris pâle en forme de texte devinable, surtout en bas du cadre ('...ONE HOUR' à peine visible)."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p01",
+  "index": 18,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Petites taches sombres diffuses au centre du cadre, à peine visibles, pas de lettres identifiables."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p01",
+  "index": 19,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Taches sombres nettes (blocs) au centre du cadre, résidu bien visible du texte 'MASTERING...GAMES' même sans zoom."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p01",
+  "index": 20,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Zone maculée : la trame du fond est floutée en nuage diffus exactement là où était le texte 'BUT THE ONE THAT GAVE ME...'"
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p01",
+  "index": 21,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Le texte coréen '이다.' n'a pas du tout été effacé : reste net, opaque et lisible en bas du cadre alors que le titre doré au-dessus a bien disparu."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p02",
+  "index": 24,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Larges taches blanches résiduelles au centre/bas de l'aplat, forme évoquant un caractère, bien visible sur le fond lisse."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p02",
+  "index": 25,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Marques sombres diffuses et petite traînée en bas de l'aplat, reste pâle d'un caractère, discret mais présent."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p02",
+  "index": 29,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "Grande tache noire/grise recouvrant l'épaule et le col : la structure du dessin (plis, col, reflet) est effacée sous l'aplat sombre laissé par le texte deux lignes."
+ },
+ {
+  "series": "the-frontier-count's-10th-class-outcas",
+  "page": "p01",
+  "index": 27,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fine trace verticale résiduelle dans le cartouche, vague contour de lettre encore visible, peu marqué."
+ },
+ {
+  "series": "the-frontier-count's-10th-class-outcas",
+  "page": "p02",
+  "index": 3,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Tache légèrement plus sombre au centre-gauche du cercle rouge, aucune lettre lisible mais empreinte visible."
+ },
+ {
+  "series": "the-frontier-count's-10th-class-outcas",
+  "page": "p02",
+  "index": 54,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "« LOST TRACK OF TIME. » reste entièrement lisible en bas à droite, quasiment pas effacé (et « COMPLETELY » partiellement visible au-dessus)."
+ },
+ {
+  "series": "the-frontier-count's-10th-class-outcas",
+  "page": "p01",
+  "index": 27,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "DUPLICATE_SKIP"
+ },
+ {
+  "series": "the-marquis'-ducal-son-is-a-martial-artist",
+  "page": "p01",
+  "index": 25,
+  "verdict": "SPILL",
+  "severity": "minor",
+  "note": "Le hachurage du fond déborde dans le remplissage de la bulle côté droit au lieu d'un aplat marron uni continu."
+ },
+ {
+  "series": "the-marquis'-ducal-son-is-a-martial-artist",
+  "page": "p01",
+  "index": 27,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Ombre rectangulaire diffuse au centre de la bulle sombre, forme du bloc de texte encore devinable en clair-obscur."
+ },
+ {
+  "series": "the-marquis'-ducal-son-is-a-martial-artist",
+  "page": "p01",
+  "index": 29,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "« DON'T BE RIDICULOUS. » entièrement lisible en négatif sombre, effacement quasi nul."
+ },
+ {
+  "series": "the-marquis'-ducal-son-is-a-martial-artist",
+  "page": "p02",
+  "index": 43,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "« WAIT, ILLIA? AS IN...? » entièrement lisible en fantôme blanc, effacement quasi nul."
+ },
+ {
+  "series": "the-marquis'-ducal-son-is-a-martial-artist",
+  "page": "p02",
+  "index": 46,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme net et parfaitement lisible \"ANY CASE,\" en haut de la bulle ; le reste du texte (STOP DISGRACING...) a bien disparu."
+ },
+ {
+  "series": "the-regressor-makes-everything",
+  "page": "p01",
+  "index": 16,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "\"Fuck.\" reste un fantôme gris parfaitement lisible en haut de la bulle ; \"I TOLD YOU.\" en revanche a bien disparu."
+ },
+ {
+  "series": "the-regressor-makes-everything",
+  "page": "p01",
+  "index": 27,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Légère tache claire diffuse subsiste dans l'encart (zone de la 2e ligne), contours non lisibles comme des lettres mais visible."
+ },
+ {
+  "series": "the-returnee's-hidden-strategy-stream",
+  "page": "p01",
+  "index": 17,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "La bulle ovale sur fond noir n'est pas proprement remplie : taches blanches informes et irrégulières à la place du remplissage propre, décor de bulle abîmé."
+ },
+ {
+  "series": "the-returnee's-hidden-strategy-stream",
+  "page": "p02",
+  "index": 7,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Les 4 lignes du texte restent quasi intégralement lisibles (légèrement flouté), résidu massif et flagrant sur toute la bulle."
+ },
+ {
+  "series": "the-returnee's-hidden-strategy-stream",
+  "page": "p02",
+  "index": 21,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Paragraphe entier encore lisible (flouté) dans la bulle, fantôme très marqué sur les 4 lignes."
+ },
+ {
+  "series": "the-returnee's-hidden-strategy-stream",
+  "page": "p02",
+  "index": 28,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Le bandeau LIVE est bien neutralisé, mais le logo-titre coréen au-dessus reste entièrement lisible en noir-sur-noir (texte non effacé dans le crop)."
+ },
+ {
+  "series": "the-wandering-knight's-survival-manual",
+  "page": "p01",
+  "index": 17,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Bulle principale (YES, WHA-) propre, mais fragment résiduel du \"pardon?\" hors-bulle (forme de ? et virgule) subsiste en bas à droite."
+ },
+ {
+  "series": "the-wandering-knight's-survival-manual",
+  "page": "p02",
+  "index": 13,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Légère empreinte en relief des lettres de STONE + petit résidu sombre visibles sur la pièce dorée."
+ },
+ {
+  "series": "the-wandering-knight's-survival-manual",
+  "page": "p02",
+  "index": 29,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Silhouette floue de tout le texte \"auu LIUH HH!!\" reste visible sur les 3 lignes, remplissage intérieur transformé en fumée grise au lieu d'être net."
+ },
+ {
+  "series": "the-wandering-knight's-survival-manual",
+  "page": "p02",
+  "index": 32,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "Toute la bulle-éclat GRRR!! (contour + fond) a disparu, remplacée par la simple texture de fond ; seules 2 gouttes rouges décoratives isolées subsistent."
+ },
+ {
+  "series": "the-wandering-knight's-survival-manual",
+  "page": "p02",
+  "index": 39,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "Toute la bulle-impact GRRR a disparu, remplacée par un dégradé blanc-gris plat sans aucune trace du contour ni du fond de la bulle."
+ },
+ {
+  "series": "the-wind-mage",
+  "page": "p02",
+  "index": 5,
+  "verdict": "SPILL",
+  "severity": "minor",
+  "note": "Texte 'HELP ME!!' entièrement effacé (RAS même à contraste x2.5), mais léger débordement en pointillé de la peinture d'effacement le long du contour haut-droit de la bulle, hors zone de texte."
+ },
+ {
+  "series": "the_cleaner",
+  "page": "p01",
+  "index": 20,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Dialogue et 'KHO' (SFX) proprement effacés, ombre du personnage bien restituée dessous ; mais petit amas de pixels gris résiduels (bruit fantôme) au centre de la bulle inférieure, visible au zoom."
+ },
+ {
+  "series": "the_cleaner",
+  "page": "p01",
+  "index": 29,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "Texte du logo 'THE CLEANER / STORY ART ZorongE YLAB' bien effacé, mais le nuage photographique compact d'origine est remplacé par une traînée blanche floue étirée en diagonale (forme non naturelle) plus de légers raccords rectangulaires de patch dans le ciel — décor repeint/dénaturé, pas juste effacé."
+ },
+ {
+  "series": "a-mountain-of-corpses-a-sea-of-blood",
+  "page": "p01",
+  "index": 2,
+  "verdict": "OTHER",
+  "severity": "minor",
+  "note": "Texte 'THIS GREAT WAR...' bien absent (aucune lettre même en sur-exposition x3.5), mais on devine le contour rectangulaire du patch de repeinture dans la pénombre (léger écart de ton), visible seulement en sur-exposition forte."
+ },
+ {
+  "series": "a-mountain-of-corpses-a-sea-of-blood",
+  "page": "p01",
+  "index": 9,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme pâle mais parfaitement lisible du mot 'STOP.' qui reste visible au centre de la bulle blanche, sans besoin de zoom ni de rehaussement."
+ },
+ {
+  "series": "a-mountain-of-corpses-a-sea-of-blood",
+  "page": "p01",
+  "index": 16,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme pâle des 3 lignes de dialogue ('THIS IS?!... FLESH AND BLOOD?!') bien visible dans la bulle blanche à l'œil nu."
+ },
+ {
+  "series": "a-mountain-of-corpses-a-sea-of-blood",
+  "page": "p01",
+  "index": 23,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme pâle des 3 lignes de texte ('ESPECIALLY YOU...') visible dans l'éclat blanc au zoom, plus discret que les zones voisines mais bien réel."
+ },
+ {
+  "series": "a-mountain-of-corpses-a-sea-of-blood",
+  "page": "p02",
+  "index": 7,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme pâle très net des 4 lignes de dialogue ('I SEE, FORTUNATELY...') dans la bulle blanche, motif clairement lisible dès la vue normale."
+ },
+ {
+  "series": "archmage-curriculum",
+  "page": "p01",
+  "index": 0,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme pâle des 4-5 lignes de texte ('YOU WON'T HAVE TO SUFFER...') bien visible dans la bulle, lisible sans rehaussement."
+ },
+ {
+  "series": "archmage-curriculum",
+  "page": "p01",
+  "index": 23,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme pâle du mot 'YUJIN.' qui reste lisible au centre de la bulle, visible à l'œil nu sans zoom."
+ },
+ {
+  "series": "archmage-curriculum",
+  "page": "p02",
+  "index": 2,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme pâle de la ligne 'MAGIC EXISTS, AFTER ALL.' visible dans le rectangle blanc, lisible dès la vue normale."
+ },
+ {
+  "series": "archmage-curriculum",
+  "page": "p02",
+  "index": 25,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme pâle en pointillé du texte 'WE MEET AGAIN~' visible dans la bulle nuageuse, discret mais réel."
+ },
+ {
+  "series": "archmage-curriculum",
+  "page": "p02",
+  "index": 49,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme pâle de la ligne 'KYYA...A?!!' visible dans la bulle dentelée, discret mais détectable sans rehaussement fort."
+ },
+ {
+  "series": "from-pauper-to-prince-uncensored",
+  "page": "p01",
+  "index": 0,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme pâle mais net des 2 lignes de texte ('I REMEMBER READING A STORY...') visible dans le cadre blanc, repérable sans zoom."
+ },
+ {
+  "series": "from-pauper-to-prince-uncensored",
+  "page": "p01",
+  "index": 1,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme très pâle des 4 lignes visible en zoom (gris quasi imperceptible à l'oeil nu), décor intact."
+ },
+ {
+  "series": "from-pauper-to-prince-uncensored",
+  "page": "p01",
+  "index": 2,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Trace fantôme encore plus légère de 'AND THEY SWITCH...' visible seulement en zoom fort, décor intact."
+ },
+ {
+  "series": "hellogin",
+  "page": "p01",
+  "index": 2,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme pâle gris de 'IT'S OKAY... EVEN IF I'M ALONE...' au centre de la bulle, visible en zoom."
+ },
+ {
+  "series": "i-married-the-dragon-i-killed",
+  "page": "p01",
+  "index": 17,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Fantôme net et lisible des 3 lignes 'FERDA, I HEARD AN INTERESTING RUMOR LATELY.' en rose/gris pâle dans la bulle blanche, visible sans zoom."
+ },
+ {
+  "series": "path-of-vengeance",
+  "page": "p02",
+  "index": 18,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Lettre 'I' résiduelle intacte et bien noire (non effacée) à gauche dans la bulle, fragment de 'I THINK THAT'S EVERYTHING.' clairement lisible."
+ },
+ {
+  "series": "reincarnation-of-the-veteran-soldier",
+  "page": "p01",
+  "index": 1,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme pâle des 3 lignes 'WATCH OUT FOR FALLING LEAVES IN YOUR LATER YEARS.' visible en zoom dans l'encadré blanc."
+ },
+ {
+  "series": "rise-of-the-dragon-overlord",
+  "page": "p02",
+  "index": 19,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme pâle du texte \"IS THAT THE JOB RESPONSIBLE FOR JOB CHANGES?\" visible au centre du cercle, forme des 5 lignes détectable après renforcement de contraste (invisible à l'oeil nu en lecture normale)."
+ },
+ {
+  "series": "savior-of-divine-blood%3A-draw-out-0.00000001percent-to-become-the-strongest",
+  "page": "p01",
+  "index": 3,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "\"ES...\" (fin de \"ONES...\") reste ENTIÈREMENT visible en noir gras, non effacé du tout, juste à droite d'un dégradé d'effacement partiel — défaut flagrant, cassage de lecture."
+ },
+ {
+  "series": "solo-ex-rank-summoner",
+  "page": "p01",
+  "index": 0,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Très léger fantôme des deux lignes \"SIGH... PERSISTENT / BASTARDS.\" détectable uniquement après fort contraste, imperceptible en lecture normale."
+ },
+ {
+  "series": "solo-ex-rank-summoner",
+  "page": "p01",
+  "index": 10,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "major",
+  "note": "La trame quadrillée du fond (papier à motif) est lissée/aplatie dans un pavé à coins arrondis à l'emplacement exact du texte \"IT'D JUST BE FASTER...\" : rupture nette et visible de la texture, sans besoin d'enhancement."
+ },
+ {
+  "series": "solo-ex-rank-summoner",
+  "page": "p01",
+  "index": 23,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Pavés mot-par-mot légèrement moins noirs que le fond, dessinant les lignes de \"SO, I DECIDED TO QUIT...\" et \"I'M 24 NOW...\" — détectable seulement à gain numérique x10, totalement imperceptible à l'oeil nu."
+ },
+ {
+  "series": "spend-more-earn-more",
+  "page": "p01",
+  "index": 2,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme gris pâle des 3 lignes \"OKAY! I FEEL IT... I FEEL IT!\" visible dans la bulle même à simple zoom x3 sans contraste ajouté — pâle mais réel."
+ },
+ {
+  "series": "spend-more-earn-more",
+  "page": "p01",
+  "index": 51,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme très pâle de 'WHAT?! YOU'RE QUITTING THE GAME?!' visible dans la bulle du haut seulement après fort étirement de contraste ; invisible en lecture normale."
+ },
+ {
+  "series": "spend-more-earn-more",
+  "page": "p02",
+  "index": 8,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme pâle de 'NAME: JEONG JINHO AGE: 27' perceptible à l'œil dans la bulle (lignes grisées + point résiduel des deux-points), confirmé net après stretch."
+ },
+ {
+  "series": "stupidemic-uncensored",
+  "page": "p01",
+  "index": 0,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme très pâle de 'ON THE CHEAPEST AND MOST SECLUDED...' révélé uniquement par fort contraste (~0,6% des pixels de la bulle légèrement assombris), invisible en lecture normale."
+ },
+ {
+  "series": "stupidemic-uncensored",
+  "page": "p01",
+  "index": 1,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Halo gris diffus sans lettres lisibles à l'emplacement de 'A FACTORY WAS BUILT.', visible seulement après étirement de contraste."
+ },
+ {
+  "series": "stupidemic-uncensored",
+  "page": "p01",
+  "index": 2,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme pâle de 'THIS IS THE PRODUCTION MANAGEMENT...' à cheval sur la ligne de case, légèrement perceptible en vision normale près du bord de case."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p02",
+  "index": 5,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme sombre (contour) de 'THERE ARE' dans le bandeau bleu nuit, visible uniquement après étirement de contraste (texte blanc à liseré mal effacé sur fond sombre)."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p02",
+  "index": 9,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme très pâle des 3 lignes de texte dans la bulle, décelable seulement par analyse de contraste poussée, invisible en lecture normale."
+ },
+ {
+  "series": "the-apocalypse-needs-a-pro",
+  "page": "p02",
+  "index": 18,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Deux points noirs de la puce '...' devant '...PHASE 1 OF THE GAME.' restent pleinement opaques et visibles à l'œil nu dans la bulle, pas du tout effacés."
+ },
+ {
+  "series": "the-frontier-count's-10th-class-outcas",
+  "page": "p02",
+  "index": 24,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "La lettre 'O' du mot 'O SEEKER OF THE JOURNEY.' reste entièrement visible (cercle noir net) dans la bulle, pas effacée du tout."
+ },
+ {
+  "series": "the-marquis'-ducal-son-is-a-martial-artist",
+  "page": "p02",
+  "index": 2,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "fantôme pâle de \"UH, WELL...\" visible dans la bulle (bande grisâtre, lettres devinables en zoom/contraste), surtout à gauche-centre"
+ },
+ {
+  "series": "the-regressor-makes-everything",
+  "page": "p01",
+  "index": 4,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "dans l'encadré noir, résidu rouge sombre alignant avec la 1ère ligne \"AND HUMANITY IS...\" (patches visibles, confirmés en étirement de contraste local)"
+ },
+ {
+  "series": "the-regressor-makes-everything",
+  "page": "p01",
+  "index": 24,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "trace résiduelle quasi imperceptible (pic ~28/255 sur fond noir) formant une ligne pointillée alignée sur la 2e/3e ligne du texte source ; invisible à l'oeil nu en lecture normale, décelable seulement par étirement extrême du contraste"
+ },
+ {
+  "series": "the-returnee's-hidden-strategy-stream",
+  "page": "p01",
+  "index": 1,
+  "verdict": "DECOR_DAMAGE",
+  "severity": "minor",
+  "note": "aucune lettre résiduelle mais le patch d'effacement forme un rectangle arrondi visiblement aplati/plus clair que le dégradé rose-violet environnant (la carte de différence confirme un carré complet, plus large que le texte), continuité du décor cassée"
+ },
+ {
+  "series": "the-wind-mage",
+  "page": "p01",
+  "index": 0,
+  "verdict": "GHOST",
+  "severity": "minor",
+  "note": "Fantôme réel confirmé par diff pixel (avant/après) : ~13% des pixels d'encre de \"THEY SAY THE / WIND BLEW FIERCELY.\" restent assombris (silhouette en blocs visible même sous contraste modéré), le reste correctement effacé ; décor de forêt intact."
+ },
+ {
+  "series": "the_cleaner",
+  "page": "p01",
+  "index": 16,
+  "verdict": "GHOST",
+  "severity": "major",
+  "note": "Défaut flagrant : la première ligne \"...AND ALSO.\" n'a PAS été effacée du tout (pixels identiques à l'image source, diff=0) et reste pleinement lisible ; en dessous, fantôme net et lisible à l'œil nu de \"I'M SO HAPPY I GOT TO BE... YOUR WIFE...\" (confirmé par diff avant/après qui redessine les lettres complètes)."
+ }
+]

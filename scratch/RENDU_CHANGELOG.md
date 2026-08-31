@@ -1341,9 +1341,18 @@ du ballon) exclut la zone droite, car #14 est un cartouche de narration sur DÉC
 seul, au barème : residu 17 → 17 (aucun cas résolu) et erase_spill 27 → 28 (une
 bulle sur-effacée). Effet net négatif. Les deux annulés.
 
-La cause racine est l'OCR qui tronque ses polygones sur fond contrasté — un
-problème de détection de texte, en amont du rendu. ~5-8 cas sur 632 (1 %). Non
-traité côté rendu : le risque sur les 99 % dépasse le gain sur 1 %.
+~~La cause racine est l'OCR qui tronque ses polygones sur fond contrasté — un
+problème de détection de texte, en amont du rendu.~~
+
+> **DÉMENTI (2026-08-29, mesuré). Ce diagnostic était FAUX et a fait clore le
+> dossier à tort.** Sur `30-years p01 #14` : les polygones OCR vont jusqu'à
+> **x = 578**, `block_mask` jusqu'à **586**, l'encre jusqu'à **575** — la bbox
+> fait 587 de large. RIEN n'est tronqué en amont.
+>
+> La troncature à x = 429 est produite **intégralement par
+> `pipeline.py:719`**, dans le rendu : `bounded = cv2.bitwise_and(ocr_mask,
+> interior)`. Voir la phase « effacement : le garde-fou qui détruisait
+> l'effacement » plus bas.
 
 ## Bilan confort de lecture (demande utilisateur)
 
@@ -1358,3 +1367,155 @@ le corps un cran petit.
   le rendu reste gros et lisible (fs 35-80). Pas de problème de lisibilité de masse.
 - **Lignes équilibrées** (fluidité) : orphelins 25 % → 10 % sur la session.
 - **Effacement propre** sauf ~5-8 cas d'OCR tronqué (L2, hors rendu).
+
+---
+
+## 2026-08-31 — Artillerie effacement : fond uniforme + split, barème rendu fidèle
+
+Reprise sur exigence utilisateur : « irréprochable sur les 23 séries, pas un seul
+micro-défaut ; gérer les 26 zones stylisées (Système, onomatopées) ; vérification
+visuelle paranoïaque (les métriques mentent) ; déléguer la vérif en masse à un
+essaim Sonnet ».
+
+### 0. Le barème mesurait un masque PÉRIMÉ (faille de mesure)
+
+`scratch/bareme.py score` relisait `chirurgical_mask` depuis le cache
+(construit le 2026-08-27, AVANT le correctif de seuil). Donc le correctif
+`_BORNAGE_SEUIL=0.95` de `pipeline.py` était **invisible au barème** : #14
+affichait residu 41,8 inchangé, et `_flat_deverse` semblait « régresser » 2
+zones — artefact de mesure, pas régression réelle (vérifié à l'œil : ON≡OFF sur
+the-wandering-knight #17 et the-returnee #17).
+
+**Corrigé.** Extrait `_build_masks_for_detection` → `_assemble_chirurgical_mask`
+(assemblage CPU pur, à partir de `text_regions`/`mask_binary` déjà en cache). Le
+barème le rappelle à chaque zone : le masque est désormais RECONSTRUIT à jour.
+Vérifié : #14 masque x=116→573 (plein texte) vs 116→429 (périmé).
+
+### 1. `_uniform_bg_erase` — cartouches/titres/UI sur fond UNIFORME
+
+Cause des pires fantômes (archmage « GOLDEN AGE » ghost 163, sur noir pur) : le
+masque OCR ne couvrait que ~60 % des lettres (bbox courte / OCR partiel), LaMa
+redessinait le reste. Sur un fond d'UNE seule teinte, « l'encre = tout ce qui
+n'est pas le fond » : on repeint toute l'encre de la bbox par la teinte du fond,
+sans dépendre du masque. Deux verrous : (a) couronne autour du texte réellement
+uniforme (≥90 % dans la tolérance) sinon on rend la main ; (b) ne se déclenche
+que si le masque SOUS-COUVRE (≥15 % d'encre hors masque) — les bulles déjà bien
+couvertes gardent leur traitement. Pad borné au rayon de couronne (15 px) pour
+ne jamais peindre hors zone vérifiée uniforme. Résultat : archmage ghost 163 →
+quasi zéro ; fond noir pur nettoyé net.
+
+### 2. `_split_flatten` — fond MIXTE (uniforme + texturé), fin de #14
+
+Sur #14 (texte à cheval fenêtre BLANCHE + arche BEIGE), LaMa laisse un fantôme
+gris sur le blanc, l'aplat déverserait du blanc sur l'arche. Après LaMa, on
+repose la médiane locale EXACTE sur les seules sous-régions dont le fond est
+localement uniforme (std < 8, voisinage à assez de fond connu), étendue de 5 px
+pour engloutir l'anti-aliasing ; le reste (arche texturée) garde LaMa. Fenêtre
+blanche de #14 : fantôme éliminé, arche intacte. Ne touche pas les bulles
+rayonnantes (gradient → std élevé → reste LaMa) : garde imarried « K-KILL ME »
+vérifié inchangé.
+
+### 3. Validation visuelle (candidat final, à l'œil)
+
+- 30-years #14 : blanc net, arche respectée. Reste 2-3 taches grises près du bord
+  d'arche (zone LaMa) — micro-défaut résiduel à traiter.
+- archmage « GOLDEN AGE » : quasi noir pur, trace à peine perceptible à droite.
+- imarried « K-KILL ME » (garde bulle rayonnante) : INCHANGÉ, décor violet intact.
+- apocalypse « SECOND APOCALYPSE » (grand titre sur décor nocturne chargé) : texte
+  parti, mais coulures LaMa résiduelles — cas dur (décor photographique).
+- rise « Ding! NEW SKILL » (panneau Système holo) : quasi propre, fragment « Da! ».
+
+Défauts DUR restants catalogués : cartouches sur décor très chargé (coulures),
+panneaux Système à texte intégré (fragments), taches de bord d'arche #14. →
+Vérification en masse par essaim Sonnet sur le run `final1` (crops before/erased/
+after des 1481 zones) pour la liste exhaustive des traînards.
+
+### 4. `_uniform_bg_erase` : garde-fous anti-destruction de décor (itéré au barème)
+
+Première version LÂCHE → **catastrophe mesurée** au barème (run `final1`) :
+erase_spill 71 → 1107, 737 zones cassées. Elle se déclenchait sur des CENTAINES
+de bulles et peignait un rectangle : `30-years p01 #3`, gros rectangle blanc sur
+un visage (scène chaude prise pour « fond blanc uniforme »). Le barème fidèle
+(§0) a rendu le désastre visible immédiatement — sans lui, invisible.
+
+Resserré en quatre verrous, chacun validé à l'œil (diff rouge = pixels modifiés) :
+1. **classe out_text / System seulement** — jamais les bulles (leur flux gère).
+2. **fond QUASI PUR** : médiane de couronne ≥248 (blanc) ou ≤10 (noir). Écarte
+   les scènes claires texturées (médiane ~240) qui trompaient le test.
+3. **encre MINORITAIRE** (< 45 % de la boîte) — si « l'encre » est majoritaire,
+   la teinte de fond est en fait du décor : on renonce.
+4. **on ne peint QUE la teinte des LETTRES** (mode des pixels du cœur à l'extrême
+   opposé du fond : sombres sur blanc, clairs sur noir), pas « tout ce qui n'est
+   pas le fond ». C'est ce qui sauve le liseré JAUNE de `savior #3/#4` : le décor
+   coloré n'est jamais à la teinte des lettres, donc jamais blanchi.
+Boîte calée sur la bbox de détection (rattrape l'OCR court) mais pad ≤ 15 px
+(rayon de couronne vérifié) : le décor hors bbox (peau rose de `reincarnation
+#26`, vérifié au diff) reste intact.
+
+Résultat (sweep 1481 zones, sans LaMa) : ne se déclenche plus que sur ~10 zones,
+TOUTES out_text/System, aucune bulle. Cas durs validés à l'œil :
+- archmage « GOLDEN AGE » : texte blanc entièrement effacé (y compris la moitié
+  que l'OCR manquait), noir pur.
+- marquis « DON'T BE RIDICULOUS. » : lettrage blanc + LUEUR violette sur noir,
+  lueur comprise, effacé net.
+- savior « DOORS OF TRIALS » : texte noir effacé, liseré jaune du décor INTACT.
+- reincarnation #26 : texte effacé, peau rose au-dessus INTACTE (diff à l'appui).
+- returnee « LIVE » (carton-titre) : logo-titre effacé (typographie = à traduire).
+
+### 5. Verrou final : décor DÉBORDANT (a-mountain #8, chevelure)
+
+Dernier piège trouvé au sweep : un texte NOIR sur une case BLANCHE, avec une
+CHEVELURE noire adjacente. La couronne autour du texte est blanche (uniforme),
+la teinte des lettres est noire — donc la chevelure (même noir) tombait dans
+« l'encre » et un rectangle blanc mangeait les cheveux (mesuré : 4 708 px de
+décor sombre blanchi).
+
+Discriminant décisif : le TEXTE est CONTENU dans la boîte ; un DÉCOR en DÉBORDE.
+On repère tout gros amas « non-fond » (> 15 % de la boîte) dont > 30 % de l'aire
+est HORS boîte → décor qui entre → on renonce, LaMa prend la main (il efface le
+texte sans toucher la chevelure : vérifié, décor intact, dark-spill 4708 → 140).
+
+Effet de bord voulu : reincarnation #26 et 30-years p02 #22 (texte près d'un
+décor) basculent aussi sur LaMa — plus sûr qu'un aplat, quitte à un fantôme plus
+léger. `_uniform_bg_erase` ne garde donc QUE les cartouches à fond franchement
+pur et sans décor intrus : archmage, marquis (lueur violette comprise), titres.
+
+### 6. `_split_flatten` : seuil resserré 8 → 4 (préserver les textures faibles)
+
+Le sweep visuel (essaim Sonnet, run final2) a montré que `_split_flatten`
+aplatissait des fonds FAIBLEMENT texturés pris pour uniformes : trame quadrillée
+du papier de solo-ex-rank #10, grain photo de the_cleaner #29. Mesuré : à
+std_thr=8 il modifiait 11 588 px sur solo #10 (trame lissée en pavé visible).
+
+Abaissé à std_thr=4 : la fenêtre BLANCHE de #14 (std ~0-2) reste entièrement
+aplatie (28 402 → 28 072 px, fantôme toujours nul), mais la trame de solo #10
+tombe à 4 460 px (trame préservée à l'œil) et the_cleaner à 5 336. Strictement
+moins agressif, sans régression sur #14.
+
+## 2026-08-31 — Vérification paranoïaque par essaim Sonnet : verdict HONNÊTE
+
+12 agents Sonnet ont noté À L'ŒIL 227 crops (effacement, run final2) :
+**131 PASS, 76 GHOST, 16 DECOR_DAMAGE (13 majeurs), 3 SPILL**. La vérif visuelle
+a confirmé la mise en garde utilisateur : « les métriques mentent » — des zones
+DÉCLARÉES CONFORMES par le barème (returnee p01 #1, solo #10) portent un défaut
+de décor que seul l'œil attrape.
+
+Ventilation des 92 défauts par CAUSE (trace de route à l'appui) :
+- **Fantômes LaMa sur bulles à dégradé / lueur / fond chargé (76)** : limite de
+  fond de LaMa, PRÉ-EXISTANTE (apocalypse, spend-more, i-married, marquis…).
+- **LaMa lisse une TEXTURE/photo (briques hellogin, nuage the_cleaner)** :
+  limite intrinsèque de LaMa, pré-existante.
+- **Bulles-SFX « GRRR » détruites** : détection qui les classe `bulle` au lieu de
+  `sfx` → elles passent l'effacement (les vrais `sfx` sont exclus, cf. l.2396).
+  Problème de DÉTECTION, hors rendu.
+- **Aplat/patch sur panneau Système ou dégradé (spend-more, returnee #1)** :
+  flat/smooth pré-existants.
+- **`_split_flatten` sur trame faible (solo #10)** : corrigé §6.
+
+VERDICT : les correctifs de cette session (fidélité du barème, #14, cartouches
+décor-safe, garde-fous, split resserré) sont un gain net et SÛR (aucun décor
+neuf détruit). MAIS la copie n'est PAS « 100 % irréprochable » : le gros des
+défauts restants est SYSTÉMIQUE (reconstruction de texture/fond par LaMa,
+fantômes sur bulles complexes) et demande soit un modèle d'inpainting supérieur,
+soit un chantier par cluster sur plusieurs sessions + un correctif DÉTECTION pour
+les SFX. Ne pas auto-certifier : liste complète dans scratch/swarm_fails.json.

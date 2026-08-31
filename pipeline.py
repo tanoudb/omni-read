@@ -45,6 +45,33 @@ DEBUG_COLORS = {
 }
 
 
+# Part de l'encre qu'il faut CONSERVER pour que le bornage sur « l'intérieur du
+# ballon » soit accepté (cf. `_build_masks_for_detection`).
+#
+# Ce garde-fou borne le masque d'effacement à la forme du ballon déduite de
+# l'image, pour que l'effacement ne morde pas le trait. Son principe est juste et
+# son commentaire l'énonce : « mieux vaut un contour légèrement entamé qu'un
+# texte d'origine qui survit sous la traduction ». Mais le seuil valait 0,50 : il
+# autorisait donc à perdre LA MOITIÉ de l'encre, soit l'inverse de son principe.
+#
+# Conséquence mesurée sur `30-years p01 #14` : le bornage y conserve 0,5081 de
+# l'encre, passe donc de 0,8 point, et 49 % du texte anglais reste VISIBLE sous
+# la traduction. La forme déduite est mauvaise pour une raison STRUCTURELLE :
+# `_bubble_mask_from_image` ne retient une lettre que si elle forme un TROU FERMÉ
+# de la zone uniforme, or elle a été écrite pour `insert_text`, qui reçoit
+# l'image DÉJÀ effacée (intérieur uniforme, sans glyphes). Sur le crop d'ORIGINE,
+# une lettre posée sur un fond non uniforme — ici une arche beige — fusionne avec
+# lui après l'érosion 7x7 et cesse d'être un trou fermé : elle sort du masque.
+#
+# Balayage sur 1481 bulles / 23 séries : passer de 0,50 à 0,95 fait gagner plus
+# de 5 points de couverture d'encre à 26 zones (gain médian +0,22, max +0,68),
+# n'en fait perdre AUCUNE, et n'ajoute que 1 502 px de structure touchée au
+# total, soit 1,0 px par bulle. Au-delà de 0,90 les résultats sont identiques :
+# le bornage n'est plus accepté que lorsqu'il ne coûte pratiquement rien, ce qui
+# est exactement son intention.
+_BORNAGE_SEUIL = 0.95
+
+
 class TranslationPipeline:
     """Pipeline complet de traduction manhwa"""
     
@@ -683,13 +710,33 @@ class TranslationPipeline:
         det.mask_binary = seg_binary
         det.seg_backend = seg_backend
 
-        ocr_mask = self._ocr_mask_from_regions(
+        self._assemble_chirurgical_mask(img, det)
+        return max(0.0, time.perf_counter() - t0)
+
+    @staticmethod
+    def _assemble_chirurgical_mask(img: np.ndarray, det: Detection) -> None:
+        """Assemble le masque d'effacement chirurgical à partir des régions OCR
+        et de la segmentation DÉJÀ calculée (`det.text_regions`,
+        `det.mask_binary`, `det.class_name`).
+
+        Extrait de `_build_masks_for_detection` pour que le banc de mesure
+        (`scratch/bareme.py`) puisse reconstruire ce masque EXACTEMENT comme la
+        production, au lieu de relire un `chirurgical_mask` figé dans le cache :
+        sans quoi tout réglage du masquage (p. ex. `_BORNAGE_SEUIL`) reste
+        invisible à la mesure — piège constaté le 2026-08-30 où le cache du
+        2026-08-27 masquait le correctif de seuil. N'utilise que des champs déjà
+        renseignés : aucun GPU, aucun segmenteur requis.
+        """
+        h_det = max(1, det.y2 - det.y1)
+        w_det = max(1, det.x2 - det.x1)
+
+        ocr_mask = TranslationPipeline._ocr_mask_from_regions(
             det.text_regions, h_det, w_det,
             crop_bgr=img[max(0, det.y1):det.y2, max(0, det.x1):det.x2],
         )
         if ocr_mask is None:
             det.chirurgical_mask = None
-            return max(0.0, time.perf_counter() - t0)
+            return
 
         # Garde-fou de CONTOUR : l'intérieur du ballon déduit de l'image.
         #
@@ -721,7 +768,7 @@ class TranslationPipeline:
                 # forme déduite est mauvaise (bulle ouverte, fond complexe) :
                 # mieux vaut un contour légèrement entamé qu'un texte d'origine
                 # qui survit sous la traduction.
-                if int(np.count_nonzero(bounded)) >= 0.5 * int(np.count_nonzero(ocr_mask)):
+                if int(np.count_nonzero(bounded)) >= _BORNAGE_SEUIL * int(np.count_nonzero(ocr_mask)):
                     ocr_mask = bounded
 
         bubble = det.mask_binary
@@ -768,7 +815,6 @@ class TranslationPipeline:
         # pixels — un noyau plus large recrée le pavé plein qu'on veut éviter).
         kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         det.chirurgical_mask = cv2.morphologyEx(ocr_mask, cv2.MORPH_CLOSE, kernel_close)
-        return max(0.0, time.perf_counter() - t0)
 
     @staticmethod
     def _drop_regions_overlapping_siblings(

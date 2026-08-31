@@ -674,8 +674,12 @@ def score(run, only=None, save_pages=False, save_crops=False):
             d.ocr_confidence = it["ocr_confidence"]
             d.text_regions = it["text_regions"]
             d.mask_regions = it.get("mask_regions")
-            d.chirurgical_mask = it.get("chirurgical_mask")
             d.mask_binary = it.get("mask_binary")
+            # Le masque chirurgical est RECONSTRUIT ici (pas relu du cache) pour
+            # que le banc mesure fidèlement l'assemblage de masque courant :
+            # segmentation figée au cache (mask_regions/mask_binary), mais tout
+            # réglage postérieur (bornage, fermeture…) est réappliqué à jour.
+            TranslationPipeline._assemble_chirurgical_mask(img, d)
             dets.append(d)
 
         # Masque d'encre SOURCE, par bulle puis en union pleine page.
@@ -774,6 +778,7 @@ def score(run, only=None, save_pages=False, save_crops=False):
                 cd = run_dir / "crops" / ("%s__%s" % (_slug(series), page))
                 cd.mkdir(parents=True, exist_ok=True)
                 cv2.imwrite(str(cd / ("%03d_before.png" % i)), img[py1:py2, px1:px2])
+                cv2.imwrite(str(cd / ("%03d_erased.png" % i)), erased[py1:py2, px1:px2])
                 cv2.imwrite(str(cd / ("%03d_after.png" % i)), after[py1:py2, px1:px2])
 
         all_rows.extend(rows)
