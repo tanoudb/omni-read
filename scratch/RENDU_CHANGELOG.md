@@ -1519,3 +1519,30 @@ défauts restants est SYSTÉMIQUE (reconstruction de texture/fond par LaMa,
 fantômes sur bulles complexes) et demande soit un modèle d'inpainting supérieur,
 soit un chantier par cluster sur plusieurs sessions + un correctif DÉTECTION pour
 les SFX. Ne pas auto-certifier : liste complète dans scratch/swarm_fails.json.
+
+## 2026-09-01 — Chantier B : typage SFX verrouillé à la source
+
+Cause du dégât : une onomatopée mal classée `bulle` par YOLO passe la traduction
+PUIS l'effacement, qui rase le décor derrière un texte qui devait rester en VO
+(essaim : GRRR!!/GRRR/DING = 3 des 16 DECOR_DAMAGE majeurs). Découverte clé en
+traçant le code : la prod n'efface QUE les détections `text_translated`
+(pipeline.py:1606/1691, process_image idem), et les `sfx` sont déjà hors
+traduction. **Corriger la CLASSE suffit — zéro changement du moteur de rendu.**
+
+`TranslationPipeline._is_sfx_by_text` (classmethod, à côté de `_is_watermark_text`) :
+reclasse `bulle`/`out_text` → `sfx` SEULEMENT si TOUT le texte est onomatopée
+(lexique strict + répétition 3+ lettres par mot). Haute précision VOULUE : un
+dialogue reclassé à tort resterait en anglais à l'écran, pire qu'un décor abîmé —
+donc un seul vrai mot de dialogue fait échouer la zone. Appelée dans
+`_apply_ocr_result` (après OCR, avant le split trad/effacement) ; les deux
+chemins de prod (mega_batch + process_image) excluent alors la zone de la
+traduction → jamais effacée → VO intacte.
+
+Mesuré (1481 zones) : **28 SFX récupérés, 0 dialogue touché** ; « LORD
+JOHAAAAAN--!! », « I NEED YOUR HELP », « MMM~ IT'S NOTHING » restent traduits.
+Barème aligné (respecte le skip `sfx`) : sur the-wandering-knight, GRRR/ARGHH/
+WAAAH/HUP ne sont plus notés (VO), les 7 lignes « JOHAN » le restent.
+
+Rappel non couvert (étage 2, à venir) : les SFX que l'OCR massacre (« auu LIUH
+HH », « L GO UO ») échappent au texte → signal VISUEL (lettrage géant + pas de
+vrai contour de bulle), à valider à l'essaim.

@@ -680,7 +680,17 @@ def score(run, only=None, save_pages=False, save_crops=False):
             # segmentation figée au cache (mask_regions/mask_binary), mais tout
             # réglage postérieur (bornage, fermeture…) est réappliqué à jour.
             TranslationPipeline._assemble_chirurgical_mask(img, d)
+            # Re-typage SFX comme en production (_apply_ocr_result) : une
+            # onomatopée reste en VO — ni effacée ni redessinée. Sinon le banc
+            # compte de FAUX dégâts (bulles-cri « GRRR » que la prod ne touche
+            # jamais).
+            if (str(d.class_name).lower() in ("bulle", "out_text")
+                    and TranslationPipeline._is_sfx_by_text(d.text_original)):
+                d.class_name = "sfx"
             dets.append(d)
+
+        sfx_idx = {i for i, d in enumerate(dets)
+                   if str(d.class_name).lower() == "sfx"}
 
         # Masque d'encre SOURCE, par bulle puis en union pleine page.
         src_inks = []
@@ -695,10 +705,14 @@ def score(run, only=None, save_pages=False, save_crops=False):
                 page_ink[y1:y2, x1:x2] = np.maximum(page_ink[y1:y2, x1:x2], ink)
 
         # Effacement, puis reinjection du texte SOURCE.
-        erased, _, _ = TranslationPipeline._run_pre_inpainting(img, dets, renderer)
+        erased, _, _ = TranslationPipeline._run_pre_inpainting(
+            img, [d for i, d in enumerate(dets) if i not in sfx_idx], renderer)
         after = erased.copy()
         debugs = []
-        for d in dets:
+        for i, d in enumerate(dets):
+            if i in sfx_idx:
+                debugs.append({"sfx_vo": True})   # VO : ni effacée ni redessinée
+                continue
             try:
                 TranslationPipeline._prepare_render_style(renderer, img, d)
                 renderer.last_layout_debug = None
@@ -734,6 +748,8 @@ def score(run, only=None, save_pages=False, save_crops=False):
         # Mesure.
         rows = []
         for i, (it, ink, dbg) in enumerate(zip(items, src_inks, debugs)):
+            if i in sfx_idx:
+                continue                          # SFX en VO : rien à noter
             x1, y1, x2, y2 = it["bbox"]
             b = img[y1:y2, x1:x2]
             e = erased[y1:y2, x1:x2]

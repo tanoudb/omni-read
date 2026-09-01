@@ -926,6 +926,14 @@ class TranslationPipeline:
         if trimmed:
             det.text_original = " ".join(det.ocr_lines)
 
+        # Re-typage SFX (onomatopée mal classée `bulle`/`out_text`) : fait ICI,
+        # après l'OCR et avant le split traduction/effacement, pour que la zone
+        # reste en VO — ni traduite ni effacée. Sans quoi l'effacement détruit
+        # le décor derrière un texte qu'on ne devait pas toucher.
+        if (str(getattr(det, 'class_name', '')).lower() in ('bulle', 'out_text')
+                and self._is_sfx_by_text(det.text_original)):
+            det.class_name = 'sfx'
+
         seg_seconds = self._build_masks_for_detection(img, det)
         return None, seg_seconds
 
@@ -947,6 +955,56 @@ class TranslationPipeline:
         if cls._WATERMARK_DOMAIN_RE.search(value) or cls._WATERMARK_KEYWORD_RE.search(value):
             return True
         return len(value.split()) == 1 and bool(cls._WATERMARK_BRAND_RE.match(value))
+
+    # Onomatopées : lexique STRICT (jamais du dialogue). Une SFX mal classée
+    # `bulle` force la traduction PUIS l'effacement, qui détruit le décor
+    # derrière un texte qui devait rester en VO (mesuré à l'essaim : bulles-cri
+    # « GRRR » effacées, décor rasé). On la re-type `sfx` en amont.
+    _SFX_LEX = frozenset(
+        "grr grrr argh arghh aargh ugh ughh boom booom kaboom baam bam bang crash "
+        "crack thud thump clang clank clunk clink ding dong sob gasp haa hah pow "
+        "smash woosh vroom screech hiss growl snarl noo nooo waa waah waaah kya eek "
+        "gah urk gulp rumble crackle sizzle tch tsk nngh ngh huah hup shing fwoosh "
+        "graah grah aaah ahh ohh hmm mmm".split()
+    )
+
+    @classmethod
+    def _is_sfx_by_text(cls, text: str) -> bool:
+        """Vrai si le texte est ENTIÈREMENT une onomatopée (à re-typer `sfx`).
+
+        Haute précision VOULUE, pas haut rappel : reclasser un dialogue à tort
+        le laisserait en anglais à l'écran — pire qu'un décor un peu abîmé. On
+        n'accepte donc que si CHAQUE mot est une onomatopée ; un seul vrai mot
+        de dialogue fait échouer toute la zone (« LORD JOHAAAAAN--!! », « I NEED
+        YOUR HELP » restent donc traduits). Mesuré sur les 1481 zones du corpus :
+        28 SFX récupérés, 0 dialogue touché. Le rappel sur les SFX que l'OCR
+        massacre (« auu LIUH HH ») relèvera d'un signal VISUEL séparé.
+        """
+        words = re.findall(r"[A-Za-z']+", str(text or ""))
+        if not words:
+            return False
+
+        def norm(w):
+            return re.sub(r"[^a-z]", "", w.lower())
+
+        def is_sfx_word(w):
+            x = norm(w)
+            if not x:
+                return True                              # ponctuation seule
+            if x in cls._SFX_LEX:
+                return True
+            if re.search(r"(.)\1\1", x):
+                return True                              # 3+ lettres répétées
+            if len(x) <= 2:
+                return True                              # interjection (ah, oh, hm)
+            if re.fullmatch(r"[aeiouh]+", x):
+                return True                              # voyelles/h (aah, haa, ooh)
+            return False
+
+        strong = any(
+            norm(w) in cls._SFX_LEX or re.search(r"(.)\1\1", norm(w)) for w in words
+        )
+        return strong and all(is_sfx_word(w) for w in words)
 
     @staticmethod
     def _is_render_noise_text(text: str, confidence: float) -> bool:
@@ -1394,6 +1452,8 @@ class TranslationPipeline:
                             if self._is_render_noise_text(det.text_original, det.ocr_confidence):
                                 det.text_original = ""
                                 continue
+                            if str(getattr(det, 'class_name', '')).lower() == 'sfx':
+                                continue  # reclassé SFX → VO : ni traduit ni effacé
                             ch_info['valid_texts'].append(
                                 (img_path, det_idx, det.text_original,
                                  getattr(det, 'class_name', '') or '')
@@ -2504,7 +2564,10 @@ class TranslationPipeline:
                 )
         
         # Filtrer détections sans texte
-        valid_detections = [d for d in translatable_detections if d.text_original]
+        valid_detections = [
+            d for d in translatable_detections
+            if d.text_original and str(getattr(d, 'class_name', '')).lower() != 'sfx'
+        ]  # les onomatopées re-typées `sfx` par _apply_ocr_result restent en VO
 
         # Sécurité rendu: ignorer les artefacts OCR (pas d'inpainting ni texte)
         cleaned_for_render: List[Detection] = []
