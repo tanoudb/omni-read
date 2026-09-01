@@ -1546,3 +1546,31 @@ WAAAH/HUP ne sont plus notés (VO), les 7 lignes « JOHAN » le restent.
 Rappel non couvert (étage 2, à venir) : les SFX que l'OCR massacre (« auu LIUH
 HH », « L GO UO ») échappent au texte → signal VISUEL (lettrage géant + pas de
 vrai contour de bulle), à valider à l'essaim.
+
+## 2026-09-01 — Chantier A : inpainting texture-aware (MAT) borné
+
+Banc GPU (RTX 3060) : SimpleLama actuel vs mat/zits/fcf/manga/ldm (lama-cleaner)
+sur les 8 pires zones. **mat gagne** — reconstruit briques/forêt/photo/rayons que
+SimpleLama LISSE. fcf strie, manga hallucine une trame, ldm 63 s/zone (non viable).
+Mais mat hallucine parfois (blob bleu, ou aplat de mauvaise couleur).
+
+`_inpaint_lama` devient un ENSEMBLE borné à QUATRE verrous, chacun calibré au banc :
+1. **classe out_text / System uniquement** — les gains mesurés étaient TOUS des
+   cartouches ; sur les BULLES mat invente un aplat de mauvaise couleur (brun sur
+   crème marquis #25, gris sur dégradé apoc #19) → écartées.
+2. **fond texturé** (gradient médian de couronne > 6 ; bulles unies = 0) — évite
+   de payer mat (~6 s, pad 1024) là où il n'aide pas.
+3. **anti-hallucination** : rejette un aplat saturé ET LISSE (discriminant :
+   texture légitime = rugueuse ; hallucination = lisse ; 5,7 % vs 16,7 % du masque).
+4. **SimpleLama en filet** dès qu'un verrou écarte mat.
+
+Validé : bricks/forest (out_text) → mat, décor texturé reconstruit, texte parti ;
+marquis #25 / apoc #19 (bulle) → SimpleLama, plus d'aplat parasite ; bulles simples
+→ SimpleLama (anomalie nulle). PIÈGE de mesure confirmé une fois de plus : le barème
+compte la TEXTURE reconstruite par mat comme du « residu » (residu métrique +9 alors
+que le texte a disparu — vérifié à l'œil sur hellogin briques). Seul l'essaim juge.
+
+RESTE À FAIRE (coupé par la limite de session) : re-lancer l'essaim COMPLET sur un
+ré-score post-class-gate pour certifier zéro dégât neuf à l'échelle du corpus. Le
+run final3 (mat AVANT le class-gate) a montré 2 régressions bulle, désormais
+gardées ; l'essaim final3 n'a tourné que 5 chunks/12 (limite atteinte).

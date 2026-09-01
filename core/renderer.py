@@ -251,6 +251,13 @@ class TextRenderer:
         self.lama = None
         self.anime_inpainter = None
         self.anime_inpainter_ready = False
+        # Inpainter TEXTURE (MAT, Mask-Aware Transformer, via lama-cleaner) :
+        # reconstruit briques/forêts/photos que SimpleLama LISSE. Benché contre
+        # 5 candidats — seul gagnant net sans artefact systématique (fcf strie,
+        # manga hallucine une trame). Utilisé sous garde-fou anti-hallucination
+        # (cf. `_inpaint_lama`) car il invente parfois un aplat coloré saturé.
+        self.mat_inpainter = None
+        self._mat_config = None
 
         # QCheck : rempli par `_apply_erasure_by_group` quand un groupe reste
         # imparfaitement effacé (LaMa a échoué ET la diffusion n'était pas sûre
@@ -274,6 +281,29 @@ class TextRenderer:
                 logger.info("LaMa charge")
             except Exception as e:
                 logger.warning("Erreur LaMa: %s. Fallback cv2.inpaint.", e)
+
+        self._init_mat_inpainter()
+
+    def _init_mat_inpainter(self):
+        """Charge MAT (lama-cleaner) sur GPU si disponible ; sinon on reste sur
+        SimpleLama seul. Ne bloque jamais l'init : tout échec => mat_inpainter=None."""
+        try:
+            import torch
+            if not torch.cuda.is_available():
+                return                                   # MAT sans GPU = trop lent
+            from lama_cleaner.model_manager import ModelManager
+            from lama_cleaner.schema import Config as LamaConfig
+            self.mat_inpainter = ModelManager(name="mat", device=torch.device("cuda"))
+            self._mat_config = LamaConfig(
+                hd_strategy="Original", ldm_steps=20,
+                hd_strategy_crop_margin=64, hd_strategy_crop_trigger_size=1024,
+                hd_strategy_resize_limit=2048,
+            )
+            logger.info("MAT (texture inpainter) pret")
+        except Exception as exc:
+            self.mat_inpainter = None
+            self._mat_config = None
+            logger.warning("MAT indisponible (%s) - SimpleLama seul", exc)
 
     def _init_anime_inpainter(self):
         if not HF_AVAILABLE:
@@ -784,7 +814,7 @@ class TextRenderer:
         # LaMa inpaint
         if self.lama is not None:
             try:
-                result = self._inpaint_lama(crop, local_mask)
+                result = self._inpaint_lama(crop, local_mask, class_name)
                 erased = self._apply_erasure_by_group(crop, result, local_mask, class_name)
 
                 # Deuxième passe au BLOC si un fantôme subsiste.
@@ -828,7 +858,7 @@ class TextRenderer:
                         wider = cv2.bitwise_or(
                             cv2.bitwise_and(wider, interior_limit), local_mask,
                         )
-                    retry = self._inpaint_lama(crop, wider)
+                    retry = self._inpaint_lama(crop, wider, class_name)
                     erased2 = crop.copy()
                     erased2[wider > 0] = retry[wider > 0]
                     # On garde la passe qui laisse le MOINS de structure.
@@ -1779,7 +1809,51 @@ class TextRenderer:
         except Exception:
             return None
 
-    def _inpaint_lama(self, crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    def _inpaint_lama(self, crop: np.ndarray, mask: np.ndarray,
+                      class_name: str = "") -> np.ndarray:
+        """Effacement TEXTURE-aware borné : MAT d'abord (reconstruit briques,
+        forêts, photos que SimpleLama lisse), SimpleLama en filet.
+
+        Restreint aux CARTOUCHES/UI (out_text / System) : c'est là que MAT gagne
+        (texte posé sur du décor texturé). Sur les BULLES de dialogue il invente
+        parfois un aplat de MAUVAISE COULEUR — brun sur une bulle crème (marquis
+        p01 #25), rectangle gris sur un dégradé (apocalypse p01 #19) — que le
+        garde-fou « aplat saturé » ne rattrape pas. Or les gains mesurés étaient
+        TOUS des out_text : on écarte donc simplement les bulles. Trois verrous
+        restants : classe, fond texturé (couronne), anti-hallucination saturée.
+        """
+        if (self.mat_inpainter is not None
+                and str(class_name).lower() in ("out_text", "system")
+                and self._surround_textured(crop, mask)):
+            try:
+                out = self._inpaint_mat(crop, mask)
+                if out is not None and not self._mat_anomaly(out, crop, mask):
+                    return out
+            except Exception:
+                pass
+        return self._inpaint_simplelama(crop, mask)
+
+    @staticmethod
+    def _surround_textured(crop: np.ndarray, mask: np.ndarray,
+                           grad_thr: float = 6.0) -> bool:
+        """MAT ne sert QUE sur un fond TEXTURÉ (là où SimpleLama lisse) ; inutile
+        et coûteux (~6 s, pad 1024) sur une bulle unie. On ne l'appelle donc que
+        si le gradient MÉDIAN de la couronne dépasse `grad_thr`. Mesuré : bulles
+        simples = 0, décors texturés (briques/forêt/photo/rayons) = 10 à 42.
+        Évite d'exécuter MAT sur ~97 % des zones sans le moindre gain."""
+        try:
+            ring = (cv2.dilate(mask, np.ones((25, 25), np.uint8)) > 0) & (mask == 0)
+            if int(np.count_nonzero(ring)) < 50:
+                return False
+            g = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY).astype(np.float32)
+            gx = cv2.Sobel(g, cv2.CV_32F, 1, 0, ksize=3)
+            gy = cv2.Sobel(g, cv2.CV_32F, 0, 1, ksize=3)
+            gm = np.sqrt(gx * gx + gy * gy)
+            return float(np.median(gm[ring])) > grad_thr
+        except Exception:
+            return False
+
+    def _inpaint_simplelama(self, crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
         h_orig, w_orig = crop.shape[:2]
         crop_pil = Image.fromarray(cv2.cvtColor(crop, cv2.COLOR_BGR2RGB))
         mask_pil = Image.fromarray(mask).convert('L')
@@ -1788,6 +1862,65 @@ class TextRenderer:
         if result.shape[:2] != (h_orig, w_orig):
             result = cv2.resize(result, (w_orig, h_orig), interpolation=cv2.INTER_LANCZOS4)
         return result
+
+    def _inpaint_mat(self, crop: np.ndarray, mask: np.ndarray) -> Optional[np.ndarray]:
+        """MAT via lama-cleaner. Entrée RGB attendue ; la sortie est renormalisée
+        en BGR en recalant la zone NON masquée sur la source (l'ordre de canaux
+        de lama-cleaner varie selon la version)."""
+        if self.mat_inpainter is None:
+            return None
+        h0, w0 = crop.shape[:2]
+        rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
+        out = self.mat_inpainter(rgb, mask, self._mat_config)
+        out = np.asarray(out)
+        if out.shape[:2] != (h0, w0):
+            out = cv2.resize(out, (w0, h0), interpolation=cv2.INTER_LANCZOS4)
+        out = out.astype(np.uint8)
+        um = mask == 0
+        if int(np.count_nonzero(um)) > 200:
+            e_bgr = float(np.abs(out[um].astype(np.int16) - crop[um].astype(np.int16)).mean())
+            e_rgb = float(np.abs(out[um].astype(np.int16) - rgb[um].astype(np.int16)).mean())
+            if e_rgb < e_bgr:
+                out = cv2.cvtColor(out, cv2.COLOR_RGB2BGR)
+        return out
+
+    @staticmethod
+    def _mat_anomaly(matb: np.ndarray, crop: np.ndarray, mask: np.ndarray,
+                     frac_thr: float = 0.10) -> bool:
+        """MAT a-t-il halluciné un APLAT coloré saturé dans le masque ?
+
+        Piège écarté : une TEXTURE colorée légitime (feuillage, pétales que MAT
+        reconstruit bien) est elle aussi « saturée et loin de la médiane » — la
+        confondre ferait rejeter les gains. Le discriminant est la
+        RÉGULARITÉ : une hallucination est un aplat LISSE, une texture est
+        rugueuse. On ne compte donc que les pixels saturés+déviés ET localement
+        LISSES (faible gradient). Banc (7 zones) : gains texture ≤ 5,7 % du
+        masque, hallucination (blob bleu) = 16,7 % — seuil 10 % au milieu.
+        `True` => rendre la main à SimpleLama.
+        """
+        try:
+            md = mask > 0
+            m_area = int(np.count_nonzero(md))
+            if m_area < 60:
+                return False
+            ring = (cv2.dilate(mask, np.ones((31, 31), np.uint8)) > 0) & (mask == 0)
+            if int(np.count_nonzero(ring)) < 60:
+                return False
+            smed = np.median(crop[ring].reshape(-1, 3).astype(np.float32), axis=0)
+            sat = cv2.cvtColor(matb, cv2.COLOR_BGR2HSV)[:, :, 1].astype(np.float32)
+            dev = np.abs(matb.astype(np.float32) - smed).max(axis=2)
+            gray = cv2.cvtColor(matb, cv2.COLOR_BGR2GRAY).astype(np.float32)
+            gx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+            gy = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+            grad_lo = cv2.blur(np.sqrt(gx * gx + gy * gy), (9, 9)) < 18.0
+            anom = ((dev > 60.0) & (sat > 90.0) & grad_lo & md).astype(np.uint8)
+            n, _, st, _ = cv2.connectedComponentsWithStats(anom, 8)
+            if n <= 1:
+                return False
+            biggest = int(st[1:, cv2.CC_STAT_AREA].max())
+            return biggest >= frac_thr * m_area
+        except Exception:
+            return False
 
     def _inpaint_anime(self, crop: np.ndarray, mask: np.ndarray) -> np.ndarray:
         image_rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
